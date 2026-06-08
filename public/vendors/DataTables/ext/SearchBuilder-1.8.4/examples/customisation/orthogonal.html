@@ -1,0 +1,2430 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<link rel="shortcut icon" type="image/ico" href="https://www.datatables.net/favicon.ico">
+	<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1.0, user-scalable=no">
+	<title>SearchBuilder example - Using Orthogonal Data</title>
+	<link rel="stylesheet" type="text/css" href="../../../../examples/resources/syntax/shCore.css">
+	<link rel="stylesheet" type="text/css" href="../../../../examples/resources/demo.css">
+	<style type="text/css" class="init">
+	
+td.f32 .flag {
+	vertical-align: middle;
+}
+
+	</style>
+	<script type="text/javascript" language="javascript" src="../../../../examples/resources/syntax/shCore.js"></script>
+	<script type="text/javascript" language="javascript" src="../../../../examples/resources/demo.js"></script>
+	<script defer class="init">
+	dt_demo.init({
+		libs: {"targetFramework":"","js":["jquery","datatables","searchbuilder","datetime"],"css":["datatables","searchbuilder","datetime","world-flags-sprite"],"components":{"datatables":{"css":"..\/..\/..\/..\/css","js":"..\/..\/..\/..\/js","resolve":true},"autofill":{"css":"..\/..\/..\/..\/..\/extensions\/AutoFill\/css","js":"..\/..\/..\/..\/..\/extensions\/AutoFill\/js","resolve":true},"buttons":{"css":"..\/..\/..\/..\/..\/extensions\/Buttons\/css","js":"..\/..\/..\/..\/..\/extensions\/Buttons\/js","resolve":true},"colreorder":{"css":"..\/..\/..\/..\/..\/extensions\/ColReorder\/css","js":"..\/..\/..\/..\/..\/extensions\/ColReorder\/js","resolve":true},"columncontrol":{"css":"..\/..\/..\/..\/..\/extensions\/ColumnControl\/css","js":"..\/..\/..\/..\/..\/extensions\/ColumnControl\/js","resolve":true},"editor":{"css":"..\/..\/css","js":"..\/..\/js","resolve":true},"fixedcolumns":{"css":"..\/..\/..\/..\/..\/extensions\/FixedColumns\/css","js":"..\/..\/..\/..\/..\/extensions\/FixedColumns\/js","resolve":true},"fixedheader":{"css":"..\/..\/..\/..\/..\/extensions\/FixedHeader\/css","js":"..\/..\/..\/..\/..\/extensions\/FixedHeader\/js","resolve":true},"keytable":{"css":"..\/..\/..\/..\/..\/extensions\/KeyTable\/css","js":"..\/..\/..\/..\/..\/extensions\/KeyTable\/js","resolve":true},"responsive":{"css":"..\/..\/..\/..\/..\/extensions\/Responsive\/css","js":"..\/..\/..\/..\/..\/extensions\/Responsive\/js","resolve":true},"rowgroup":{"css":"..\/..\/..\/..\/..\/extensions\/RowGroup\/css","js":"..\/..\/..\/..\/..\/extensions\/RowGroup\/js","resolve":true},"rowreorder":{"css":"..\/..\/..\/..\/..\/extensions\/RowReorder\/css","js":"..\/..\/..\/..\/..\/extensions\/RowReorder\/js","resolve":true},"scroller":{"css":"..\/..\/..\/..\/..\/extensions\/Scroller\/css","js":"..\/..\/..\/..\/..\/extensions\/Scroller\/js","resolve":true},"select":{"css":"..\/..\/..\/..\/..\/extensions\/Select\/css","js":"..\/..\/..\/..\/..\/extensions\/Select\/js","resolve":true},"searchbuilder":{"css":"..\/..\/..\/..\/..\/extensions\/SearchBuilder\/css","js":"..\/..\/..\/..\/..\/extensions\/SearchBuilder\/js","resolve":true},"searchpanes":{"css":"..\/..\/..\/..\/..\/extensions\/SearchPanes\/css","js":"..\/..\/..\/..\/..\/extensions\/SearchPanes\/js","resolve":true},"staterestore":{"css":"..\/..\/..\/..\/..\/extensions\/StateRestore\/css","js":"..\/..\/..\/..\/..\/extensions\/StateRestore\/js","resolve":true},"datetime":{"css":"..\/..\/..\/..\/..\/extensions\/DateTime\/css\/dataTables.dateTime.css","js":"..\/..\/..\/..\/..\/extensions\/DateTime\/js\/dataTables.dateTime.js"},"bootstrap":{"css":"https:\/\/maxcdn.bootstrapcdn.com\/bootstrap\/3.3.7\/css\/bootstrap.min.css","js":"https:\/\/maxcdn.bootstrapcdn.com\/bootstrap\/3.3.7\/js\/bootstrap.min.js"},"bootstrap4":{"css":"https:\/\/cdnjs.cloudflare.com\/ajax\/libs\/twitter-bootstrap\/4.5.2\/css\/bootstrap.css","js":"https:\/\/cdnjs.cloudflare.com\/ajax\/libs\/popper.js\/1.14.3\/umd\/popper.min.js|https:\/\/cdnjs.cloudflare.com\/ajax\/libs\/twitter-bootstrap\/4.5.2\/js\/bootstrap.min.js"},"bootstrap5":{"css":"https:\/\/cdnjs.cloudflare.com\/ajax\/libs\/twitter-bootstrap\/5.3.3\/css\/bootstrap.min.css","js":"https:\/\/cdnjs.cloudflare.com\/ajax\/libs\/twitter-bootstrap\/5.3.3\/js\/bootstrap.bundle.min.js"},"bulma":{"css":"https:\/\/cdnjs.cloudflare.com\/ajax\/libs\/bulma\/1.0.3\/css\/bulma.min.css"},"foundation":{"css":"https:\/\/cdnjs.cloudflare.com\/ajax\/libs\/foundation\/6.4.3\/css\/foundation.min.css","js":"https:\/\/cdnjs.cloudflare.com\/ajax\/libs\/foundation\/6.4.3\/js\/foundation.min.js"},"jqueryui":{"css":"https:\/\/code.jquery.com\/ui\/1.13.2\/themes\/base\/jquery-ui.css","js":"https:\/\/code.jquery.com\/ui\/1.13.2\/jquery-ui.js"},"material":{"css":"https:\/\/cdnjs.cloudflare.com\/ajax\/libs\/material-components-web\/14.0.0\/material-components-web.min.css","js":"https:\/\/cdnjs.cloudflare.com\/ajax\/libs\/material-components-web\/14.0.0\/material-components-web.min.js"},"semanticui":{"css":"https:\/\/cdnjs.cloudflare.com\/ajax\/libs\/fomantic-ui\/2.9.2\/semantic.min.css","js":"https:\/\/cdnjs.cloudflare.com\/ajax\/libs\/fomantic-ui\/2.9.2\/semantic.min.js"},"uikit":{"css":"https:\/\/cdnjs.cloudflare.com\/ajax\/libs\/uikit\/3.0.2\/css\/uikit.min.css","js":"https:\/\/cdnjs.cloudflare.com\/ajax\/libs\/uikit\/3.0.2\/js\/uikit.min.js"},"tailwindcss":{"css":"","js":"https:\/\/cdn.tailwindcss.com"},"font-awesome":{"css":"https:\/\/cdnjs.cloudflare.com\/ajax\/libs\/font-awesome\/4.7.0\/css\/font-awesome.min.css"},"world-flags-sprite":{"css":"https:\/\/cdn.jsdelivr.net\/gh\/lafeber\/world-flags-sprite\/stylesheets\/flags32-both.css"},"demo":{"css":"..\/..\/..\/..\/examples\/resources\/demo.css","js":"..\/..\/..\/..\/examples\/resources\/demo.js"},"syntax":{"css":"..\/..\/..\/..\/examples\/resources\/syntax\/shCore.css","js":"..\/..\/..\/..\/examples\/resources\/syntax\/shCore.js"},"buttons-html5":{"js":"..\/..\/..\/..\/..\/extensions\/Buttons\/js\/buttons.html5.js"},"buttons-print":{"js":"..\/..\/..\/..\/..\/extensions\/Buttons\/js\/buttons.print.js"},"buttons-colvis":{"js":"..\/..\/..\/..\/..\/extensions\/Buttons\/js\/buttons.colVis.js"},"jquery":{"js":"https:\/\/code.jquery.com\/jquery-3.7.1.js"},"jszip":{"js":"https:\/\/cdnjs.cloudflare.com\/ajax\/libs\/jszip\/3.10.1\/jszip.min.js"},"pdfmake":{"js":"https:\/\/cdnjs.cloudflare.com\/ajax\/libs\/pdfmake\/0.2.7\/pdfmake.min.js"},"vfsfonts":{"js":"https:\/\/cdnjs.cloudflare.com\/ajax\/libs\/pdfmake\/0.2.7\/vfs_fonts.js"},"moment":{"js":"https:\/\/cdnjs.cloudflare.com\/ajax\/libs\/moment.js\/2.30.1\/moment.min.js"},"luxon":{"js":"https:\/\/cdnjs.cloudflare.com\/ajax\/libs\/luxon\/3.6.1\/luxon.min.js"},"sparkline":{"js":"https:\/\/cdn.jsdelivr.net\/gh\/fnando\/sparkline\/dist\/sparkline.js"}}},
+		jquery: function () {
+				
+
+
+  var data = [
+	{
+		name: 'Tiger Nixon',
+		position: 'System Architect',
+		salary: '320800',
+		start_date: '2011/04/25',
+		office: 'Edinburgh',
+		rating: '5421'
+	},
+	{
+		name: 'Garrett Winters',
+		position: 'Accountant',
+		salary: '170750',
+		start_date: '2011/07/25',
+		office: 'Tokyo',
+		rating: '8422'
+	},
+	{
+		name: 'Ashton Cox',
+		position: 'Junior Technical Author',
+		salary: '86000',
+		start_date: '2009/01/12',
+		office: 'San Francisco',
+		rating: '1562'
+	},
+	{
+		name: 'Cedric Kelly',
+		position: 'Senior Javascript Developer',
+		salary: '433060',
+		start_date: '2012/03/29',
+		office: 'Edinburgh',
+		rating: '6224'
+	},
+	{
+		name: 'Airi Satou',
+		position: 'Accountant',
+		salary: '162700',
+		start_date: '2008/11/28',
+		office: 'Tokyo',
+		rating: '5407'
+	},
+	{
+		name: 'Brielle Williamson',
+		position: 'Integration Specialist',
+		salary: '372000',
+		start_date: '2012/12/02',
+		office: 'New York',
+		rating: '4804'
+	},
+	{
+		name: 'Herrod Chandler',
+		position: 'Sales Assistant',
+		salary: '137500',
+		start_date: '2012/08/06',
+		office: 'San Francisco',
+		rating: '9608'
+	},
+	{
+		name: 'Rhona Davidson',
+		position: 'Integration Specialist',
+		salary: '327900',
+		start_date: '2010/10/14',
+		office: 'Tokyo',
+		rating: '6200'
+	},
+	{
+		name: 'Colleen Hurst',
+		position: 'Javascript Developer',
+		salary: '205500',
+		start_date: '2009/09/15',
+		office: 'San Francisco',
+		rating: '2360'
+	},
+	{
+		name: 'Sonya Frost',
+		position: 'Software Engineer',
+		salary: '103600',
+		start_date: '2008/12/13',
+		office: 'Edinburgh',
+		rating: '1667'
+	},
+	{
+		name: 'Jena Gaines',
+		position: 'Office Manager',
+		salary: '90560',
+		start_date: '2008/12/19',
+		office: 'London',
+		rating: '3814'
+	},
+	{
+		name: 'Quinn Flynn',
+		position: 'Support Lead',
+		salary: '342000',
+		start_date: '2013/03/03',
+		office: 'Edinburgh',
+		rating: '9497'
+	},
+	{
+		name: 'Charde Marshall',
+		position: 'Regional Director',
+		salary: '470600',
+		start_date: '2008/10/16',
+		office: 'San Francisco',
+		rating: '6741'
+	},
+	{
+		name: 'Haley Kennedy',
+		position: 'Senior Marketing Designer',
+		salary: '313500',
+		start_date: '2012/12/18',
+		office: 'London',
+		rating: '3597'
+	},
+	{
+		name: 'Tatyana Fitzpatrick',
+		position: 'Regional Director',
+		salary: '385750',
+		start_date: '2010/03/17',
+		office: 'London',
+		rating: '1965'
+	},
+	{
+		name: 'Michael Silva',
+		position: 'Marketing Designer',
+		salary: '198500',
+		start_date: '2012/11/27',
+		office: 'London',
+		rating: '1581'
+	},
+	{
+		name: 'Paul Byrd',
+		position: 'Chief Financial Officer (CFO)',
+		salary: '725000',
+		start_date: '2010/06/09',
+		office: 'New York',
+		rating: '3059'
+	},
+	{
+		name: 'Gloria Little',
+		position: 'Systems Administrator',
+		salary: '237500',
+		start_date: '2009/04/10',
+		office: 'New York',
+		rating: '1721'
+	},
+	{
+		name: 'Bradley Greer',
+		position: 'Software Engineer',
+		salary: '132000',
+		start_date: '2012/10/13',
+		office: 'London',
+		rating: '2558'
+	},
+	{
+		name: 'Dai Rios',
+		position: 'Personnel Lead',
+		salary: '217500',
+		start_date: '2012/09/26',
+		office: 'Edinburgh',
+		rating: '2290'
+	},
+	{
+		name: 'Jenette Caldwell',
+		position: 'Development Lead',
+		salary: '345000',
+		start_date: '2011/09/03',
+		office: 'New York',
+		rating: '1937'
+	},
+	{
+		name: 'Yuri Berry',
+		position: 'Chief Marketing Officer (CMO)',
+		salary: '675000',
+		start_date: '2009/06/25',
+		office: 'New York',
+		rating: '6154'
+	},
+	{
+		name: 'Caesar Vance',
+		position: 'Pre-Sales Support',
+		salary: '106450',
+		start_date: '2011/12/12',
+		office: 'New York',
+		rating: '8330'
+	},
+	{
+		name: 'Doris Wilder',
+		position: 'Sales Assistant',
+		salary: '85600',
+		start_date: '2010/09/20',
+		office: 'Sydney',
+		rating: '3023'
+	},
+	{
+		name: 'Angelica Ramos',
+		position: 'Chief Executive Officer (CEO)',
+		salary: '1200000',
+		start_date: '2009/10/09',
+		office: 'London',
+		rating: '5797'
+	},
+	{
+		name: 'Gavin Joyce',
+		position: 'Developer',
+		salary: '92575',
+		start_date: '2010/12/22',
+		office: 'Edinburgh',
+		rating: '8822'
+	},
+	{
+		name: 'Jennifer Chang',
+		position: 'Regional Director',
+		salary: '357650',
+		start_date: '2010/11/14',
+		office: 'Argentina',
+		rating: '9239'
+	},
+	{
+		name: 'Brenden Wagner',
+		position: 'Software Engineer',
+		salary: '206850',
+		start_date: '2011/06/07',
+		office: 'San Francisco',
+		rating: '1314'
+	},
+	{
+		name: 'Fiona Green',
+		position: 'Chief Operating Officer (COO)',
+		salary: '850000',
+		start_date: '2010/03/11',
+		office: 'San Francisco',
+		rating: '2947'
+	},
+	{
+		name: 'Shou Itou',
+		position: 'Regional Marketing',
+		salary: '163000',
+		start_date: '2011/08/14',
+		office: 'Tokyo',
+		rating: '8899'
+	},
+	{
+		name: 'Michelle House',
+		position: 'Integration Specialist',
+		salary: '95400',
+		start_date: '2011/06/02',
+		office: 'Sydney',
+		rating: '2769'
+	},
+	{
+		name: 'Suki Burks',
+		position: 'Developer',
+		salary: '114500',
+		start_date: '2009/10/22',
+		office: 'London',
+		rating: '6832'
+	},
+	{
+		name: 'Prescott Bartlett',
+		position: 'Technical Author',
+		salary: '145000',
+		start_date: '2011/05/07',
+		office: 'London',
+		rating: '3606'
+	},
+	{
+		name: 'Gavin Cortez',
+		position: 'Team Leader',
+		salary: '235500',
+		start_date: '2008/10/26',
+		office: 'San Francisco',
+		rating: '2860'
+	},
+	{
+		name: 'Martena Mccray',
+		position: 'Post-Sales support',
+		salary: '324050',
+		start_date: '2011/03/09',
+		office: 'Edinburgh',
+		rating: '8240'
+	},
+	{
+		name: 'Unity Butler',
+		position: 'Marketing Designer',
+		salary: '85675',
+		start_date: '2009/12/09',
+		office: 'San Francisco',
+		rating: '5384'
+	},
+	{
+		name: 'Howard Hatfield',
+		position: 'Office Manager',
+		salary: '164500',
+		start_date: '2008/12/16',
+		office: 'San Francisco',
+		rating: '7031'
+	},
+	{
+		name: 'Hope Fuentes',
+		position: 'Secretary',
+		salary: '109850',
+		start_date: '2010/02/12',
+		office: 'San Francisco',
+		rating: '6318'
+	},
+	{
+		name: 'Vivian Harrell',
+		position: 'Financial Controller',
+		salary: '452500',
+		start_date: '2009/02/14',
+		office: 'San Francisco',
+		rating: '9422'
+	},
+	{
+		name: 'Timothy Mooney',
+		position: 'Office Manager',
+		salary: '136200',
+		start_date: '2008/12/11',
+		office: 'London',
+		rating: '7580'
+	},
+	{
+		name: 'Jackson Bradshaw',
+		position: 'Director',
+		salary: '645750',
+		start_date: '2008/09/26',
+		office: 'New York',
+		rating: '1042'
+	},
+	{
+		name: 'Olivia Liang',
+		position: 'Support Engineer',
+		salary: '234500',
+		start_date: '2011/02/03',
+		office: 'Argentina',
+		rating: '2120'
+	},
+	{
+		name: 'Bruno Nash',
+		position: 'Software Engineer',
+		salary: '163500',
+		start_date: '2011/05/03',
+		office: 'London',
+		rating: '6222'
+	},
+	{
+		name: 'Sakura Yamamoto',
+		position: 'Support Engineer',
+		salary: '139575',
+		start_date: '2009/08/19',
+		office: 'Tokyo',
+		rating: '9383'
+	},
+	{
+		name: 'Thor Walton',
+		position: 'Developer',
+		salary: '98540',
+		start_date: '2013/08/11',
+		office: 'New York',
+		rating: '8327'
+	},
+	{
+		name: 'Finn Camacho',
+		position: 'Support Engineer',
+		salary: '87500',
+		start_date: '2009/07/07',
+		office: 'San Francisco',
+		rating: '2927'
+	},
+	{
+		name: 'Serge Baldwin',
+		position: 'Data Coordinator',
+		salary: '138575',
+		start_date: '2012/04/09',
+		office: 'Argentina',
+		rating: '8352'
+	},
+	{
+		name: 'Zenaida Frank',
+		position: 'Software Engineer',
+		salary: '125250',
+		start_date: '2010/01/04',
+		office: 'New York',
+		rating: '7439'
+	},
+	{
+		name: 'Zorita Serrano',
+		position: 'Software Engineer',
+		salary: '115000',
+		start_date: '2012/06/01',
+		office: 'San Francisco',
+		rating: '4389'
+	},
+	{
+		name: 'Jennifer Acosta',
+		position: 'Junior Javascript Developer',
+		salary: '75650',
+		start_date: '2013/02/01',
+		office: 'Edinburgh',
+		rating: '3431'
+	},
+	{
+		name: 'Cara Stevens',
+		position: 'Sales Assistant',
+		salary: '145600',
+		start_date: '2011/12/06',
+		office: 'New York',
+		rating: '3990'
+	},
+	{
+		name: 'Hermione Butler',
+		position: 'Regional Director',
+		salary: '356250',
+		start_date: '2011/03/21',
+		office: 'London',
+		rating: '1016'
+	},
+	{
+		name: 'Lael Greer',
+		position: 'Systems Administrator',
+		salary: '103500',
+		start_date: '2009/02/27',
+		office: 'London',
+		rating: '6733'
+	},
+	{
+		name: 'Jonas Alexander',
+		position: 'Developer',
+		salary: '86500',
+		start_date: '2010/07/14',
+		office: 'San Francisco',
+		rating: '8196'
+	},
+	{
+		name: 'Shad Decker',
+		position: 'Regional Director',
+		salary: '183000',
+		start_date: '2008/11/13',
+		office: 'Edinburgh',
+		rating: '6373'
+	},
+	{
+		name: 'Michael Bruce',
+		position: 'Javascript Developer',
+		salary: '183000',
+		start_date: '2011/06/27',
+		office: 'Argentina',
+		rating: '5384'
+	},
+	{
+		name: 'Donna Snider',
+		position: 'Customer Support',
+		salary: '112000',
+		start_date: '2011/01/25',
+		office: 'New York',
+		rating: '4226'
+	}
+];
+
+$('#example').DataTable({
+	columns: [
+		{
+			data: 'name'
+		},
+		{
+			data: 'position'
+		},
+		{
+			className: 'f32', // used by world-flags-sprite library
+			data: 'office',
+			render: function (data, type) {
+				if (type === 'display') {
+					var country = '';
+
+					switch (data) {
+						case 'Argentina':
+							country = 'ar';
+							break;
+						case 'Edinburgh':
+							country = '_Scotland';
+							break;
+						case 'London':
+							country = '_England';
+							break;
+						case 'New York':
+						case 'San Francisco':
+							country = 'us';
+							break;
+						case 'Sydney':
+							country = 'au';
+							break;
+						case 'Tokyo':
+							country = 'jp';
+							break;
+					}
+
+					return '<span class="flag ' + country + '"></span> ' + data;
+				}
+
+				return data;
+			}
+		},
+		{
+			data: 'rating',
+			searchBuilder: {
+				orthogonal: {
+					display: 'filter'
+				}
+			},
+			render: function (data, type, row, meta) {
+				return type === 'display'
+					? '<progress title="' +
+							data +
+							'" value="' +
+							data +
+							'" max="9999"></progress>'
+					: data;
+			}
+		},
+		{
+			data: 'start_date'
+		},
+		{
+			data: 'salary',
+			render: $.fn.dataTable.render.number(',', '.', 2, '$')
+		}
+	],
+	data: data,
+	layout: {
+		top1: 'searchBuilder'
+	}
+});
+
+
+
+
+		},
+		vanilla: function () {
+				
+
+
+  var data = [
+	{
+		name: 'Tiger Nixon',
+		position: 'System Architect',
+		salary: '320800',
+		start_date: '2011/04/25',
+		office: 'Edinburgh',
+		rating: '5421'
+	},
+	{
+		name: 'Garrett Winters',
+		position: 'Accountant',
+		salary: '170750',
+		start_date: '2011/07/25',
+		office: 'Tokyo',
+		rating: '8422'
+	},
+	{
+		name: 'Ashton Cox',
+		position: 'Junior Technical Author',
+		salary: '86000',
+		start_date: '2009/01/12',
+		office: 'San Francisco',
+		rating: '1562'
+	},
+	{
+		name: 'Cedric Kelly',
+		position: 'Senior Javascript Developer',
+		salary: '433060',
+		start_date: '2012/03/29',
+		office: 'Edinburgh',
+		rating: '6224'
+	},
+	{
+		name: 'Airi Satou',
+		position: 'Accountant',
+		salary: '162700',
+		start_date: '2008/11/28',
+		office: 'Tokyo',
+		rating: '5407'
+	},
+	{
+		name: 'Brielle Williamson',
+		position: 'Integration Specialist',
+		salary: '372000',
+		start_date: '2012/12/02',
+		office: 'New York',
+		rating: '4804'
+	},
+	{
+		name: 'Herrod Chandler',
+		position: 'Sales Assistant',
+		salary: '137500',
+		start_date: '2012/08/06',
+		office: 'San Francisco',
+		rating: '9608'
+	},
+	{
+		name: 'Rhona Davidson',
+		position: 'Integration Specialist',
+		salary: '327900',
+		start_date: '2010/10/14',
+		office: 'Tokyo',
+		rating: '6200'
+	},
+	{
+		name: 'Colleen Hurst',
+		position: 'Javascript Developer',
+		salary: '205500',
+		start_date: '2009/09/15',
+		office: 'San Francisco',
+		rating: '2360'
+	},
+	{
+		name: 'Sonya Frost',
+		position: 'Software Engineer',
+		salary: '103600',
+		start_date: '2008/12/13',
+		office: 'Edinburgh',
+		rating: '1667'
+	},
+	{
+		name: 'Jena Gaines',
+		position: 'Office Manager',
+		salary: '90560',
+		start_date: '2008/12/19',
+		office: 'London',
+		rating: '3814'
+	},
+	{
+		name: 'Quinn Flynn',
+		position: 'Support Lead',
+		salary: '342000',
+		start_date: '2013/03/03',
+		office: 'Edinburgh',
+		rating: '9497'
+	},
+	{
+		name: 'Charde Marshall',
+		position: 'Regional Director',
+		salary: '470600',
+		start_date: '2008/10/16',
+		office: 'San Francisco',
+		rating: '6741'
+	},
+	{
+		name: 'Haley Kennedy',
+		position: 'Senior Marketing Designer',
+		salary: '313500',
+		start_date: '2012/12/18',
+		office: 'London',
+		rating: '3597'
+	},
+	{
+		name: 'Tatyana Fitzpatrick',
+		position: 'Regional Director',
+		salary: '385750',
+		start_date: '2010/03/17',
+		office: 'London',
+		rating: '1965'
+	},
+	{
+		name: 'Michael Silva',
+		position: 'Marketing Designer',
+		salary: '198500',
+		start_date: '2012/11/27',
+		office: 'London',
+		rating: '1581'
+	},
+	{
+		name: 'Paul Byrd',
+		position: 'Chief Financial Officer (CFO)',
+		salary: '725000',
+		start_date: '2010/06/09',
+		office: 'New York',
+		rating: '3059'
+	},
+	{
+		name: 'Gloria Little',
+		position: 'Systems Administrator',
+		salary: '237500',
+		start_date: '2009/04/10',
+		office: 'New York',
+		rating: '1721'
+	},
+	{
+		name: 'Bradley Greer',
+		position: 'Software Engineer',
+		salary: '132000',
+		start_date: '2012/10/13',
+		office: 'London',
+		rating: '2558'
+	},
+	{
+		name: 'Dai Rios',
+		position: 'Personnel Lead',
+		salary: '217500',
+		start_date: '2012/09/26',
+		office: 'Edinburgh',
+		rating: '2290'
+	},
+	{
+		name: 'Jenette Caldwell',
+		position: 'Development Lead',
+		salary: '345000',
+		start_date: '2011/09/03',
+		office: 'New York',
+		rating: '1937'
+	},
+	{
+		name: 'Yuri Berry',
+		position: 'Chief Marketing Officer (CMO)',
+		salary: '675000',
+		start_date: '2009/06/25',
+		office: 'New York',
+		rating: '6154'
+	},
+	{
+		name: 'Caesar Vance',
+		position: 'Pre-Sales Support',
+		salary: '106450',
+		start_date: '2011/12/12',
+		office: 'New York',
+		rating: '8330'
+	},
+	{
+		name: 'Doris Wilder',
+		position: 'Sales Assistant',
+		salary: '85600',
+		start_date: '2010/09/20',
+		office: 'Sydney',
+		rating: '3023'
+	},
+	{
+		name: 'Angelica Ramos',
+		position: 'Chief Executive Officer (CEO)',
+		salary: '1200000',
+		start_date: '2009/10/09',
+		office: 'London',
+		rating: '5797'
+	},
+	{
+		name: 'Gavin Joyce',
+		position: 'Developer',
+		salary: '92575',
+		start_date: '2010/12/22',
+		office: 'Edinburgh',
+		rating: '8822'
+	},
+	{
+		name: 'Jennifer Chang',
+		position: 'Regional Director',
+		salary: '357650',
+		start_date: '2010/11/14',
+		office: 'Argentina',
+		rating: '9239'
+	},
+	{
+		name: 'Brenden Wagner',
+		position: 'Software Engineer',
+		salary: '206850',
+		start_date: '2011/06/07',
+		office: 'San Francisco',
+		rating: '1314'
+	},
+	{
+		name: 'Fiona Green',
+		position: 'Chief Operating Officer (COO)',
+		salary: '850000',
+		start_date: '2010/03/11',
+		office: 'San Francisco',
+		rating: '2947'
+	},
+	{
+		name: 'Shou Itou',
+		position: 'Regional Marketing',
+		salary: '163000',
+		start_date: '2011/08/14',
+		office: 'Tokyo',
+		rating: '8899'
+	},
+	{
+		name: 'Michelle House',
+		position: 'Integration Specialist',
+		salary: '95400',
+		start_date: '2011/06/02',
+		office: 'Sydney',
+		rating: '2769'
+	},
+	{
+		name: 'Suki Burks',
+		position: 'Developer',
+		salary: '114500',
+		start_date: '2009/10/22',
+		office: 'London',
+		rating: '6832'
+	},
+	{
+		name: 'Prescott Bartlett',
+		position: 'Technical Author',
+		salary: '145000',
+		start_date: '2011/05/07',
+		office: 'London',
+		rating: '3606'
+	},
+	{
+		name: 'Gavin Cortez',
+		position: 'Team Leader',
+		salary: '235500',
+		start_date: '2008/10/26',
+		office: 'San Francisco',
+		rating: '2860'
+	},
+	{
+		name: 'Martena Mccray',
+		position: 'Post-Sales support',
+		salary: '324050',
+		start_date: '2011/03/09',
+		office: 'Edinburgh',
+		rating: '8240'
+	},
+	{
+		name: 'Unity Butler',
+		position: 'Marketing Designer',
+		salary: '85675',
+		start_date: '2009/12/09',
+		office: 'San Francisco',
+		rating: '5384'
+	},
+	{
+		name: 'Howard Hatfield',
+		position: 'Office Manager',
+		salary: '164500',
+		start_date: '2008/12/16',
+		office: 'San Francisco',
+		rating: '7031'
+	},
+	{
+		name: 'Hope Fuentes',
+		position: 'Secretary',
+		salary: '109850',
+		start_date: '2010/02/12',
+		office: 'San Francisco',
+		rating: '6318'
+	},
+	{
+		name: 'Vivian Harrell',
+		position: 'Financial Controller',
+		salary: '452500',
+		start_date: '2009/02/14',
+		office: 'San Francisco',
+		rating: '9422'
+	},
+	{
+		name: 'Timothy Mooney',
+		position: 'Office Manager',
+		salary: '136200',
+		start_date: '2008/12/11',
+		office: 'London',
+		rating: '7580'
+	},
+	{
+		name: 'Jackson Bradshaw',
+		position: 'Director',
+		salary: '645750',
+		start_date: '2008/09/26',
+		office: 'New York',
+		rating: '1042'
+	},
+	{
+		name: 'Olivia Liang',
+		position: 'Support Engineer',
+		salary: '234500',
+		start_date: '2011/02/03',
+		office: 'Argentina',
+		rating: '2120'
+	},
+	{
+		name: 'Bruno Nash',
+		position: 'Software Engineer',
+		salary: '163500',
+		start_date: '2011/05/03',
+		office: 'London',
+		rating: '6222'
+	},
+	{
+		name: 'Sakura Yamamoto',
+		position: 'Support Engineer',
+		salary: '139575',
+		start_date: '2009/08/19',
+		office: 'Tokyo',
+		rating: '9383'
+	},
+	{
+		name: 'Thor Walton',
+		position: 'Developer',
+		salary: '98540',
+		start_date: '2013/08/11',
+		office: 'New York',
+		rating: '8327'
+	},
+	{
+		name: 'Finn Camacho',
+		position: 'Support Engineer',
+		salary: '87500',
+		start_date: '2009/07/07',
+		office: 'San Francisco',
+		rating: '2927'
+	},
+	{
+		name: 'Serge Baldwin',
+		position: 'Data Coordinator',
+		salary: '138575',
+		start_date: '2012/04/09',
+		office: 'Argentina',
+		rating: '8352'
+	},
+	{
+		name: 'Zenaida Frank',
+		position: 'Software Engineer',
+		salary: '125250',
+		start_date: '2010/01/04',
+		office: 'New York',
+		rating: '7439'
+	},
+	{
+		name: 'Zorita Serrano',
+		position: 'Software Engineer',
+		salary: '115000',
+		start_date: '2012/06/01',
+		office: 'San Francisco',
+		rating: '4389'
+	},
+	{
+		name: 'Jennifer Acosta',
+		position: 'Junior Javascript Developer',
+		salary: '75650',
+		start_date: '2013/02/01',
+		office: 'Edinburgh',
+		rating: '3431'
+	},
+	{
+		name: 'Cara Stevens',
+		position: 'Sales Assistant',
+		salary: '145600',
+		start_date: '2011/12/06',
+		office: 'New York',
+		rating: '3990'
+	},
+	{
+		name: 'Hermione Butler',
+		position: 'Regional Director',
+		salary: '356250',
+		start_date: '2011/03/21',
+		office: 'London',
+		rating: '1016'
+	},
+	{
+		name: 'Lael Greer',
+		position: 'Systems Administrator',
+		salary: '103500',
+		start_date: '2009/02/27',
+		office: 'London',
+		rating: '6733'
+	},
+	{
+		name: 'Jonas Alexander',
+		position: 'Developer',
+		salary: '86500',
+		start_date: '2010/07/14',
+		office: 'San Francisco',
+		rating: '8196'
+	},
+	{
+		name: 'Shad Decker',
+		position: 'Regional Director',
+		salary: '183000',
+		start_date: '2008/11/13',
+		office: 'Edinburgh',
+		rating: '6373'
+	},
+	{
+		name: 'Michael Bruce',
+		position: 'Javascript Developer',
+		salary: '183000',
+		start_date: '2011/06/27',
+		office: 'Argentina',
+		rating: '5384'
+	},
+	{
+		name: 'Donna Snider',
+		position: 'Customer Support',
+		salary: '112000',
+		start_date: '2011/01/25',
+		office: 'New York',
+		rating: '4226'
+	}
+];
+
+new DataTable('#example', {
+	columns: [
+		{
+			data: 'name'
+		},
+		{
+			data: 'position'
+		},
+		{
+			className: 'f32', // used by world-flags-sprite library
+			data: 'office',
+			render: function (data, type) {
+				if (type === 'display') {
+					var country = '';
+
+					switch (data) {
+						case 'Argentina':
+							country = 'ar';
+							break;
+						case 'Edinburgh':
+							country = '_Scotland';
+							break;
+						case 'London':
+							country = '_England';
+							break;
+						case 'New York':
+						case 'San Francisco':
+							country = 'us';
+							break;
+						case 'Sydney':
+							country = 'au';
+							break;
+						case 'Tokyo':
+							country = 'jp';
+							break;
+					}
+
+					return '<span class="flag ' + country + '"></span> ' + data;
+				}
+
+				return data;
+			}
+		},
+		{
+			data: 'rating',
+			searchBuilder: {
+				orthogonal: {
+					display: 'filter'
+				}
+			},
+			render: function (data, type, row, meta) {
+				return type === 'display'
+					? '<progress title="' +
+							data +
+							'" value="' +
+							data +
+							'" max="9999"></progress>'
+					: data;
+			}
+		},
+		{
+			data: 'start_date'
+		},
+		{
+			data: 'salary',
+			render: $.fn.dataTable.render.number(',', '.', 2, '$')
+		}
+	],
+	data: data,
+	layout: {
+		top1: 'searchBuilder'
+	}
+});
+
+
+
+
+		}
+	});
+	</script>
+</head>
+<body class="dt-example">
+	<div class="container">
+		<section>
+			<h1>SearchBuilder example <span>Using Orthogonal Data</span></h1>
+			<div class="info">
+				<p>This example shows how <a href="//datatables.net/reference/option/SearchBuilder"><code class="option" title=
+				"DataTables initialisation option">SearchBuilder</code></a> can make use of orthogonal data.</p>
+				<p>The "Rating" column renders a progress bar depending on the value that it holds. SearchBuilder is unable to display progress bars in it's <code class="tag"
+				title="HTML tag">select</code> elements. By setting <a href="//datatables.net/reference/option/columns.searchBuilder.orthogonal"><code class="option" title=
+				"DataTables initialisation option">columns.searchBuilder.orthogonal</code></a> to have an <code>orthogonal.display</code> value of <code>'filter'</code>, the raw
+				numerical data is displayed instead.</p>
+			</div>
+			<div class="demo-html">
+				<table id="example" class="display nowrap" width="100%">
+					<thead>
+						<tr>
+							<th>Name</th>
+							<th>Position</th>
+							<th>Office</th>
+							<th>Rating</th>
+							<th>Start date</th>
+							<th>Salary</th>
+						</tr>
+					</thead>
+					<tfoot>
+						<tr>
+							<th>Name</th>
+							<th>Position</th>
+							<th>Office</th>
+							<th>Rating</th>
+							<th>Start date</th>
+							<th>Salary</th>
+						</tr>
+					</tfoot>
+					<tbody></tbody>
+				</table>
+			</div>
+			<ul class="dt-tabs">
+				<li class="active">JavaScript</li>
+				<li>HTML</li>
+				<li>CSS</li>
+				<li>Ajax</li>
+				<li>Server-side script</li>
+			</ul>
+			<div class="dt-tabs">
+				<div class="js">
+					<p>The JavaScript shown below is used to initialise the table shown in this example:</p>
+					<div id="js-jquery">
+						<code class="multiline language-js">var data = [
+	{
+		name: &#039;Tiger Nixon&#039;,
+		position: &#039;System Architect&#039;,
+		salary: &#039;320800&#039;,
+		start_date: &#039;2011/04/25&#039;,
+		office: &#039;Edinburgh&#039;,
+		rating: &#039;5421&#039;
+	},
+	{
+		name: &#039;Garrett Winters&#039;,
+		position: &#039;Accountant&#039;,
+		salary: &#039;170750&#039;,
+		start_date: &#039;2011/07/25&#039;,
+		office: &#039;Tokyo&#039;,
+		rating: &#039;8422&#039;
+	},
+	{
+		name: &#039;Ashton Cox&#039;,
+		position: &#039;Junior Technical Author&#039;,
+		salary: &#039;86000&#039;,
+		start_date: &#039;2009/01/12&#039;,
+		office: &#039;San Francisco&#039;,
+		rating: &#039;1562&#039;
+	},
+	{
+		name: &#039;Cedric Kelly&#039;,
+		position: &#039;Senior Javascript Developer&#039;,
+		salary: &#039;433060&#039;,
+		start_date: &#039;2012/03/29&#039;,
+		office: &#039;Edinburgh&#039;,
+		rating: &#039;6224&#039;
+	},
+	{
+		name: &#039;Airi Satou&#039;,
+		position: &#039;Accountant&#039;,
+		salary: &#039;162700&#039;,
+		start_date: &#039;2008/11/28&#039;,
+		office: &#039;Tokyo&#039;,
+		rating: &#039;5407&#039;
+	},
+	{
+		name: &#039;Brielle Williamson&#039;,
+		position: &#039;Integration Specialist&#039;,
+		salary: &#039;372000&#039;,
+		start_date: &#039;2012/12/02&#039;,
+		office: &#039;New York&#039;,
+		rating: &#039;4804&#039;
+	},
+	{
+		name: &#039;Herrod Chandler&#039;,
+		position: &#039;Sales Assistant&#039;,
+		salary: &#039;137500&#039;,
+		start_date: &#039;2012/08/06&#039;,
+		office: &#039;San Francisco&#039;,
+		rating: &#039;9608&#039;
+	},
+	{
+		name: &#039;Rhona Davidson&#039;,
+		position: &#039;Integration Specialist&#039;,
+		salary: &#039;327900&#039;,
+		start_date: &#039;2010/10/14&#039;,
+		office: &#039;Tokyo&#039;,
+		rating: &#039;6200&#039;
+	},
+	{
+		name: &#039;Colleen Hurst&#039;,
+		position: &#039;Javascript Developer&#039;,
+		salary: &#039;205500&#039;,
+		start_date: &#039;2009/09/15&#039;,
+		office: &#039;San Francisco&#039;,
+		rating: &#039;2360&#039;
+	},
+	{
+		name: &#039;Sonya Frost&#039;,
+		position: &#039;Software Engineer&#039;,
+		salary: &#039;103600&#039;,
+		start_date: &#039;2008/12/13&#039;,
+		office: &#039;Edinburgh&#039;,
+		rating: &#039;1667&#039;
+	},
+	{
+		name: &#039;Jena Gaines&#039;,
+		position: &#039;Office Manager&#039;,
+		salary: &#039;90560&#039;,
+		start_date: &#039;2008/12/19&#039;,
+		office: &#039;London&#039;,
+		rating: &#039;3814&#039;
+	},
+	{
+		name: &#039;Quinn Flynn&#039;,
+		position: &#039;Support Lead&#039;,
+		salary: &#039;342000&#039;,
+		start_date: &#039;2013/03/03&#039;,
+		office: &#039;Edinburgh&#039;,
+		rating: &#039;9497&#039;
+	},
+	{
+		name: &#039;Charde Marshall&#039;,
+		position: &#039;Regional Director&#039;,
+		salary: &#039;470600&#039;,
+		start_date: &#039;2008/10/16&#039;,
+		office: &#039;San Francisco&#039;,
+		rating: &#039;6741&#039;
+	},
+	{
+		name: &#039;Haley Kennedy&#039;,
+		position: &#039;Senior Marketing Designer&#039;,
+		salary: &#039;313500&#039;,
+		start_date: &#039;2012/12/18&#039;,
+		office: &#039;London&#039;,
+		rating: &#039;3597&#039;
+	},
+	{
+		name: &#039;Tatyana Fitzpatrick&#039;,
+		position: &#039;Regional Director&#039;,
+		salary: &#039;385750&#039;,
+		start_date: &#039;2010/03/17&#039;,
+		office: &#039;London&#039;,
+		rating: &#039;1965&#039;
+	},
+	{
+		name: &#039;Michael Silva&#039;,
+		position: &#039;Marketing Designer&#039;,
+		salary: &#039;198500&#039;,
+		start_date: &#039;2012/11/27&#039;,
+		office: &#039;London&#039;,
+		rating: &#039;1581&#039;
+	},
+	{
+		name: &#039;Paul Byrd&#039;,
+		position: &#039;Chief Financial Officer (CFO)&#039;,
+		salary: &#039;725000&#039;,
+		start_date: &#039;2010/06/09&#039;,
+		office: &#039;New York&#039;,
+		rating: &#039;3059&#039;
+	},
+	{
+		name: &#039;Gloria Little&#039;,
+		position: &#039;Systems Administrator&#039;,
+		salary: &#039;237500&#039;,
+		start_date: &#039;2009/04/10&#039;,
+		office: &#039;New York&#039;,
+		rating: &#039;1721&#039;
+	},
+	{
+		name: &#039;Bradley Greer&#039;,
+		position: &#039;Software Engineer&#039;,
+		salary: &#039;132000&#039;,
+		start_date: &#039;2012/10/13&#039;,
+		office: &#039;London&#039;,
+		rating: &#039;2558&#039;
+	},
+	{
+		name: &#039;Dai Rios&#039;,
+		position: &#039;Personnel Lead&#039;,
+		salary: &#039;217500&#039;,
+		start_date: &#039;2012/09/26&#039;,
+		office: &#039;Edinburgh&#039;,
+		rating: &#039;2290&#039;
+	},
+	{
+		name: &#039;Jenette Caldwell&#039;,
+		position: &#039;Development Lead&#039;,
+		salary: &#039;345000&#039;,
+		start_date: &#039;2011/09/03&#039;,
+		office: &#039;New York&#039;,
+		rating: &#039;1937&#039;
+	},
+	{
+		name: &#039;Yuri Berry&#039;,
+		position: &#039;Chief Marketing Officer (CMO)&#039;,
+		salary: &#039;675000&#039;,
+		start_date: &#039;2009/06/25&#039;,
+		office: &#039;New York&#039;,
+		rating: &#039;6154&#039;
+	},
+	{
+		name: &#039;Caesar Vance&#039;,
+		position: &#039;Pre-Sales Support&#039;,
+		salary: &#039;106450&#039;,
+		start_date: &#039;2011/12/12&#039;,
+		office: &#039;New York&#039;,
+		rating: &#039;8330&#039;
+	},
+	{
+		name: &#039;Doris Wilder&#039;,
+		position: &#039;Sales Assistant&#039;,
+		salary: &#039;85600&#039;,
+		start_date: &#039;2010/09/20&#039;,
+		office: &#039;Sydney&#039;,
+		rating: &#039;3023&#039;
+	},
+	{
+		name: &#039;Angelica Ramos&#039;,
+		position: &#039;Chief Executive Officer (CEO)&#039;,
+		salary: &#039;1200000&#039;,
+		start_date: &#039;2009/10/09&#039;,
+		office: &#039;London&#039;,
+		rating: &#039;5797&#039;
+	},
+	{
+		name: &#039;Gavin Joyce&#039;,
+		position: &#039;Developer&#039;,
+		salary: &#039;92575&#039;,
+		start_date: &#039;2010/12/22&#039;,
+		office: &#039;Edinburgh&#039;,
+		rating: &#039;8822&#039;
+	},
+	{
+		name: &#039;Jennifer Chang&#039;,
+		position: &#039;Regional Director&#039;,
+		salary: &#039;357650&#039;,
+		start_date: &#039;2010/11/14&#039;,
+		office: &#039;Argentina&#039;,
+		rating: &#039;9239&#039;
+	},
+	{
+		name: &#039;Brenden Wagner&#039;,
+		position: &#039;Software Engineer&#039;,
+		salary: &#039;206850&#039;,
+		start_date: &#039;2011/06/07&#039;,
+		office: &#039;San Francisco&#039;,
+		rating: &#039;1314&#039;
+	},
+	{
+		name: &#039;Fiona Green&#039;,
+		position: &#039;Chief Operating Officer (COO)&#039;,
+		salary: &#039;850000&#039;,
+		start_date: &#039;2010/03/11&#039;,
+		office: &#039;San Francisco&#039;,
+		rating: &#039;2947&#039;
+	},
+	{
+		name: &#039;Shou Itou&#039;,
+		position: &#039;Regional Marketing&#039;,
+		salary: &#039;163000&#039;,
+		start_date: &#039;2011/08/14&#039;,
+		office: &#039;Tokyo&#039;,
+		rating: &#039;8899&#039;
+	},
+	{
+		name: &#039;Michelle House&#039;,
+		position: &#039;Integration Specialist&#039;,
+		salary: &#039;95400&#039;,
+		start_date: &#039;2011/06/02&#039;,
+		office: &#039;Sydney&#039;,
+		rating: &#039;2769&#039;
+	},
+	{
+		name: &#039;Suki Burks&#039;,
+		position: &#039;Developer&#039;,
+		salary: &#039;114500&#039;,
+		start_date: &#039;2009/10/22&#039;,
+		office: &#039;London&#039;,
+		rating: &#039;6832&#039;
+	},
+	{
+		name: &#039;Prescott Bartlett&#039;,
+		position: &#039;Technical Author&#039;,
+		salary: &#039;145000&#039;,
+		start_date: &#039;2011/05/07&#039;,
+		office: &#039;London&#039;,
+		rating: &#039;3606&#039;
+	},
+	{
+		name: &#039;Gavin Cortez&#039;,
+		position: &#039;Team Leader&#039;,
+		salary: &#039;235500&#039;,
+		start_date: &#039;2008/10/26&#039;,
+		office: &#039;San Francisco&#039;,
+		rating: &#039;2860&#039;
+	},
+	{
+		name: &#039;Martena Mccray&#039;,
+		position: &#039;Post-Sales support&#039;,
+		salary: &#039;324050&#039;,
+		start_date: &#039;2011/03/09&#039;,
+		office: &#039;Edinburgh&#039;,
+		rating: &#039;8240&#039;
+	},
+	{
+		name: &#039;Unity Butler&#039;,
+		position: &#039;Marketing Designer&#039;,
+		salary: &#039;85675&#039;,
+		start_date: &#039;2009/12/09&#039;,
+		office: &#039;San Francisco&#039;,
+		rating: &#039;5384&#039;
+	},
+	{
+		name: &#039;Howard Hatfield&#039;,
+		position: &#039;Office Manager&#039;,
+		salary: &#039;164500&#039;,
+		start_date: &#039;2008/12/16&#039;,
+		office: &#039;San Francisco&#039;,
+		rating: &#039;7031&#039;
+	},
+	{
+		name: &#039;Hope Fuentes&#039;,
+		position: &#039;Secretary&#039;,
+		salary: &#039;109850&#039;,
+		start_date: &#039;2010/02/12&#039;,
+		office: &#039;San Francisco&#039;,
+		rating: &#039;6318&#039;
+	},
+	{
+		name: &#039;Vivian Harrell&#039;,
+		position: &#039;Financial Controller&#039;,
+		salary: &#039;452500&#039;,
+		start_date: &#039;2009/02/14&#039;,
+		office: &#039;San Francisco&#039;,
+		rating: &#039;9422&#039;
+	},
+	{
+		name: &#039;Timothy Mooney&#039;,
+		position: &#039;Office Manager&#039;,
+		salary: &#039;136200&#039;,
+		start_date: &#039;2008/12/11&#039;,
+		office: &#039;London&#039;,
+		rating: &#039;7580&#039;
+	},
+	{
+		name: &#039;Jackson Bradshaw&#039;,
+		position: &#039;Director&#039;,
+		salary: &#039;645750&#039;,
+		start_date: &#039;2008/09/26&#039;,
+		office: &#039;New York&#039;,
+		rating: &#039;1042&#039;
+	},
+	{
+		name: &#039;Olivia Liang&#039;,
+		position: &#039;Support Engineer&#039;,
+		salary: &#039;234500&#039;,
+		start_date: &#039;2011/02/03&#039;,
+		office: &#039;Argentina&#039;,
+		rating: &#039;2120&#039;
+	},
+	{
+		name: &#039;Bruno Nash&#039;,
+		position: &#039;Software Engineer&#039;,
+		salary: &#039;163500&#039;,
+		start_date: &#039;2011/05/03&#039;,
+		office: &#039;London&#039;,
+		rating: &#039;6222&#039;
+	},
+	{
+		name: &#039;Sakura Yamamoto&#039;,
+		position: &#039;Support Engineer&#039;,
+		salary: &#039;139575&#039;,
+		start_date: &#039;2009/08/19&#039;,
+		office: &#039;Tokyo&#039;,
+		rating: &#039;9383&#039;
+	},
+	{
+		name: &#039;Thor Walton&#039;,
+		position: &#039;Developer&#039;,
+		salary: &#039;98540&#039;,
+		start_date: &#039;2013/08/11&#039;,
+		office: &#039;New York&#039;,
+		rating: &#039;8327&#039;
+	},
+	{
+		name: &#039;Finn Camacho&#039;,
+		position: &#039;Support Engineer&#039;,
+		salary: &#039;87500&#039;,
+		start_date: &#039;2009/07/07&#039;,
+		office: &#039;San Francisco&#039;,
+		rating: &#039;2927&#039;
+	},
+	{
+		name: &#039;Serge Baldwin&#039;,
+		position: &#039;Data Coordinator&#039;,
+		salary: &#039;138575&#039;,
+		start_date: &#039;2012/04/09&#039;,
+		office: &#039;Argentina&#039;,
+		rating: &#039;8352&#039;
+	},
+	{
+		name: &#039;Zenaida Frank&#039;,
+		position: &#039;Software Engineer&#039;,
+		salary: &#039;125250&#039;,
+		start_date: &#039;2010/01/04&#039;,
+		office: &#039;New York&#039;,
+		rating: &#039;7439&#039;
+	},
+	{
+		name: &#039;Zorita Serrano&#039;,
+		position: &#039;Software Engineer&#039;,
+		salary: &#039;115000&#039;,
+		start_date: &#039;2012/06/01&#039;,
+		office: &#039;San Francisco&#039;,
+		rating: &#039;4389&#039;
+	},
+	{
+		name: &#039;Jennifer Acosta&#039;,
+		position: &#039;Junior Javascript Developer&#039;,
+		salary: &#039;75650&#039;,
+		start_date: &#039;2013/02/01&#039;,
+		office: &#039;Edinburgh&#039;,
+		rating: &#039;3431&#039;
+	},
+	{
+		name: &#039;Cara Stevens&#039;,
+		position: &#039;Sales Assistant&#039;,
+		salary: &#039;145600&#039;,
+		start_date: &#039;2011/12/06&#039;,
+		office: &#039;New York&#039;,
+		rating: &#039;3990&#039;
+	},
+	{
+		name: &#039;Hermione Butler&#039;,
+		position: &#039;Regional Director&#039;,
+		salary: &#039;356250&#039;,
+		start_date: &#039;2011/03/21&#039;,
+		office: &#039;London&#039;,
+		rating: &#039;1016&#039;
+	},
+	{
+		name: &#039;Lael Greer&#039;,
+		position: &#039;Systems Administrator&#039;,
+		salary: &#039;103500&#039;,
+		start_date: &#039;2009/02/27&#039;,
+		office: &#039;London&#039;,
+		rating: &#039;6733&#039;
+	},
+	{
+		name: &#039;Jonas Alexander&#039;,
+		position: &#039;Developer&#039;,
+		salary: &#039;86500&#039;,
+		start_date: &#039;2010/07/14&#039;,
+		office: &#039;San Francisco&#039;,
+		rating: &#039;8196&#039;
+	},
+	{
+		name: &#039;Shad Decker&#039;,
+		position: &#039;Regional Director&#039;,
+		salary: &#039;183000&#039;,
+		start_date: &#039;2008/11/13&#039;,
+		office: &#039;Edinburgh&#039;,
+		rating: &#039;6373&#039;
+	},
+	{
+		name: &#039;Michael Bruce&#039;,
+		position: &#039;Javascript Developer&#039;,
+		salary: &#039;183000&#039;,
+		start_date: &#039;2011/06/27&#039;,
+		office: &#039;Argentina&#039;,
+		rating: &#039;5384&#039;
+	},
+	{
+		name: &#039;Donna Snider&#039;,
+		position: &#039;Customer Support&#039;,
+		salary: &#039;112000&#039;,
+		start_date: &#039;2011/01/25&#039;,
+		office: &#039;New York&#039;,
+		rating: &#039;4226&#039;
+	}
+];
+
+$(&#039;#example&#039;).DataTable({
+	columns: [
+		{
+			data: &#039;name&#039;
+		},
+		{
+			data: &#039;position&#039;
+		},
+		{
+			className: &#039;f32&#039;, // used by world-flags-sprite library
+			data: &#039;office&#039;,
+			render: function (data, type) {
+				if (type === &#039;display&#039;) {
+					var country = &#039;&#039;;
+
+					switch (data) {
+						case &#039;Argentina&#039;:
+							country = &#039;ar&#039;;
+							break;
+						case &#039;Edinburgh&#039;:
+							country = &#039;_Scotland&#039;;
+							break;
+						case &#039;London&#039;:
+							country = &#039;_England&#039;;
+							break;
+						case &#039;New York&#039;:
+						case &#039;San Francisco&#039;:
+							country = &#039;us&#039;;
+							break;
+						case &#039;Sydney&#039;:
+							country = &#039;au&#039;;
+							break;
+						case &#039;Tokyo&#039;:
+							country = &#039;jp&#039;;
+							break;
+					}
+
+					return &#039;&lt;span class=&quot;flag &#039; + country + &#039;&quot;&gt;&lt;/span&gt; &#039; + data;
+				}
+
+				return data;
+			}
+		},
+		{
+			data: &#039;rating&#039;,
+			searchBuilder: {
+				orthogonal: {
+					display: &#039;filter&#039;
+				}
+			},
+			render: function (data, type, row, meta) {
+				return type === &#039;display&#039;
+					? &#039;&lt;progress title=&quot;&#039; +
+							data +
+							&#039;&quot; value=&quot;&#039; +
+							data +
+							&#039;&quot; max=&quot;9999&quot;&gt;&lt;/progress&gt;&#039;
+					: data;
+			}
+		},
+		{
+			data: &#039;start_date&#039;
+		},
+		{
+			data: &#039;salary&#039;,
+			render: $.fn.dataTable.render.number(&#039;,&#039;, &#039;.&#039;, 2, &#039;$&#039;)
+		}
+	],
+	data: data,
+	layout: {
+		top1: &#039;searchBuilder&#039;
+	}
+});</code>
+					</div>
+					<div id="js-vanilla">
+						<code class="multiline language-js">var data = [
+	{
+		name: &#039;Tiger Nixon&#039;,
+		position: &#039;System Architect&#039;,
+		salary: &#039;320800&#039;,
+		start_date: &#039;2011/04/25&#039;,
+		office: &#039;Edinburgh&#039;,
+		rating: &#039;5421&#039;
+	},
+	{
+		name: &#039;Garrett Winters&#039;,
+		position: &#039;Accountant&#039;,
+		salary: &#039;170750&#039;,
+		start_date: &#039;2011/07/25&#039;,
+		office: &#039;Tokyo&#039;,
+		rating: &#039;8422&#039;
+	},
+	{
+		name: &#039;Ashton Cox&#039;,
+		position: &#039;Junior Technical Author&#039;,
+		salary: &#039;86000&#039;,
+		start_date: &#039;2009/01/12&#039;,
+		office: &#039;San Francisco&#039;,
+		rating: &#039;1562&#039;
+	},
+	{
+		name: &#039;Cedric Kelly&#039;,
+		position: &#039;Senior Javascript Developer&#039;,
+		salary: &#039;433060&#039;,
+		start_date: &#039;2012/03/29&#039;,
+		office: &#039;Edinburgh&#039;,
+		rating: &#039;6224&#039;
+	},
+	{
+		name: &#039;Airi Satou&#039;,
+		position: &#039;Accountant&#039;,
+		salary: &#039;162700&#039;,
+		start_date: &#039;2008/11/28&#039;,
+		office: &#039;Tokyo&#039;,
+		rating: &#039;5407&#039;
+	},
+	{
+		name: &#039;Brielle Williamson&#039;,
+		position: &#039;Integration Specialist&#039;,
+		salary: &#039;372000&#039;,
+		start_date: &#039;2012/12/02&#039;,
+		office: &#039;New York&#039;,
+		rating: &#039;4804&#039;
+	},
+	{
+		name: &#039;Herrod Chandler&#039;,
+		position: &#039;Sales Assistant&#039;,
+		salary: &#039;137500&#039;,
+		start_date: &#039;2012/08/06&#039;,
+		office: &#039;San Francisco&#039;,
+		rating: &#039;9608&#039;
+	},
+	{
+		name: &#039;Rhona Davidson&#039;,
+		position: &#039;Integration Specialist&#039;,
+		salary: &#039;327900&#039;,
+		start_date: &#039;2010/10/14&#039;,
+		office: &#039;Tokyo&#039;,
+		rating: &#039;6200&#039;
+	},
+	{
+		name: &#039;Colleen Hurst&#039;,
+		position: &#039;Javascript Developer&#039;,
+		salary: &#039;205500&#039;,
+		start_date: &#039;2009/09/15&#039;,
+		office: &#039;San Francisco&#039;,
+		rating: &#039;2360&#039;
+	},
+	{
+		name: &#039;Sonya Frost&#039;,
+		position: &#039;Software Engineer&#039;,
+		salary: &#039;103600&#039;,
+		start_date: &#039;2008/12/13&#039;,
+		office: &#039;Edinburgh&#039;,
+		rating: &#039;1667&#039;
+	},
+	{
+		name: &#039;Jena Gaines&#039;,
+		position: &#039;Office Manager&#039;,
+		salary: &#039;90560&#039;,
+		start_date: &#039;2008/12/19&#039;,
+		office: &#039;London&#039;,
+		rating: &#039;3814&#039;
+	},
+	{
+		name: &#039;Quinn Flynn&#039;,
+		position: &#039;Support Lead&#039;,
+		salary: &#039;342000&#039;,
+		start_date: &#039;2013/03/03&#039;,
+		office: &#039;Edinburgh&#039;,
+		rating: &#039;9497&#039;
+	},
+	{
+		name: &#039;Charde Marshall&#039;,
+		position: &#039;Regional Director&#039;,
+		salary: &#039;470600&#039;,
+		start_date: &#039;2008/10/16&#039;,
+		office: &#039;San Francisco&#039;,
+		rating: &#039;6741&#039;
+	},
+	{
+		name: &#039;Haley Kennedy&#039;,
+		position: &#039;Senior Marketing Designer&#039;,
+		salary: &#039;313500&#039;,
+		start_date: &#039;2012/12/18&#039;,
+		office: &#039;London&#039;,
+		rating: &#039;3597&#039;
+	},
+	{
+		name: &#039;Tatyana Fitzpatrick&#039;,
+		position: &#039;Regional Director&#039;,
+		salary: &#039;385750&#039;,
+		start_date: &#039;2010/03/17&#039;,
+		office: &#039;London&#039;,
+		rating: &#039;1965&#039;
+	},
+	{
+		name: &#039;Michael Silva&#039;,
+		position: &#039;Marketing Designer&#039;,
+		salary: &#039;198500&#039;,
+		start_date: &#039;2012/11/27&#039;,
+		office: &#039;London&#039;,
+		rating: &#039;1581&#039;
+	},
+	{
+		name: &#039;Paul Byrd&#039;,
+		position: &#039;Chief Financial Officer (CFO)&#039;,
+		salary: &#039;725000&#039;,
+		start_date: &#039;2010/06/09&#039;,
+		office: &#039;New York&#039;,
+		rating: &#039;3059&#039;
+	},
+	{
+		name: &#039;Gloria Little&#039;,
+		position: &#039;Systems Administrator&#039;,
+		salary: &#039;237500&#039;,
+		start_date: &#039;2009/04/10&#039;,
+		office: &#039;New York&#039;,
+		rating: &#039;1721&#039;
+	},
+	{
+		name: &#039;Bradley Greer&#039;,
+		position: &#039;Software Engineer&#039;,
+		salary: &#039;132000&#039;,
+		start_date: &#039;2012/10/13&#039;,
+		office: &#039;London&#039;,
+		rating: &#039;2558&#039;
+	},
+	{
+		name: &#039;Dai Rios&#039;,
+		position: &#039;Personnel Lead&#039;,
+		salary: &#039;217500&#039;,
+		start_date: &#039;2012/09/26&#039;,
+		office: &#039;Edinburgh&#039;,
+		rating: &#039;2290&#039;
+	},
+	{
+		name: &#039;Jenette Caldwell&#039;,
+		position: &#039;Development Lead&#039;,
+		salary: &#039;345000&#039;,
+		start_date: &#039;2011/09/03&#039;,
+		office: &#039;New York&#039;,
+		rating: &#039;1937&#039;
+	},
+	{
+		name: &#039;Yuri Berry&#039;,
+		position: &#039;Chief Marketing Officer (CMO)&#039;,
+		salary: &#039;675000&#039;,
+		start_date: &#039;2009/06/25&#039;,
+		office: &#039;New York&#039;,
+		rating: &#039;6154&#039;
+	},
+	{
+		name: &#039;Caesar Vance&#039;,
+		position: &#039;Pre-Sales Support&#039;,
+		salary: &#039;106450&#039;,
+		start_date: &#039;2011/12/12&#039;,
+		office: &#039;New York&#039;,
+		rating: &#039;8330&#039;
+	},
+	{
+		name: &#039;Doris Wilder&#039;,
+		position: &#039;Sales Assistant&#039;,
+		salary: &#039;85600&#039;,
+		start_date: &#039;2010/09/20&#039;,
+		office: &#039;Sydney&#039;,
+		rating: &#039;3023&#039;
+	},
+	{
+		name: &#039;Angelica Ramos&#039;,
+		position: &#039;Chief Executive Officer (CEO)&#039;,
+		salary: &#039;1200000&#039;,
+		start_date: &#039;2009/10/09&#039;,
+		office: &#039;London&#039;,
+		rating: &#039;5797&#039;
+	},
+	{
+		name: &#039;Gavin Joyce&#039;,
+		position: &#039;Developer&#039;,
+		salary: &#039;92575&#039;,
+		start_date: &#039;2010/12/22&#039;,
+		office: &#039;Edinburgh&#039;,
+		rating: &#039;8822&#039;
+	},
+	{
+		name: &#039;Jennifer Chang&#039;,
+		position: &#039;Regional Director&#039;,
+		salary: &#039;357650&#039;,
+		start_date: &#039;2010/11/14&#039;,
+		office: &#039;Argentina&#039;,
+		rating: &#039;9239&#039;
+	},
+	{
+		name: &#039;Brenden Wagner&#039;,
+		position: &#039;Software Engineer&#039;,
+		salary: &#039;206850&#039;,
+		start_date: &#039;2011/06/07&#039;,
+		office: &#039;San Francisco&#039;,
+		rating: &#039;1314&#039;
+	},
+	{
+		name: &#039;Fiona Green&#039;,
+		position: &#039;Chief Operating Officer (COO)&#039;,
+		salary: &#039;850000&#039;,
+		start_date: &#039;2010/03/11&#039;,
+		office: &#039;San Francisco&#039;,
+		rating: &#039;2947&#039;
+	},
+	{
+		name: &#039;Shou Itou&#039;,
+		position: &#039;Regional Marketing&#039;,
+		salary: &#039;163000&#039;,
+		start_date: &#039;2011/08/14&#039;,
+		office: &#039;Tokyo&#039;,
+		rating: &#039;8899&#039;
+	},
+	{
+		name: &#039;Michelle House&#039;,
+		position: &#039;Integration Specialist&#039;,
+		salary: &#039;95400&#039;,
+		start_date: &#039;2011/06/02&#039;,
+		office: &#039;Sydney&#039;,
+		rating: &#039;2769&#039;
+	},
+	{
+		name: &#039;Suki Burks&#039;,
+		position: &#039;Developer&#039;,
+		salary: &#039;114500&#039;,
+		start_date: &#039;2009/10/22&#039;,
+		office: &#039;London&#039;,
+		rating: &#039;6832&#039;
+	},
+	{
+		name: &#039;Prescott Bartlett&#039;,
+		position: &#039;Technical Author&#039;,
+		salary: &#039;145000&#039;,
+		start_date: &#039;2011/05/07&#039;,
+		office: &#039;London&#039;,
+		rating: &#039;3606&#039;
+	},
+	{
+		name: &#039;Gavin Cortez&#039;,
+		position: &#039;Team Leader&#039;,
+		salary: &#039;235500&#039;,
+		start_date: &#039;2008/10/26&#039;,
+		office: &#039;San Francisco&#039;,
+		rating: &#039;2860&#039;
+	},
+	{
+		name: &#039;Martena Mccray&#039;,
+		position: &#039;Post-Sales support&#039;,
+		salary: &#039;324050&#039;,
+		start_date: &#039;2011/03/09&#039;,
+		office: &#039;Edinburgh&#039;,
+		rating: &#039;8240&#039;
+	},
+	{
+		name: &#039;Unity Butler&#039;,
+		position: &#039;Marketing Designer&#039;,
+		salary: &#039;85675&#039;,
+		start_date: &#039;2009/12/09&#039;,
+		office: &#039;San Francisco&#039;,
+		rating: &#039;5384&#039;
+	},
+	{
+		name: &#039;Howard Hatfield&#039;,
+		position: &#039;Office Manager&#039;,
+		salary: &#039;164500&#039;,
+		start_date: &#039;2008/12/16&#039;,
+		office: &#039;San Francisco&#039;,
+		rating: &#039;7031&#039;
+	},
+	{
+		name: &#039;Hope Fuentes&#039;,
+		position: &#039;Secretary&#039;,
+		salary: &#039;109850&#039;,
+		start_date: &#039;2010/02/12&#039;,
+		office: &#039;San Francisco&#039;,
+		rating: &#039;6318&#039;
+	},
+	{
+		name: &#039;Vivian Harrell&#039;,
+		position: &#039;Financial Controller&#039;,
+		salary: &#039;452500&#039;,
+		start_date: &#039;2009/02/14&#039;,
+		office: &#039;San Francisco&#039;,
+		rating: &#039;9422&#039;
+	},
+	{
+		name: &#039;Timothy Mooney&#039;,
+		position: &#039;Office Manager&#039;,
+		salary: &#039;136200&#039;,
+		start_date: &#039;2008/12/11&#039;,
+		office: &#039;London&#039;,
+		rating: &#039;7580&#039;
+	},
+	{
+		name: &#039;Jackson Bradshaw&#039;,
+		position: &#039;Director&#039;,
+		salary: &#039;645750&#039;,
+		start_date: &#039;2008/09/26&#039;,
+		office: &#039;New York&#039;,
+		rating: &#039;1042&#039;
+	},
+	{
+		name: &#039;Olivia Liang&#039;,
+		position: &#039;Support Engineer&#039;,
+		salary: &#039;234500&#039;,
+		start_date: &#039;2011/02/03&#039;,
+		office: &#039;Argentina&#039;,
+		rating: &#039;2120&#039;
+	},
+	{
+		name: &#039;Bruno Nash&#039;,
+		position: &#039;Software Engineer&#039;,
+		salary: &#039;163500&#039;,
+		start_date: &#039;2011/05/03&#039;,
+		office: &#039;London&#039;,
+		rating: &#039;6222&#039;
+	},
+	{
+		name: &#039;Sakura Yamamoto&#039;,
+		position: &#039;Support Engineer&#039;,
+		salary: &#039;139575&#039;,
+		start_date: &#039;2009/08/19&#039;,
+		office: &#039;Tokyo&#039;,
+		rating: &#039;9383&#039;
+	},
+	{
+		name: &#039;Thor Walton&#039;,
+		position: &#039;Developer&#039;,
+		salary: &#039;98540&#039;,
+		start_date: &#039;2013/08/11&#039;,
+		office: &#039;New York&#039;,
+		rating: &#039;8327&#039;
+	},
+	{
+		name: &#039;Finn Camacho&#039;,
+		position: &#039;Support Engineer&#039;,
+		salary: &#039;87500&#039;,
+		start_date: &#039;2009/07/07&#039;,
+		office: &#039;San Francisco&#039;,
+		rating: &#039;2927&#039;
+	},
+	{
+		name: &#039;Serge Baldwin&#039;,
+		position: &#039;Data Coordinator&#039;,
+		salary: &#039;138575&#039;,
+		start_date: &#039;2012/04/09&#039;,
+		office: &#039;Argentina&#039;,
+		rating: &#039;8352&#039;
+	},
+	{
+		name: &#039;Zenaida Frank&#039;,
+		position: &#039;Software Engineer&#039;,
+		salary: &#039;125250&#039;,
+		start_date: &#039;2010/01/04&#039;,
+		office: &#039;New York&#039;,
+		rating: &#039;7439&#039;
+	},
+	{
+		name: &#039;Zorita Serrano&#039;,
+		position: &#039;Software Engineer&#039;,
+		salary: &#039;115000&#039;,
+		start_date: &#039;2012/06/01&#039;,
+		office: &#039;San Francisco&#039;,
+		rating: &#039;4389&#039;
+	},
+	{
+		name: &#039;Jennifer Acosta&#039;,
+		position: &#039;Junior Javascript Developer&#039;,
+		salary: &#039;75650&#039;,
+		start_date: &#039;2013/02/01&#039;,
+		office: &#039;Edinburgh&#039;,
+		rating: &#039;3431&#039;
+	},
+	{
+		name: &#039;Cara Stevens&#039;,
+		position: &#039;Sales Assistant&#039;,
+		salary: &#039;145600&#039;,
+		start_date: &#039;2011/12/06&#039;,
+		office: &#039;New York&#039;,
+		rating: &#039;3990&#039;
+	},
+	{
+		name: &#039;Hermione Butler&#039;,
+		position: &#039;Regional Director&#039;,
+		salary: &#039;356250&#039;,
+		start_date: &#039;2011/03/21&#039;,
+		office: &#039;London&#039;,
+		rating: &#039;1016&#039;
+	},
+	{
+		name: &#039;Lael Greer&#039;,
+		position: &#039;Systems Administrator&#039;,
+		salary: &#039;103500&#039;,
+		start_date: &#039;2009/02/27&#039;,
+		office: &#039;London&#039;,
+		rating: &#039;6733&#039;
+	},
+	{
+		name: &#039;Jonas Alexander&#039;,
+		position: &#039;Developer&#039;,
+		salary: &#039;86500&#039;,
+		start_date: &#039;2010/07/14&#039;,
+		office: &#039;San Francisco&#039;,
+		rating: &#039;8196&#039;
+	},
+	{
+		name: &#039;Shad Decker&#039;,
+		position: &#039;Regional Director&#039;,
+		salary: &#039;183000&#039;,
+		start_date: &#039;2008/11/13&#039;,
+		office: &#039;Edinburgh&#039;,
+		rating: &#039;6373&#039;
+	},
+	{
+		name: &#039;Michael Bruce&#039;,
+		position: &#039;Javascript Developer&#039;,
+		salary: &#039;183000&#039;,
+		start_date: &#039;2011/06/27&#039;,
+		office: &#039;Argentina&#039;,
+		rating: &#039;5384&#039;
+	},
+	{
+		name: &#039;Donna Snider&#039;,
+		position: &#039;Customer Support&#039;,
+		salary: &#039;112000&#039;,
+		start_date: &#039;2011/01/25&#039;,
+		office: &#039;New York&#039;,
+		rating: &#039;4226&#039;
+	}
+];
+
+new DataTable(&#039;#example&#039;, {
+	columns: [
+		{
+			data: &#039;name&#039;
+		},
+		{
+			data: &#039;position&#039;
+		},
+		{
+			className: &#039;f32&#039;, // used by world-flags-sprite library
+			data: &#039;office&#039;,
+			render: function (data, type) {
+				if (type === &#039;display&#039;) {
+					var country = &#039;&#039;;
+
+					switch (data) {
+						case &#039;Argentina&#039;:
+							country = &#039;ar&#039;;
+							break;
+						case &#039;Edinburgh&#039;:
+							country = &#039;_Scotland&#039;;
+							break;
+						case &#039;London&#039;:
+							country = &#039;_England&#039;;
+							break;
+						case &#039;New York&#039;:
+						case &#039;San Francisco&#039;:
+							country = &#039;us&#039;;
+							break;
+						case &#039;Sydney&#039;:
+							country = &#039;au&#039;;
+							break;
+						case &#039;Tokyo&#039;:
+							country = &#039;jp&#039;;
+							break;
+					}
+
+					return &#039;&lt;span class=&quot;flag &#039; + country + &#039;&quot;&gt;&lt;/span&gt; &#039; + data;
+				}
+
+				return data;
+			}
+		},
+		{
+			data: &#039;rating&#039;,
+			searchBuilder: {
+				orthogonal: {
+					display: &#039;filter&#039;
+				}
+			},
+			render: function (data, type, row, meta) {
+				return type === &#039;display&#039;
+					? &#039;&lt;progress title=&quot;&#039; +
+							data +
+							&#039;&quot; value=&quot;&#039; +
+							data +
+							&#039;&quot; max=&quot;9999&quot;&gt;&lt;/progress&gt;&#039;
+					: data;
+			}
+		},
+		{
+			data: &#039;start_date&#039;
+		},
+		{
+			data: &#039;salary&#039;,
+			render: $.fn.dataTable.render.number(&#039;,&#039;, &#039;.&#039;, 2, &#039;$&#039;)
+		}
+	],
+	data: data,
+	layout: {
+		top1: &#039;searchBuilder&#039;
+	}
+});</code>
+					</div>
+					<p>In addition to the above code, the following JavaScript library files are loaded for use in this example:</p>
+					<ul id="js-lib-files"></ul>
+				</div>
+				<div class="table">
+					<p>The HTML shown below is the raw HTML table element, before it has been enhanced by DataTables:</p>
+				</div>
+				<div class="css">
+					<div>
+						<p>This example uses a little bit of additional CSS beyond what is loaded from the library files (below), in order to correctly display the table. The
+						additional CSS used is shown below:</p><code class="multiline language-css">td.f32 .flag {
+	vertical-align: middle;
+}</code>
+					</div>
+					<p>The following CSS library files are loaded for use in this example to provide the styling of the table:</p>
+					<ul id="css-lib-files"></ul>
+				</div>
+				<div class="ajax">
+					<p>This table loads data by Ajax. The latest data that has been loaded is shown below. This data will update automatically as any additional data is
+					loaded.</p>
+				</div>
+				<div class="php">
+					<p>The script used to perform the server-side processing for this table is shown below. Please note that this is just an example script using PHP. Server-side
+					processing scripts can be written in any language, using <a href="//datatables.net/manual/server-side">the protocol described in the DataTables
+					documentation</a>.</p>
+				</div>
+			</div>
+		</section>
+	</div>
+	<section>
+		<div class="footer">
+			<div class="gradient"></div>
+			<div class="liner">
+				<h2>Other examples</h2>
+				<div class="toc">
+					<div class="toc-group">
+						<h3><a href="../performance/index.html">Performance</a></h3>
+						<ul class="toc">
+							<li>
+								<a href="../performance/searchBuilder5k.html">5k rows</a>
+							</li>
+							<li>
+								<a href="../performance/searchBuilder50k.html">50k rows</a>
+							</li>
+						</ul>
+					</div>
+					<div class="toc-group">
+						<h3><a href="../initialisation/index.html">Initialisation and options</a></h3>
+						<ul class="toc">
+							<li>
+								<a href="../initialisation/simple.html">Basic Initialisation</a>
+							</li>
+							<li>
+								<a href="../initialisation/api.html">API Initialisation</a>
+							</li>
+							<li>
+								<a href="../initialisation/button.html">Button Initialisation</a>
+							</li>
+							<li>
+								<a href="../initialisation/buttonOptions.html">SearchBuilder Configuration using Buttons</a>
+							</li>
+							<li>
+								<a href="../initialisation/num-fmt.html">Formatted Numbers</a>
+							</li>
+							<li>
+								<a href="../initialisation/date-fmt.html">Formatted dates with Moment.js</a>
+							</li>
+							<li>
+								<a href="../initialisation/date.html">Dates - auto locale formatting</a>
+							</li>
+							<li>
+								<a href="../initialisation/date-fmt-luxon.html">Formatted dates with Luxon</a>
+							</li>
+							<li>
+								<a href="../initialisation/logic.html">Default Logic</a>
+							</li>
+							<li>
+								<a href="../initialisation/columns.html">Restrict Filtering to Certain Columns</a>
+							</li>
+							<li>
+								<a href="../initialisation/depthLimit.html">Limit Sub-Group Depth</a>
+							</li>
+							<li>
+								<a href="../initialisation/preDefined.html">Predefined Search</a>
+							</li>
+							<li>
+								<a href="../initialisation/emptyCells.html">Interaction with Empty Cells</a>
+							</li>
+							<li>
+								<a href="../initialisation/returnSearch.html">Force Search on Enter</a>
+							</li>
+							<li>
+								<a href="../initialisation/html.html">HTML Format</a>
+							</li>
+							<li>
+								<a href="../initialisation/renderedCells.html">Interaction with Rendered Cells</a>
+							</li>
+							<li>
+								<a href="../initialisation/unknownType.html">Unknown Column Type</a>
+							</li>
+							<li>
+								<a href="../initialisation/searchButton.html">Search on button</a>
+							</li>
+							<li>
+								<a href="../initialisation/i18n.html">Internationalisation</a>
+							</li>
+						</ul>
+					</div>
+					<div class="toc-group">
+						<h3><a href="../api/index.html">API demonstrations</a></h3>
+						<ul class="toc">
+							<li>
+								<a href="../api/rebuild.html">Rebuild Demonstration</a>
+							</li>
+						</ul>
+					</div>
+					<div class="toc-group">
+						<h3><a href="./index.html">Customisation</a></h3>
+						<ul class="toc active">
+							<li>
+								<a href="./customTitle.html">Custom Title</a>
+							</li>
+							<li>
+								<a href="./defaultCondition.html">Default Condition</a>
+							</li>
+							<li>
+								<a href="./buttonText.html">SearchBuilder Button Text</a>
+							</li>
+							<li>
+								<a href="./language.html">Language Options</a>
+							</li>
+							<li>
+								<a href="./renderArrays.html">Rendering Arrays</a>
+							</li>
+							<li>
+								<a href="./customConditions.html">Custom Conditions</a>
+							</li>
+							<li>
+								<a href="./customMultiple.html">Custom Multiple Of Condition</a>
+							</li>
+							<li class="active">
+								<a href="./orthogonal.html">Using Orthogonal Data</a>
+							</li>
+							<li>
+								<a href="./plugin.html">Plug-in Example</a>
+							</li>
+						</ul>
+					</div>
+					<div class="toc-group">
+						<h3><a href="../styling/index.html">Styling</a></h3>
+						<ul class="toc">
+							<li>
+								<a href="../styling/greyscale.html">Grey scale</a>
+							</li>
+							<li>
+								<a href="../styling/bootstrap3.html">Bootstrap 3</a>
+							</li>
+							<li>
+								<a href="../styling/bootstrap4.html">Bootstrap 4</a>
+							</li>
+							<li>
+								<a href="../styling/bootstrap5.html">Bootstrap 5</a>
+							</li>
+							<li>
+								<a href="../styling/bulma.html">Bulma</a>
+							</li>
+							<li>
+								<a href="../styling/foundation.html">Foundation</a>
+							</li>
+							<li>
+								<a href="../styling/jqueryui.html">jQuery UI styling</a>
+							</li>
+							<li>
+								<a href="../styling/semanticui.html">Fomantic-UI (formally Semantic-UI) styling</a>
+							</li>
+						</ul>
+					</div>
+					<div class="toc-group">
+						<h3><a href="../integration/index.html">Integration</a></h3>
+						<ul class="toc">
+							<li>
+								<a href="../integration/statesave.html">StateSave Integration</a>
+							</li>
+							<li>
+								<a href="../integration/buttons.html">Buttons integration</a>
+							</li>
+							<li>
+								<a href="../integration/colReorder.html">ColReorder Integration</a>
+							</li>
+							<li>
+								<a href="../integration/searchPanes.html">SearchPanes Integration</a>
+							</li>
+							<li>
+								<a href="../integration/searchPanesCascadeViewTotal.html">SearchPanes, CascadePanes and ViewTotal Integration</a>
+							</li>
+						</ul>
+					</div>
+				</div>
+				<div class="epilogue">
+					<p>Please refer to the <a href="https://www.datatables.net">DataTables documentation</a> for full information about its API properties and methods.<br>
+					Additionally, there are a wide range of <a href="https://www.datatables.net/extensions">extensions</a> and <a href=
+					"https://www.datatables.net/plug-ins">plug-ins</a> which extend the capabilities of DataTables.</p>
+					<p class="copyright">DataTables designed and created by <a href="https://www.sprymedia.co.uk">SpryMedia Ltd</a> © 2007-2025<br>
+					DataTables is licensed under the <a href="https://www.datatables.net/mit">MIT license</a>.</p>
+				</div>
+			</div>
+		</div>
+	</section>
+</body>
+</html>

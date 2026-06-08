@@ -1,0 +1,784 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<link rel="shortcut icon" type="image/ico" href="https://www.datatables.net/favicon.ico">
+	<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1.0, user-scalable=no">
+	<title>SearchBuilder example - HTML Format</title>
+	<link rel="stylesheet" type="text/css" href="../../../../examples/resources/syntax/shCore.css">
+	<link rel="stylesheet" type="text/css" href="../../../../examples/resources/demo.css">
+	<style type="text/css" class="init">
+	
+    .old {
+        color: red;
+    }
+    .middleaged {
+        color: blue;
+    }
+    .young {
+        color: green;
+    }
+
+	</style>
+	<script type="text/javascript" language="javascript" src="../../../../examples/resources/syntax/shCore.js"></script>
+	<script type="text/javascript" language="javascript" src="../../../../examples/resources/demo.js"></script>
+	<script defer class="init">
+	dt_demo.init({
+		libs: {"targetFramework":"","js":["jquery","datatables","searchbuilder","datetime"],"css":["datatables","searchbuilder","datetime"],"components":{"datatables":{"css":"..\/..\/..\/..\/css","js":"..\/..\/..\/..\/js","resolve":true},"autofill":{"css":"..\/..\/..\/..\/..\/extensions\/AutoFill\/css","js":"..\/..\/..\/..\/..\/extensions\/AutoFill\/js","resolve":true},"buttons":{"css":"..\/..\/..\/..\/..\/extensions\/Buttons\/css","js":"..\/..\/..\/..\/..\/extensions\/Buttons\/js","resolve":true},"colreorder":{"css":"..\/..\/..\/..\/..\/extensions\/ColReorder\/css","js":"..\/..\/..\/..\/..\/extensions\/ColReorder\/js","resolve":true},"columncontrol":{"css":"..\/..\/..\/..\/..\/extensions\/ColumnControl\/css","js":"..\/..\/..\/..\/..\/extensions\/ColumnControl\/js","resolve":true},"editor":{"css":"..\/..\/css","js":"..\/..\/js","resolve":true},"fixedcolumns":{"css":"..\/..\/..\/..\/..\/extensions\/FixedColumns\/css","js":"..\/..\/..\/..\/..\/extensions\/FixedColumns\/js","resolve":true},"fixedheader":{"css":"..\/..\/..\/..\/..\/extensions\/FixedHeader\/css","js":"..\/..\/..\/..\/..\/extensions\/FixedHeader\/js","resolve":true},"keytable":{"css":"..\/..\/..\/..\/..\/extensions\/KeyTable\/css","js":"..\/..\/..\/..\/..\/extensions\/KeyTable\/js","resolve":true},"responsive":{"css":"..\/..\/..\/..\/..\/extensions\/Responsive\/css","js":"..\/..\/..\/..\/..\/extensions\/Responsive\/js","resolve":true},"rowgroup":{"css":"..\/..\/..\/..\/..\/extensions\/RowGroup\/css","js":"..\/..\/..\/..\/..\/extensions\/RowGroup\/js","resolve":true},"rowreorder":{"css":"..\/..\/..\/..\/..\/extensions\/RowReorder\/css","js":"..\/..\/..\/..\/..\/extensions\/RowReorder\/js","resolve":true},"scroller":{"css":"..\/..\/..\/..\/..\/extensions\/Scroller\/css","js":"..\/..\/..\/..\/..\/extensions\/Scroller\/js","resolve":true},"select":{"css":"..\/..\/..\/..\/..\/extensions\/Select\/css","js":"..\/..\/..\/..\/..\/extensions\/Select\/js","resolve":true},"searchbuilder":{"css":"..\/..\/..\/..\/..\/extensions\/SearchBuilder\/css","js":"..\/..\/..\/..\/..\/extensions\/SearchBuilder\/js","resolve":true},"searchpanes":{"css":"..\/..\/..\/..\/..\/extensions\/SearchPanes\/css","js":"..\/..\/..\/..\/..\/extensions\/SearchPanes\/js","resolve":true},"staterestore":{"css":"..\/..\/..\/..\/..\/extensions\/StateRestore\/css","js":"..\/..\/..\/..\/..\/extensions\/StateRestore\/js","resolve":true},"datetime":{"css":"..\/..\/..\/..\/..\/extensions\/DateTime\/css\/dataTables.dateTime.css","js":"..\/..\/..\/..\/..\/extensions\/DateTime\/js\/dataTables.dateTime.js"},"bootstrap":{"css":"https:\/\/maxcdn.bootstrapcdn.com\/bootstrap\/3.3.7\/css\/bootstrap.min.css","js":"https:\/\/maxcdn.bootstrapcdn.com\/bootstrap\/3.3.7\/js\/bootstrap.min.js"},"bootstrap4":{"css":"https:\/\/cdnjs.cloudflare.com\/ajax\/libs\/twitter-bootstrap\/4.5.2\/css\/bootstrap.css","js":"https:\/\/cdnjs.cloudflare.com\/ajax\/libs\/popper.js\/1.14.3\/umd\/popper.min.js|https:\/\/cdnjs.cloudflare.com\/ajax\/libs\/twitter-bootstrap\/4.5.2\/js\/bootstrap.min.js"},"bootstrap5":{"css":"https:\/\/cdnjs.cloudflare.com\/ajax\/libs\/twitter-bootstrap\/5.3.3\/css\/bootstrap.min.css","js":"https:\/\/cdnjs.cloudflare.com\/ajax\/libs\/twitter-bootstrap\/5.3.3\/js\/bootstrap.bundle.min.js"},"bulma":{"css":"https:\/\/cdnjs.cloudflare.com\/ajax\/libs\/bulma\/1.0.3\/css\/bulma.min.css"},"foundation":{"css":"https:\/\/cdnjs.cloudflare.com\/ajax\/libs\/foundation\/6.4.3\/css\/foundation.min.css","js":"https:\/\/cdnjs.cloudflare.com\/ajax\/libs\/foundation\/6.4.3\/js\/foundation.min.js"},"jqueryui":{"css":"https:\/\/code.jquery.com\/ui\/1.13.2\/themes\/base\/jquery-ui.css","js":"https:\/\/code.jquery.com\/ui\/1.13.2\/jquery-ui.js"},"material":{"css":"https:\/\/cdnjs.cloudflare.com\/ajax\/libs\/material-components-web\/14.0.0\/material-components-web.min.css","js":"https:\/\/cdnjs.cloudflare.com\/ajax\/libs\/material-components-web\/14.0.0\/material-components-web.min.js"},"semanticui":{"css":"https:\/\/cdnjs.cloudflare.com\/ajax\/libs\/fomantic-ui\/2.9.2\/semantic.min.css","js":"https:\/\/cdnjs.cloudflare.com\/ajax\/libs\/fomantic-ui\/2.9.2\/semantic.min.js"},"uikit":{"css":"https:\/\/cdnjs.cloudflare.com\/ajax\/libs\/uikit\/3.0.2\/css\/uikit.min.css","js":"https:\/\/cdnjs.cloudflare.com\/ajax\/libs\/uikit\/3.0.2\/js\/uikit.min.js"},"tailwindcss":{"css":"","js":"https:\/\/cdn.tailwindcss.com"},"font-awesome":{"css":"https:\/\/cdnjs.cloudflare.com\/ajax\/libs\/font-awesome\/4.7.0\/css\/font-awesome.min.css"},"world-flags-sprite":{"css":"https:\/\/cdn.jsdelivr.net\/gh\/lafeber\/world-flags-sprite\/stylesheets\/flags32-both.css"},"demo":{"css":"..\/..\/..\/..\/examples\/resources\/demo.css","js":"..\/..\/..\/..\/examples\/resources\/demo.js"},"syntax":{"css":"..\/..\/..\/..\/examples\/resources\/syntax\/shCore.css","js":"..\/..\/..\/..\/examples\/resources\/syntax\/shCore.js"},"buttons-html5":{"js":"..\/..\/..\/..\/..\/extensions\/Buttons\/js\/buttons.html5.js"},"buttons-print":{"js":"..\/..\/..\/..\/..\/extensions\/Buttons\/js\/buttons.print.js"},"buttons-colvis":{"js":"..\/..\/..\/..\/..\/extensions\/Buttons\/js\/buttons.colVis.js"},"jquery":{"js":"https:\/\/code.jquery.com\/jquery-3.7.1.js"},"jszip":{"js":"https:\/\/cdnjs.cloudflare.com\/ajax\/libs\/jszip\/3.10.1\/jszip.min.js"},"pdfmake":{"js":"https:\/\/cdnjs.cloudflare.com\/ajax\/libs\/pdfmake\/0.2.7\/pdfmake.min.js"},"vfsfonts":{"js":"https:\/\/cdnjs.cloudflare.com\/ajax\/libs\/pdfmake\/0.2.7\/vfs_fonts.js"},"moment":{"js":"https:\/\/cdnjs.cloudflare.com\/ajax\/libs\/moment.js\/2.30.1\/moment.min.js"},"luxon":{"js":"https:\/\/cdnjs.cloudflare.com\/ajax\/libs\/luxon\/3.6.1\/luxon.min.js"},"sparkline":{"js":"https:\/\/cdn.jsdelivr.net\/gh\/fnando\/sparkline\/dist\/sparkline.js"}}},
+		jquery: function () {
+				
+
+
+$('#example').DataTable({
+	layout: {
+		top1: 'searchBuilder'
+	}
+});
+
+
+
+		},
+		vanilla: function () {
+				
+
+
+new DataTable('#example', {
+	layout: {
+		top1: 'searchBuilder'
+	}
+});
+
+
+
+		}
+	});
+	</script>
+</head>
+<body class="dt-example">
+	<div class="container">
+		<section>
+			<h1>SearchBuilder example <span>HTML Format</span></h1>
+			<div class="info">
+				<p>This example shows the behaviour of SearchBuilder with columns of type <code>html</code> which is present in the age column.</p>
+			</div>
+			<div class="demo-html">
+				<table id="example" class="display nowrap">
+					<thead>
+						<tr>
+							<th>Name</th>
+							<th>Position</th>
+							<th>Office</th>
+							<th>Age</th>
+							<th>Start Date</th>
+							<th>Salary</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr>
+							<td>Tiger Nixon</td>
+							<td>System Architect</td>
+							<td><span>Edinburgh</span></td>
+							<td><span class="old">61</span></td>
+							<td>2011-04-25</td>
+							<td><span>$320,800.00</span></td>
+						</tr>
+						<tr>
+							<td>Garrett Winters</td>
+							<td>Accountant</td>
+							<td><span>Tokyo</span></td>
+							<td><span class="old">63</span></td>
+							<td>2011-07-25</td>
+							<td><span>$170,750.00</span></td>
+						</tr>
+						<tr>
+							<td>Ashton Cox</td>
+							<td>Junior Technical Author</td>
+							<td><span>San Francisco</span></td>
+							<td><span class="old">66</span></td>
+							<td>2009-01-12</td>
+							<td><span>$86,000.00</span></td>
+						</tr>
+						<tr>
+							<td>Cedric Kelly</td>
+							<td>Senior JavaScript Developer</td>
+							<td><span>Edinburgh</span></td>
+							<td><span class="young">22</span></td>
+							<td>2012-03-29</td>
+							<td><span>$433,060.00</span></td>
+						</tr>
+						<tr>
+							<td>Airi Satou</td>
+							<td>Accountant</td>
+							<td><span>Tokyo</span></td>
+							<td><span class="young">33</span></td>
+							<td>2008-11-28</td>
+							<td><span>$162,700.00</span></td>
+						</tr>
+						<tr>
+							<td>Brielle Williamson</td>
+							<td>Integration Specialist</td>
+							<td><span>New York</span></td>
+							<td><span class="old">61</span></td>
+							<td>2012-12-02</td>
+							<td><span>$372,000.00</span></td>
+						</tr>
+						<tr>
+							<td>Herrod Chandler</td>
+							<td>Sales Assistant</td>
+							<td><span>San Francisco</span></td>
+							<td><span class="old">59</span></td>
+							<td>2012-08-06</td>
+							<td><span>$137,500.00</span></td>
+						</tr>
+						<tr>
+							<td>Rhona Davidson</td>
+							<td>Integration Specialist</td>
+							<td><span>Tokyo</span></td>
+							<td><span class="old">55</span></td>
+							<td>2010-10-14</td>
+							<td><span>$327,900.00</span></td>
+						</tr>
+						<tr>
+							<td>Colleen Hurst</td>
+							<td>JavaScript Developer</td>
+							<td><span>San Francisco</span></td>
+							<td><span class="middle-aged">39</span></td>
+							<td>2009-09-15</td>
+							<td><span>$205,500.00</span></td>
+						</tr>
+						<tr>
+							<td>Sonya Frost</td>
+							<td>Software Engineer</td>
+							<td><span>Edinburgh</span></td>
+							<td><span class="young">23</span></td>
+							<td>2008-12-13</td>
+							<td><span>$103,600.00</span></td>
+						</tr>
+						<tr>
+							<td>Jena Gaines</td>
+							<td>Office Manager</td>
+							<td><span>London</span></td>
+							<td><span class="young">30</span></td>
+							<td>2008-12-19</td>
+							<td><span>$90,560.00</span></td>
+						</tr>
+						<tr>
+							<td>Quinn Flynn</td>
+							<td>Support Lead</td>
+							<td><span>Edinburgh</span></td>
+							<td><span class="young">22</span></td>
+							<td>2013-03-03</td>
+							<td><span>$342,000.00</span></td>
+						</tr>
+						<tr>
+							<td>Charde Marshall</td>
+							<td>Regional Director</td>
+							<td><span>San Francisco</span></td>
+							<td><span class="middle-aged">36</span></td>
+							<td>2008-10-16</td>
+							<td><span>$470,600.00</span></td>
+						</tr>
+						<tr>
+							<td>Haley Kennedy</td>
+							<td>Senior Marketing Designer</td>
+							<td><span>London</span></td>
+							<td><span class="middle-aged">43</span></td>
+							<td>2012-12-18</td>
+							<td><span>$313,500.00</span></td>
+						</tr>
+						<tr>
+							<td>Tatyana Fitzpatrick</td>
+							<td>Regional Director</td>
+							<td><span>London</span></td>
+							<td><span class="young">19</span></td>
+							<td>2010-03-17</td>
+							<td><span>$385,750.00</span></td>
+						</tr>
+						<tr>
+							<td>Michael Silva</td>
+							<td>Marketing Designer</td>
+							<td><span>London</span></td>
+							<td><span class="old">66</span></td>
+							<td>2012-11-27</td>
+							<td><span>$198,500.00</span></td>
+						</tr>
+						<tr>
+							<td>Paul Byrd</td>
+							<td>Chief Financial Officer (CFO)</td>
+							<td><span>New York</span></td>
+							<td><span class="old">64</span></td>
+							<td>2010-06-09</td>
+							<td><span>$725,000.00</span></td>
+						</tr>
+						<tr>
+							<td>Gloria Little</td>
+							<td>Systems Administrator</td>
+							<td><span>New York</span></td>
+							<td><span class="old">59</span></td>
+							<td>2009-04-10</td>
+							<td><span>$237,500.00</span></td>
+						</tr>
+						<tr>
+							<td>Bradley Greer</td>
+							<td>Software Engineer</td>
+							<td><span>London</span></td>
+							<td><span class="middle-aged">41</span></td>
+							<td>2012-10-13</td>
+							<td><span>$132,000.00</span></td>
+						</tr>
+						<tr>
+							<td>Dai Rios</td>
+							<td>Personnel Lead</td>
+							<td><span>Edinburgh</span></td>
+							<td><span class="middle-aged">35</span></td>
+							<td>2012-09-26</td>
+							<td><span>$217,500.00</span></td>
+						</tr>
+						<tr>
+							<td>Jenette Caldwell</td>
+							<td>Development Lead</td>
+							<td><span>New York</span></td>
+							<td><span class="young">30</span></td>
+							<td>2011-09-03</td>
+							<td><span>$345,000.00</span></td>
+						</tr>
+						<tr>
+							<td>Yuri Berry</td>
+							<td>Chief Marketing Officer (CMO)</td>
+							<td><span>New York</span></td>
+							<td><span class="middle-aged">40</span></td>
+							<td>2009-06-25</td>
+							<td><span>$675,000.00</span></td>
+						</tr>
+						<tr>
+							<td>Caesar Vance</td>
+							<td>Pre-Sales Support</td>
+							<td><span>New York</span></td>
+							<td><span class="young">21</span></td>
+							<td>2011-12-12</td>
+							<td><span>$106,450.00</span></td>
+						</tr>
+						<tr>
+							<td>Doris Wilder</td>
+							<td>Sales Assistant</td>
+							<td><span>Sydney</span></td>
+							<td><span class="young">23</span></td>
+							<td>2010-09-20</td>
+							<td><span>$85,600.00</span></td>
+						</tr>
+						<tr>
+							<td>Angelica Ramos</td>
+							<td>Chief Executive Officer (CEO)</td>
+							<td><span>London</span></td>
+							<td><span class="middle-aged">47</span></td>
+							<td>2009-10-09</td>
+							<td><span>$1,200,000.00</span></td>
+						</tr>
+						<tr>
+							<td>Gavin Joyce</td>
+							<td>Developer</td>
+							<td><span>Edinburgh</span></td>
+							<td><span class="middle-aged">42</span></td>
+							<td>2010-12-22</td>
+							<td><span>$92,575.00</span></td>
+						</tr>
+						<tr>
+							<td>Jennifer Chang</td>
+							<td>Regional Director</td>
+							<td><span>Singapore</span></td>
+							<td><span class="young">28</span></td>
+							<td>2010-11-14</td>
+							<td><span>$357,650.00</span></td>
+						</tr>
+						<tr>
+							<td>Brenden Wagner</td>
+							<td>Software Engineer</td>
+							<td><span>San Francisco</span></td>
+							<td><span class="young">28</span></td>
+							<td>2011-06-07</td>
+							<td><span>$206,850.00</span></td>
+						</tr>
+						<tr>
+							<td>Fiona Green</td>
+							<td>Chief Operating Officer (COO)</td>
+							<td><span>San Francisco</span></td>
+							<td><span class="middle-aged">48</span></td>
+							<td>2010-03-11</td>
+							<td><span>$850,000.00</span></td>
+						</tr>
+						<tr>
+							<td>Shou Itou</td>
+							<td>Regional Marketing</td>
+							<td><span>Tokyo</span></td>
+							<td><span class="young">20</span></td>
+							<td>2011-08-14</td>
+							<td><span>$163,000.00</span></td>
+						</tr>
+						<tr>
+							<td>Michelle House</td>
+							<td>Integration Specialist</td>
+							<td><span>Sydney</span></td>
+							<td><span class="middle-aged">37</span></td>
+							<td>2011-06-02</td>
+							<td><span>$95,400.00</span></td>
+						</tr>
+						<tr>
+							<td>Suki Burks</td>
+							<td>Developer</td>
+							<td><span>London</span></td>
+							<td><span class="middle-aged">53</span></td>
+							<td>2009-10-22</td>
+							<td><span>$114,500.00</span></td>
+						</tr>
+						<tr>
+							<td>Prescott Bartlett</td>
+							<td>Technical Author</td>
+							<td><span>London</span></td>
+							<td><span class="young">27</span></td>
+							<td>2011-05-07</td>
+							<td><span>$145,000.00</span></td>
+						</tr>
+						<tr>
+							<td>Gavin Cortez</td>
+							<td>Team Leader</td>
+							<td><span>San Francisco</span></td>
+							<td><span class="young">22</span></td>
+							<td>2008-10-26</td>
+							<td><span>$235,500.00</span></td>
+						</tr>
+						<tr>
+							<td>Martena Mccray</td>
+							<td>Post-Sales support</td>
+							<td><span>Edinburgh</span></td>
+							<td><span class="middle-aged">46</span></td>
+							<td>2011-03-09</td>
+							<td><span>$324,050.00</span></td>
+						</tr>
+						<tr>
+							<td>Unity Butler</td>
+							<td>Marketing Designer</td>
+							<td><span>San Francisco</span></td>
+							<td><span class="middle-aged">47</span></td>
+							<td>2009-12-09</td>
+							<td><span>$85,675.00</span></td>
+						</tr>
+						<tr>
+							<td>Howard Hatfield</td>
+							<td>Office Manager</td>
+							<td><span>San Francisco</span></td>
+							<td><span class="middle-aged">51</span></td>
+							<td>2008-12-16</td>
+							<td><span>$164,500.00</span></td>
+						</tr>
+						<tr>
+							<td>Hope Fuentes</td>
+							<td>Secretary</td>
+							<td><span>San Francisco</span></td>
+							<td><span class="middle-aged">41</span></td>
+							<td>2010-02-12</td>
+							<td><span>$109,850.00</span></td>
+						</tr>
+						<tr>
+							<td>Vivian Harrell</td>
+							<td>Financial Controller</td>
+							<td><span>San Francisco</span></td>
+							<td><span class="old">62</span></td>
+							<td>2009-02-14</td>
+							<td><span>$452,500.00</span></td>
+						</tr>
+						<tr>
+							<td>Timothy Mooney</td>
+							<td>Office Manager</td>
+							<td><span>London</span></td>
+							<td><span class="middle-aged">37</span></td>
+							<td>2008-12-11</td>
+							<td><span>$136,200.00</span></td>
+						</tr>
+						<tr>
+							<td>Jackson Bradshaw</td>
+							<td>Director</td>
+							<td><span>New York</span></td>
+							<td><span class="old">65</span></td>
+							<td>2008-09-26</td>
+							<td><span>$645,750.00</span></td>
+						</tr>
+						<tr>
+							<td>Olivia Liang</td>
+							<td>Support Engineer</td>
+							<td><span>Singapore</span></td>
+							<td><span class="old">64</span></td>
+							<td>2011-02-03</td>
+							<td><span>$234,500.00</span></td>
+						</tr>
+						<tr>
+							<td>Bruno Nash</td>
+							<td>Software Engineer</td>
+							<td><span>London</span></td>
+							<td><span class="middle-aged">38</span></td>
+							<td>2011-05-03</td>
+							<td><span>$163,500.00</span></td>
+						</tr>
+						<tr>
+							<td>Sakura Yamamoto</td>
+							<td>Support Engineer</td>
+							<td><span>Tokyo</span></td>
+							<td><span class="middle-aged">37</span></td>
+							<td>2009-08-19</td>
+							<td><span>$139,575.00</span></td>
+						</tr>
+						<tr>
+							<td>Thor Walton</td>
+							<td>Developer</td>
+							<td><span>New York</span></td>
+							<td><span class="old">61</span></td>
+							<td>2013-08-11</td>
+							<td><span>$98,540.00</span></td>
+						</tr>
+						<tr>
+							<td>Finn Camacho</td>
+							<td>Support Engineer</td>
+							<td><span>San Francisco</span></td>
+							<td><span class="middle-aged">47</span></td>
+							<td>2009-07-07</td>
+							<td><span>$87,500.00</span></td>
+						</tr>
+						<tr>
+							<td>Serge Baldwin</td>
+							<td>Data Coordinator</td>
+							<td><span>Singapore</span></td>
+							<td><span class="old">64</span></td>
+							<td>2012-04-09</td>
+							<td><span>$138,575.00</span></td>
+						</tr>
+						<tr>
+							<td>Zenaida Frank</td>
+							<td>Software Engineer</td>
+							<td><span>New York</span></td>
+							<td><span class="old">63</span></td>
+							<td>2010-01-04</td>
+							<td><span>$125,250.00</span></td>
+						</tr>
+						<tr>
+							<td>Zorita Serrano</td>
+							<td>Software Engineer</td>
+							<td><span>San Francisco</span></td>
+							<td><span class="old">56</span></td>
+							<td>2012-06-01</td>
+							<td><span>$115,000.00</span></td>
+						</tr>
+						<tr>
+							<td>Jennifer Acosta</td>
+							<td>Junior JavaScript Developer</td>
+							<td><span>Edinburgh</span></td>
+							<td><span class="middle-aged">43</span></td>
+							<td>2013-02-01</td>
+							<td><span>$75,650.00</span></td>
+						</tr>
+						<tr>
+							<td>Cara Stevens</td>
+							<td>Sales Assistant</td>
+							<td><span>New York</span></td>
+							<td><span class="middle-aged">46</span></td>
+							<td>2011-12-06</td>
+							<td><span>$145,600.00</span></td>
+						</tr>
+						<tr>
+							<td>Hermione Butler</td>
+							<td>Regional Director</td>
+							<td><span>London</span></td>
+							<td><span class="middle-aged">47</span></td>
+							<td>2011-03-21</td>
+							<td><span>$356,250.00</span></td>
+						</tr>
+						<tr>
+							<td>Lael Greer</td>
+							<td>Systems Administrator</td>
+							<td><span>London</span></td>
+							<td><span class="young">21</span></td>
+							<td>2009-02-27</td>
+							<td><span>$103,500.00</span></td>
+						</tr>
+						<tr>
+							<td>Jonas Alexander</td>
+							<td>Developer</td>
+							<td><span>San Francisco</span></td>
+							<td><span class="young">30</span></td>
+							<td>2010-07-14</td>
+							<td><span>$86,500.00</span></td>
+						</tr>
+						<tr>
+							<td>Shad Decker</td>
+							<td>Regional Director</td>
+							<td><span>Edinburgh</span></td>
+							<td><span class="middle-aged">51</span></td>
+							<td>2008-11-13</td>
+							<td><span>$183,000.00</span></td>
+						</tr>
+						<tr>
+							<td>Michael Bruce</td>
+							<td>JavaScript Developer</td>
+							<td><span>Singapore</span></td>
+							<td><span class="young">29</span></td>
+							<td>2011-06-27</td>
+							<td><span>$183,000.00</span></td>
+						</tr>
+						<tr>
+							<td>Donna Snider</td>
+							<td>Customer Support</td>
+							<td><span>New York</span></td>
+							<td><span class="young">27</span></td>
+							<td>2011-01-25</td>
+							<td><span>$112,000.00</span></td>
+						</tr>
+					</tbody>
+					<tfoot>
+						<tr>
+							<th>Name</th>
+							<th>Position</th>
+							<th>Office</th>
+							<th>Age</th>
+							<th>Start Date</th>
+							<th>Salary</th>
+						</tr>
+					</tfoot>
+				</table>
+			</div>
+			<ul class="dt-tabs">
+				<li class="active">JavaScript</li>
+				<li>HTML</li>
+				<li>CSS</li>
+				<li>Ajax</li>
+				<li>Server-side script</li>
+			</ul>
+			<div class="dt-tabs">
+				<div class="js">
+					<p>The JavaScript shown below is used to initialise the table shown in this example:</p>
+					<div id="js-jquery">
+						<code class="multiline language-js">$(&#039;#example&#039;).DataTable({
+	layout: {
+		top1: &#039;searchBuilder&#039;
+	}
+});</code>
+					</div>
+					<div id="js-vanilla">
+						<code class="multiline language-js">new DataTable(&#039;#example&#039;, {
+	layout: {
+		top1: &#039;searchBuilder&#039;
+	}
+});</code>
+					</div>
+					<p>In addition to the above code, the following JavaScript library files are loaded for use in this example:</p>
+					<ul id="js-lib-files"></ul>
+				</div>
+				<div class="table">
+					<p>The HTML shown below is the raw HTML table element, before it has been enhanced by DataTables:</p>
+				</div>
+				<div class="css">
+					<div>
+						<p>This example uses a little bit of additional CSS beyond what is loaded from the library files (below), in order to correctly display the table. The
+						additional CSS used is shown below:</p><code class="multiline language-css">.old {
+        color: red;
+    }
+    .middleaged {
+        color: blue;
+    }
+    .young {
+        color: green;
+    }</code>
+					</div>
+					<p>The following CSS library files are loaded for use in this example to provide the styling of the table:</p>
+					<ul id="css-lib-files"></ul>
+				</div>
+				<div class="ajax">
+					<p>This table loads data by Ajax. The latest data that has been loaded is shown below. This data will update automatically as any additional data is
+					loaded.</p>
+				</div>
+				<div class="php">
+					<p>The script used to perform the server-side processing for this table is shown below. Please note that this is just an example script using PHP. Server-side
+					processing scripts can be written in any language, using <a href="//datatables.net/manual/server-side">the protocol described in the DataTables
+					documentation</a>.</p>
+				</div>
+			</div>
+		</section>
+	</div>
+	<section>
+		<div class="footer">
+			<div class="gradient"></div>
+			<div class="liner">
+				<h2>Other examples</h2>
+				<div class="toc">
+					<div class="toc-group">
+						<h3><a href="../performance/index.html">Performance</a></h3>
+						<ul class="toc">
+							<li>
+								<a href="../performance/searchBuilder5k.html">5k rows</a>
+							</li>
+							<li>
+								<a href="../performance/searchBuilder50k.html">50k rows</a>
+							</li>
+						</ul>
+					</div>
+					<div class="toc-group">
+						<h3><a href="./index.html">Initialisation and options</a></h3>
+						<ul class="toc active">
+							<li>
+								<a href="./simple.html">Basic Initialisation</a>
+							</li>
+							<li>
+								<a href="./api.html">API Initialisation</a>
+							</li>
+							<li>
+								<a href="./button.html">Button Initialisation</a>
+							</li>
+							<li>
+								<a href="./buttonOptions.html">SearchBuilder Configuration using Buttons</a>
+							</li>
+							<li>
+								<a href="./num-fmt.html">Formatted Numbers</a>
+							</li>
+							<li>
+								<a href="./date-fmt.html">Formatted dates with Moment.js</a>
+							</li>
+							<li>
+								<a href="./date.html">Dates - auto locale formatting</a>
+							</li>
+							<li>
+								<a href="./date-fmt-luxon.html">Formatted dates with Luxon</a>
+							</li>
+							<li>
+								<a href="./logic.html">Default Logic</a>
+							</li>
+							<li>
+								<a href="./columns.html">Restrict Filtering to Certain Columns</a>
+							</li>
+							<li>
+								<a href="./depthLimit.html">Limit Sub-Group Depth</a>
+							</li>
+							<li>
+								<a href="./preDefined.html">Predefined Search</a>
+							</li>
+							<li>
+								<a href="./emptyCells.html">Interaction with Empty Cells</a>
+							</li>
+							<li>
+								<a href="./returnSearch.html">Force Search on Enter</a>
+							</li>
+							<li class="active">
+								<a href="./html.html">HTML Format</a>
+							</li>
+							<li>
+								<a href="./renderedCells.html">Interaction with Rendered Cells</a>
+							</li>
+							<li>
+								<a href="./unknownType.html">Unknown Column Type</a>
+							</li>
+							<li>
+								<a href="./searchButton.html">Search on button</a>
+							</li>
+							<li>
+								<a href="./i18n.html">Internationalisation</a>
+							</li>
+						</ul>
+					</div>
+					<div class="toc-group">
+						<h3><a href="../api/index.html">API demonstrations</a></h3>
+						<ul class="toc">
+							<li>
+								<a href="../api/rebuild.html">Rebuild Demonstration</a>
+							</li>
+						</ul>
+					</div>
+					<div class="toc-group">
+						<h3><a href="../customisation/index.html">Customisation</a></h3>
+						<ul class="toc">
+							<li>
+								<a href="../customisation/customTitle.html">Custom Title</a>
+							</li>
+							<li>
+								<a href="../customisation/defaultCondition.html">Default Condition</a>
+							</li>
+							<li>
+								<a href="../customisation/buttonText.html">SearchBuilder Button Text</a>
+							</li>
+							<li>
+								<a href="../customisation/language.html">Language Options</a>
+							</li>
+							<li>
+								<a href="../customisation/renderArrays.html">Rendering Arrays</a>
+							</li>
+							<li>
+								<a href="../customisation/customConditions.html">Custom Conditions</a>
+							</li>
+							<li>
+								<a href="../customisation/customMultiple.html">Custom Multiple Of Condition</a>
+							</li>
+							<li>
+								<a href="../customisation/orthogonal.html">Using Orthogonal Data</a>
+							</li>
+							<li>
+								<a href="../customisation/plugin.html">Plug-in Example</a>
+							</li>
+						</ul>
+					</div>
+					<div class="toc-group">
+						<h3><a href="../styling/index.html">Styling</a></h3>
+						<ul class="toc">
+							<li>
+								<a href="../styling/greyscale.html">Grey scale</a>
+							</li>
+							<li>
+								<a href="../styling/bootstrap3.html">Bootstrap 3</a>
+							</li>
+							<li>
+								<a href="../styling/bootstrap4.html">Bootstrap 4</a>
+							</li>
+							<li>
+								<a href="../styling/bootstrap5.html">Bootstrap 5</a>
+							</li>
+							<li>
+								<a href="../styling/bulma.html">Bulma</a>
+							</li>
+							<li>
+								<a href="../styling/foundation.html">Foundation</a>
+							</li>
+							<li>
+								<a href="../styling/jqueryui.html">jQuery UI styling</a>
+							</li>
+							<li>
+								<a href="../styling/semanticui.html">Fomantic-UI (formally Semantic-UI) styling</a>
+							</li>
+						</ul>
+					</div>
+					<div class="toc-group">
+						<h3><a href="../integration/index.html">Integration</a></h3>
+						<ul class="toc">
+							<li>
+								<a href="../integration/statesave.html">StateSave Integration</a>
+							</li>
+							<li>
+								<a href="../integration/buttons.html">Buttons integration</a>
+							</li>
+							<li>
+								<a href="../integration/colReorder.html">ColReorder Integration</a>
+							</li>
+							<li>
+								<a href="../integration/searchPanes.html">SearchPanes Integration</a>
+							</li>
+							<li>
+								<a href="../integration/searchPanesCascadeViewTotal.html">SearchPanes, CascadePanes and ViewTotal Integration</a>
+							</li>
+						</ul>
+					</div>
+				</div>
+				<div class="epilogue">
+					<p>Please refer to the <a href="https://www.datatables.net">DataTables documentation</a> for full information about its API properties and methods.<br>
+					Additionally, there are a wide range of <a href="https://www.datatables.net/extensions">extensions</a> and <a href=
+					"https://www.datatables.net/plug-ins">plug-ins</a> which extend the capabilities of DataTables.</p>
+					<p class="copyright">DataTables designed and created by <a href="https://www.sprymedia.co.uk">SpryMedia Ltd</a> © 2007-2025<br>
+					DataTables is licensed under the <a href="https://www.datatables.net/mit">MIT license</a>.</p>
+				</div>
+			</div>
+		</div>
+	</section>
+</body>
+</html>

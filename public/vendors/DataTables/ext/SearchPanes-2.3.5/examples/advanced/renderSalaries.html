@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<link rel="shortcut icon" type="image/ico" href="https://www.datatables.net/favicon.ico">
+	<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1.0, user-scalable=no">
+	<title>SearchPanes example - Using Render Function to Create Custom Options</title>
+	<link rel="stylesheet" type="text/css" href="../../../../examples/resources/syntax/shCore.css">
+	<link rel="stylesheet" type="text/css" href="../../../../examples/resources/demo.css">
+	<style type="text/css" class="init">
+	
+	</style>
+	<script type="text/javascript" language="javascript" src="../../../../examples/resources/syntax/shCore.js"></script>
+	<script type="text/javascript" language="javascript" src="../../../../examples/resources/demo.js"></script>
+	<script defer class="init">
+	dt_demo.init({
+		libs: {"targetFramework":"","js":["jquery","datatables","searchpanes","select"],"css":["datatables","searchpanes","select"],"components":{"datatables":{"css":"..\/..\/..\/..\/css","js":"..\/..\/..\/..\/js","resolve":true},"autofill":{"css":"..\/..\/..\/..\/..\/extensions\/AutoFill\/css","js":"..\/..\/..\/..\/..\/extensions\/AutoFill\/js","resolve":true},"buttons":{"css":"..\/..\/..\/..\/..\/extensions\/Buttons\/css","js":"..\/..\/..\/..\/..\/extensions\/Buttons\/js","resolve":true},"colreorder":{"css":"..\/..\/..\/..\/..\/extensions\/ColReorder\/css","js":"..\/..\/..\/..\/..\/extensions\/ColReorder\/js","resolve":true},"columncontrol":{"css":"..\/..\/..\/..\/..\/extensions\/ColumnControl\/css","js":"..\/..\/..\/..\/..\/extensions\/ColumnControl\/js","resolve":true},"editor":{"css":"..\/..\/css","js":"..\/..\/js","resolve":true},"fixedcolumns":{"css":"..\/..\/..\/..\/..\/extensions\/FixedColumns\/css","js":"..\/..\/..\/..\/..\/extensions\/FixedColumns\/js","resolve":true},"fixedheader":{"css":"..\/..\/..\/..\/..\/extensions\/FixedHeader\/css","js":"..\/..\/..\/..\/..\/extensions\/FixedHeader\/js","resolve":true},"keytable":{"css":"..\/..\/..\/..\/..\/extensions\/KeyTable\/css","js":"..\/..\/..\/..\/..\/extensions\/KeyTable\/js","resolve":true},"responsive":{"css":"..\/..\/..\/..\/..\/extensions\/Responsive\/css","js":"..\/..\/..\/..\/..\/extensions\/Responsive\/js","resolve":true},"rowgroup":{"css":"..\/..\/..\/..\/..\/extensions\/RowGroup\/css","js":"..\/..\/..\/..\/..\/extensions\/RowGroup\/js","resolve":true},"rowreorder":{"css":"..\/..\/..\/..\/..\/extensions\/RowReorder\/css","js":"..\/..\/..\/..\/..\/extensions\/RowReorder\/js","resolve":true},"scroller":{"css":"..\/..\/..\/..\/..\/extensions\/Scroller\/css","js":"..\/..\/..\/..\/..\/extensions\/Scroller\/js","resolve":true},"select":{"css":"..\/..\/..\/..\/..\/extensions\/Select\/css","js":"..\/..\/..\/..\/..\/extensions\/Select\/js","resolve":true},"searchbuilder":{"css":"..\/..\/..\/..\/..\/extensions\/SearchBuilder\/css","js":"..\/..\/..\/..\/..\/extensions\/SearchBuilder\/js","resolve":true},"searchpanes":{"css":"..\/..\/..\/..\/..\/extensions\/SearchPanes\/css","js":"..\/..\/..\/..\/..\/extensions\/SearchPanes\/js","resolve":true},"staterestore":{"css":"..\/..\/..\/..\/..\/extensions\/StateRestore\/css","js":"..\/..\/..\/..\/..\/extensions\/StateRestore\/js","resolve":true},"datetime":{"css":"..\/..\/..\/..\/..\/extensions\/DateTime\/css\/dataTables.dateTime.css","js":"..\/..\/..\/..\/..\/extensions\/DateTime\/js\/dataTables.dateTime.js"},"bootstrap":{"css":"https:\/\/maxcdn.bootstrapcdn.com\/bootstrap\/3.3.7\/css\/bootstrap.min.css","js":"https:\/\/maxcdn.bootstrapcdn.com\/bootstrap\/3.3.7\/js\/bootstrap.min.js"},"bootstrap4":{"css":"https:\/\/cdnjs.cloudflare.com\/ajax\/libs\/twitter-bootstrap\/4.5.2\/css\/bootstrap.css","js":"https:\/\/cdnjs.cloudflare.com\/ajax\/libs\/popper.js\/1.14.3\/umd\/popper.min.js|https:\/\/cdnjs.cloudflare.com\/ajax\/libs\/twitter-bootstrap\/4.5.2\/js\/bootstrap.min.js"},"bootstrap5":{"css":"https:\/\/cdnjs.cloudflare.com\/ajax\/libs\/twitter-bootstrap\/5.3.3\/css\/bootstrap.min.css","js":"https:\/\/cdnjs.cloudflare.com\/ajax\/libs\/twitter-bootstrap\/5.3.3\/js\/bootstrap.bundle.min.js"},"bulma":{"css":"https:\/\/cdnjs.cloudflare.com\/ajax\/libs\/bulma\/1.0.3\/css\/bulma.min.css"},"foundation":{"css":"https:\/\/cdnjs.cloudflare.com\/ajax\/libs\/foundation\/6.4.3\/css\/foundation.min.css","js":"https:\/\/cdnjs.cloudflare.com\/ajax\/libs\/foundation\/6.4.3\/js\/foundation.min.js"},"jqueryui":{"css":"https:\/\/code.jquery.com\/ui\/1.13.2\/themes\/base\/jquery-ui.css","js":"https:\/\/code.jquery.com\/ui\/1.13.2\/jquery-ui.js"},"material":{"css":"https:\/\/cdnjs.cloudflare.com\/ajax\/libs\/material-components-web\/14.0.0\/material-components-web.min.css","js":"https:\/\/cdnjs.cloudflare.com\/ajax\/libs\/material-components-web\/14.0.0\/material-components-web.min.js"},"semanticui":{"css":"https:\/\/cdnjs.cloudflare.com\/ajax\/libs\/fomantic-ui\/2.9.2\/semantic.min.css","js":"https:\/\/cdnjs.cloudflare.com\/ajax\/libs\/fomantic-ui\/2.9.2\/semantic.min.js"},"uikit":{"css":"https:\/\/cdnjs.cloudflare.com\/ajax\/libs\/uikit\/3.0.2\/css\/uikit.min.css","js":"https:\/\/cdnjs.cloudflare.com\/ajax\/libs\/uikit\/3.0.2\/js\/uikit.min.js"},"tailwindcss":{"css":"","js":"https:\/\/cdn.tailwindcss.com"},"font-awesome":{"css":"https:\/\/cdnjs.cloudflare.com\/ajax\/libs\/font-awesome\/4.7.0\/css\/font-awesome.min.css"},"world-flags-sprite":{"css":"https:\/\/cdn.jsdelivr.net\/gh\/lafeber\/world-flags-sprite\/stylesheets\/flags32-both.css"},"demo":{"css":"..\/..\/..\/..\/examples\/resources\/demo.css","js":"..\/..\/..\/..\/examples\/resources\/demo.js"},"syntax":{"css":"..\/..\/..\/..\/examples\/resources\/syntax\/shCore.css","js":"..\/..\/..\/..\/examples\/resources\/syntax\/shCore.js"},"buttons-html5":{"js":"..\/..\/..\/..\/..\/extensions\/Buttons\/js\/buttons.html5.js"},"buttons-print":{"js":"..\/..\/..\/..\/..\/extensions\/Buttons\/js\/buttons.print.js"},"buttons-colvis":{"js":"..\/..\/..\/..\/..\/extensions\/Buttons\/js\/buttons.colVis.js"},"jquery":{"js":"https:\/\/code.jquery.com\/jquery-3.7.1.js"},"jszip":{"js":"https:\/\/cdnjs.cloudflare.com\/ajax\/libs\/jszip\/3.10.1\/jszip.min.js"},"pdfmake":{"js":"https:\/\/cdnjs.cloudflare.com\/ajax\/libs\/pdfmake\/0.2.7\/pdfmake.min.js"},"vfsfonts":{"js":"https:\/\/cdnjs.cloudflare.com\/ajax\/libs\/pdfmake\/0.2.7\/vfs_fonts.js"},"moment":{"js":"https:\/\/cdnjs.cloudflare.com\/ajax\/libs\/moment.js\/2.29.2\/moment.min.js"},"luxon":{"js":"https:\/\/cdnjs.cloudflare.com\/ajax\/libs\/luxon\/3.6.1\/luxon.min.js"},"sparkline":{"js":"https:\/\/cdn.jsdelivr.net\/gh\/fnando\/sparkline\/dist\/sparkline.js"}}},
+		jquery: function () {
+				
+
+
+$('#example').DataTable({
+	ajax: '../resources/objects.json',
+	columnDefs: [
+		{
+			searchPanes: {
+				show: true
+			},
+			targets: [5]
+		}
+	],
+	columns: [
+		{
+			data: null,
+			render: function (data, type, row) {
+				// Combine the first and last names into a single table field
+				return data.first_name + ' ' + data.last_name;
+			}
+		},
+		{ data: 'position' },
+		{ data: 'office' },
+		{ data: 'extn' },
+		{ data: 'start_date' },
+		{
+			data: 'salary',
+			render: function (data, type, row) {
+				if (type === 'sort' || type === 'type') {
+					return row.salary;
+				}
+				if (row.salary <= 200000) {
+					return 'Low';
+				}
+				else if (row.salary <= 800000) {
+					return 'Medium';
+				}
+				else {
+					return 'High';
+				}
+			}
+		}
+	],
+	layout: {
+		top1: {
+			searchPanes: {
+				columns: [5]
+			}
+		}
+	}
+});
+
+
+
+		},
+		vanilla: function () {
+				
+
+
+new DataTable('#example', {
+	ajax: '../resources/objects.json',
+	columnDefs: [
+		{
+			searchPanes: {
+				show: true
+			},
+			targets: [5]
+		}
+	],
+	columns: [
+		{
+			data: null,
+			render: function (data, type, row) {
+				// Combine the first and last names into a single table field
+				return data.first_name + ' ' + data.last_name;
+			}
+		},
+		{ data: 'position' },
+		{ data: 'office' },
+		{ data: 'extn' },
+		{ data: 'start_date' },
+		{
+			data: 'salary',
+			render: function (data, type, row) {
+				if (type === 'sort' || type === 'type') {
+					return row.salary;
+				}
+				if (row.salary <= 200000) {
+					return 'Low';
+				}
+				else if (row.salary <= 800000) {
+					return 'Medium';
+				}
+				else {
+					return 'High';
+				}
+			}
+		}
+	],
+	layout: {
+		top1: {
+			searchPanes: {
+				columns: [5]
+			}
+		}
+	}
+});
+
+
+
+		}
+	});
+	</script>
+</head>
+<body class="dt-example">
+	<div class="container">
+		<section>
+			<h1>SearchPanes example <span>Using Render Function to Create Custom Options</span></h1>
+			<div class="info">
+				<p>This is the searchPanes extension for DataTables. It allows results to be filtered based on the values of columns.</p>
+				<p>This example demonstrates searching on rendered data. The <a href="//datatables.net/reference/feature/searchPanes.columns"><code class="feature" title=
+				"DataTables feature type">searchPanes.columns</code></a> property is set to <code>5</code> so that only the Salary column is displayed as a pane.</p>
+			</div>
+			<div class="demo-html">
+				<table id="example" class="display">
+					<thead>
+						<tr>
+							<th>Name</th>
+							<th>Position</th>
+							<th>Office</th>
+							<th>Extn.</th>
+							<th>Start date</th>
+							<th>Salary</th>
+						</tr>
+					</thead>
+					<tfoot>
+						<tr>
+							<th>Name</th>
+							<th>Position</th>
+							<th>Office</th>
+							<th>Extn.</th>
+							<th>Start date</th>
+							<th>Salary</th>
+						</tr>
+					</tfoot>
+				</table>
+			</div>
+			<ul class="dt-tabs">
+				<li class="active">JavaScript</li>
+				<li>HTML</li>
+				<li>CSS</li>
+				<li>Ajax</li>
+				<li>Server-side script</li>
+			</ul>
+			<div class="dt-tabs">
+				<div class="js">
+					<p>The JavaScript shown below is used to initialise the table shown in this example:</p>
+					<div id="js-jquery">
+						<code class="multiline language-js">$(&#039;#example&#039;).DataTable({
+	ajax: &#039;../resources/objects.json&#039;,
+	columnDefs: [
+		{
+			searchPanes: {
+				show: true
+			},
+			targets: [5]
+		}
+	],
+	columns: [
+		{
+			data: null,
+			render: function (data, type, row) {
+				// Combine the first and last names into a single table field
+				return data.first_name + &#039; &#039; + data.last_name;
+			}
+		},
+		{ data: &#039;position&#039; },
+		{ data: &#039;office&#039; },
+		{ data: &#039;extn&#039; },
+		{ data: &#039;start_date&#039; },
+		{
+			data: &#039;salary&#039;,
+			render: function (data, type, row) {
+				if (type === &#039;sort&#039; || type === &#039;type&#039;) {
+					return row.salary;
+				}
+				if (row.salary &lt;= 200000) {
+					return &#039;Low&#039;;
+				}
+				else if (row.salary &lt;= 800000) {
+					return &#039;Medium&#039;;
+				}
+				else {
+					return &#039;High&#039;;
+				}
+			}
+		}
+	],
+	layout: {
+		top1: {
+			searchPanes: {
+				columns: [5]
+			}
+		}
+	}
+});</code>
+					</div>
+					<div id="js-vanilla">
+						<code class="multiline language-js">new DataTable(&#039;#example&#039;, {
+	ajax: &#039;../resources/objects.json&#039;,
+	columnDefs: [
+		{
+			searchPanes: {
+				show: true
+			},
+			targets: [5]
+		}
+	],
+	columns: [
+		{
+			data: null,
+			render: function (data, type, row) {
+				// Combine the first and last names into a single table field
+				return data.first_name + &#039; &#039; + data.last_name;
+			}
+		},
+		{ data: &#039;position&#039; },
+		{ data: &#039;office&#039; },
+		{ data: &#039;extn&#039; },
+		{ data: &#039;start_date&#039; },
+		{
+			data: &#039;salary&#039;,
+			render: function (data, type, row) {
+				if (type === &#039;sort&#039; || type === &#039;type&#039;) {
+					return row.salary;
+				}
+				if (row.salary &lt;= 200000) {
+					return &#039;Low&#039;;
+				}
+				else if (row.salary &lt;= 800000) {
+					return &#039;Medium&#039;;
+				}
+				else {
+					return &#039;High&#039;;
+				}
+			}
+		}
+	],
+	layout: {
+		top1: {
+			searchPanes: {
+				columns: [5]
+			}
+		}
+	}
+});</code>
+					</div>
+					<p>In addition to the above code, the following JavaScript library files are loaded for use in this example:</p>
+					<ul id="js-lib-files"></ul>
+				</div>
+				<div class="table">
+					<p>The HTML shown below is the raw HTML table element, before it has been enhanced by DataTables:</p>
+				</div>
+				<div class="css">
+					<div>
+						<p>This example uses a little bit of additional CSS beyond what is loaded from the library files (below), in order to correctly display the table. The
+						additional CSS used is shown below:</p><code class="multiline language-css"></code>
+					</div>
+					<p>The following CSS library files are loaded for use in this example to provide the styling of the table:</p>
+					<ul id="css-lib-files"></ul>
+				</div>
+				<div class="ajax">
+					<p>This table loads data by Ajax. The latest data that has been loaded is shown below. This data will update automatically as any additional data is
+					loaded.</p>
+				</div>
+				<div class="php">
+					<p>The script used to perform the server-side processing for this table is shown below. Please note that this is just an example script using PHP. Server-side
+					processing scripts can be written in any language, using <a href="//datatables.net/manual/server-side">the protocol described in the DataTables
+					documentation</a>.</p>
+				</div>
+			</div>
+		</section>
+	</div>
+	<section>
+		<div class="footer">
+			<div class="gradient"></div>
+			<div class="liner">
+				<h2>Other examples</h2>
+				<div class="toc">
+					<div class="toc-group">
+						<h3><a href="../initialisation/index.html">Initialisation and options</a></h3>
+						<ul class="toc">
+							<li>
+								<a href="../initialisation/simple.html">Basic Initialisation</a>
+							</li>
+							<li>
+								<a href="../initialisation/api.html">API Initialisation</a>
+							</li>
+							<li>
+								<a href="../initialisation/buttons.html">Button Initialisation</a>
+							</li>
+							<li>
+								<a href="../initialisation/buttonsConfig.html">SearchPanes Button Configuration</a>
+							</li>
+							<li>
+								<a href="../initialisation/collapse.html">Collapsed Panes</a>
+							</li>
+							<li>
+								<a href="../initialisation/layout.html">Change SearchPanes Layout</a>
+							</li>
+							<li>
+								<a href="../initialisation/threshold.html">Uniqueness Threshold</a>
+							</li>
+							<li>
+								<a href="../initialisation/forceShow.html">Force Panes to Show/Hide for Specified Columns</a>
+							</li>
+							<li>
+								<a href="../initialisation/cascadePanes.html">Cascade Panes</a>
+							</li>
+							<li>
+								<a href="../initialisation/viewTotal.html">View totals and subtotals</a>
+							</li>
+							<li>
+								<a href="../initialisation/viewTotalCascade.html">Viewing Totals, Subtotals and Cascading Panes</a>
+							</li>
+							<li>
+								<a href="../initialisation/cascadePreSelect.html">Pre-Select Rows with Cascade</a>
+							</li>
+							<li>
+								<a href="../initialisation/preSelect.html">Pre-Select Rows</a>
+							</li>
+							<li>
+								<a href="../initialisation/ajaxOptions.html">Ajax Loaded SearchPanes Options</a>
+							</li>
+							<li>
+								<a href="../initialisation/clearPanes.html">Disable Clear Buttons for Panes</a>
+							</li>
+							<li>
+								<a href="../initialisation/speedTest.html">Speed Optimisation</a>
+							</li>
+						</ul>
+					</div>
+					<div class="toc-group">
+						<h3><a href="./index.html">Advanced initialisation</a></h3>
+						<ul class="toc active">
+							<li>
+								<a href="./stateSave.html">StateSave</a>
+							</li>
+							<li>
+								<a href="./emptyCells.html">Table with empty cells</a>
+							</li>
+							<li>
+								<a href="./emptyDataSet.html">Empty Table</a>
+							</li>
+							<li>
+								<a href="./abstractTypes.html">Abstract Types</a>
+							</li>
+							<li>
+								<a href="./columnFilter.html">Column Filter Integration</a>
+							</li>
+							<li>
+								<a href="./longData.html">Long Data in Panes</a>
+							</li>
+							<li>
+								<a href="./renderSearch.html">Integration with DataTables Rendering Function</a>
+							</li>
+							<li class="active">
+								<a href="./renderSalaries.html">Using Render Function to Create Custom Options</a>
+							</li>
+							<li>
+								<a href="./renderArrays.html">Rendering Arrays</a>
+							</li>
+							<li>
+								<a href="./htmlEntitiesDom.html">HTML Entities from the DOM</a>
+							</li>
+							<li>
+								<a href="./htmlEntitiesAjax.html">HTML Entities from Ajax</a>
+							</li>
+							<li>
+								<a href="./htmlRenderAjax.html">Unencoded HTML characters with a Rendering Function from Ajax</a>
+							</li>
+							<li>
+								<a href="./htmlEntitiesRenderAjax.html">HTML Entities from an Ajax Request with a Rendering Function</a>
+							</li>
+							<li>
+								<a href="./unusualCharacters.html">Dealing with unusual characters</a>
+							</li>
+							<li>
+								<a href="./multiSelect.html">Selection style to work with mobile devices</a>
+							</li>
+							<li>
+								<a href="./testDeleteRows.html">Deleting rows mid-search</a>
+							</li>
+						</ul>
+					</div>
+					<div class="toc-group">
+						<h3><a href="../customisation/index.html">Customisation</a></h3>
+						<ul class="toc">
+							<li>
+								<a href="../customisation/verticalPanes.html">Panes Vertically Stacked next to DataTable</a>
+							</li>
+							<li>
+								<a href="../customisation/footerPane.html">Panes below DataTable</a>
+							</li>
+							<li>
+								<a href="../customisation/dtOpts.html">Pane customisation</a>
+							</li>
+							<li>
+								<a href="../customisation/buttonText.html">Button text</a>
+							</li>
+							<li>
+								<a href="../customisation/customTitle.html">Custom Pane Title</a>
+							</li>
+							<li>
+								<a href="../customisation/customClass.html">Custom Pane Class</a>
+							</li>
+							<li>
+								<a href="../customisation/i18n.html">Internationalisation Language Options</a>
+							</li>
+							<li>
+								<a href="../customisation/customPaneOrder.html">Custom Pane Order</a>
+							</li>
+							<li>
+								<a href="../customisation/hideCountAll.html">Hide Count Column</a>
+							</li>
+							<li>
+								<a href="../customisation/hideCount.html">Hide Count Column on Specific Pane</a>
+							</li>
+							<li>
+								<a href="../customisation/noOrderingAll.html">Hide Ordering Buttons</a>
+							</li>
+							<li>
+								<a href="../customisation/noOrdering.html">Hide Ordering Buttons on Specific Pane</a>
+							</li>
+							<li>
+								<a href="../customisation/noCollapseAll.html">Hide Collapsing Button</a>
+							</li>
+							<li>
+								<a href="../customisation/noCollapse.html">Hide Collapsing Button on Specific Pane</a>
+							</li>
+							<li>
+								<a href="../customisation/noControlsAll.html">Hide All Controls</a>
+							</li>
+							<li>
+								<a href="../customisation/noControls.html">Hide All Controls on Specific Pane</a>
+							</li>
+						</ul>
+					</div>
+					<div class="toc-group">
+						<h3><a href="../integration/index.html">Integration with other DataTables extensions</a></h3>
+						<ul class="toc">
+							<li>
+								<a href="../integration/buttons.html">Buttons integration</a>
+							</li>
+							<li>
+								<a href="../integration/colReorder.html">ColReorder Integration</a>
+							</li>
+						</ul>
+					</div>
+					<div class="toc-group">
+						<h3><a href="../customFiltering/index.html">Creation of custom panes</a></h3>
+						<ul class="toc">
+							<li>
+								<a href="../customFiltering/customOptionConditions.html">Custom Filtering Options</a>
+							</li>
+							<li>
+								<a href="../customFiltering/customPane.html">Custom Filtering Pane</a>
+							</li>
+							<li>
+								<a href="../customFiltering/customPreSelect.html">Custom Filtering Pane with PreSelections</a>
+							</li>
+							<li>
+								<a href="../customFiltering/onlyCustom.html">Only Custom Panes</a>
+							</li>
+						</ul>
+					</div>
+					<div class="toc-group">
+						<h3><a href="../styling/index.html">Styling</a></h3>
+						<ul class="toc">
+							<li>
+								<a href="../styling/bootstrap3.html">Bootstrap 3</a>
+							</li>
+							<li>
+								<a href="../styling/bootstrap4.html">Bootstrap 4</a>
+							</li>
+							<li>
+								<a href="../styling/bootstrap5.html">Bootstrap 5</a>
+							</li>
+							<li>
+								<a href="../styling/foundation.html">Foundation</a>
+							</li>
+							<li>
+								<a href="../styling/jqueryui.html">jQuery UI styling</a>
+							</li>
+							<li>
+								<a href="../styling/semanticui.html">Fomantic-UI (formally Semantic-UI) styling</a>
+							</li>
+							<li>
+								<a href="../styling/bulma.html">Bulma</a>
+							</li>
+						</ul>
+					</div>
+					<div class="toc-group">
+						<h3><a href="../performance/index.html">Performance</a></h3>
+						<ul class="toc">
+							<li>
+								<a href="../performance/searchPanes5k.html">5k Rows</a>
+							</li>
+							<li>
+								<a href="../performance/searchPanes50k.html">50k Rows</a>
+							</li>
+							<li>
+								<a href="../performance/cascade50k.html">50k Rows with cascadePanes</a>
+							</li>
+							<li>
+								<a href="../performance/cascadeViewTotal50k.html">50k Rows with cascadePanes and viewTotal</a>
+							</li>
+						</ul>
+					</div>
+				</div>
+				<div class="epilogue">
+					<p>Please refer to the <a href="https://www.datatables.net">DataTables documentation</a> for full information about its API properties and methods.<br>
+					Additionally, there are a wide range of <a href="https://www.datatables.net/extensions">extensions</a> and <a href=
+					"https://www.datatables.net/plug-ins">plug-ins</a> which extend the capabilities of DataTables.</p>
+					<p class="copyright">DataTables designed and created by <a href="https://www.sprymedia.co.uk">SpryMedia Ltd</a> © 2007-2025<br>
+					DataTables is licensed under the <a href="https://www.datatables.net/mit">MIT license</a>.</p>
+				</div>
+			</div>
+		</div>
+	</section>
+</body>
+</html>
