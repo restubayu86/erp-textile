@@ -1,0 +1,3 @@
+php spark make:migration CreatePositionsTable --namespace "App\Modules\HRM"
+masukan kode migrate
+php spark migrate -n "App\Modules\HRM"

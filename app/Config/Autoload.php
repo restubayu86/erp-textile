@@ -25,6 +25,12 @@ class Autoload extends AutoloadConfig
         'App\Modules\HRM'        => APPPATH . 'Modules/HRM',
         'App\Modules\Production' => APPPATH . 'Modules/Production',
         'App\Modules\Warehouse'  => APPPATH . 'Modules/Warehouse',
+
+        // ── Database Migrations for Modules ──────────────────────
+        'App\Modules\HRM\Database\Migrations'        => APPPATH . 'Modules/HRM/Database/Migrations',
+        'App\Modules\Production\Database\Migrations' => APPPATH . 'Modules/Production/Database/Migrations',
+        'App\Modules\Warehouse\Database\Migrations'  => APPPATH . 'Modules/Warehouse/Database/Migrations',
+
         // Tambahkan modul baru di sini mengikuti pola yang sama:
         // 'App\Modules\NamaModul' => APPPATH . 'Modules/NamaModul',
     ];
