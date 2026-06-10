@@ -3,13 +3,13 @@
 <?= $this->section('styles') ?>
 <meta name="csrf-token" content="<?= csrf_hash() ?>">
 <meta name="csrf-name" content="<?= csrf_token() ?>">
+<link rel="stylesheet" href="https://cdn.datatables.net/rowgroup/1.5.0/css/rowGroup.dataTables.min.css">
 <style>
-    /* ── Prevent horizontal page scrollbar ───────────────────────── */
     body {
         overflow-x: hidden;
     }
 
-    /* ── Stat Cards ──────────────────────────────────────────────── */
+    /* ── Stat Cards ───────────────────────────────────────────── */
     .stat-card {
         border: none;
         border-radius: 1rem;
@@ -46,7 +46,7 @@
         line-height: 1;
     }
 
-    /* ── Avatar ──────────────────────────────────────────────────── */
+    /* ── Avatar ───────────────────────────────────────────────── */
     .emp-avatar {
         width: 36px;
         height: 36px;
@@ -69,7 +69,7 @@
         color: var(--phoenix-primary);
     }
 
-    /* ── Gender badge ────────────────────────────────────────────── */
+    /* ── Gender badge ─────────────────────────────────────────── */
     .badge-gender {
         width: 26px;
         height: 26px;
@@ -90,19 +90,7 @@
         color: #dc3545;
     }
 
-    /* ── Shift badge ─────────────────────────────────────────────── */
-    .badge-shift {
-        display: inline-flex;
-        align-items: center;
-        gap: .25rem;
-        padding: .2rem .5rem;
-        border-radius: 20px;
-        font-size: .7rem;
-        font-weight: 600;
-        white-space: nowrap;
-    }
-
-    /* ── Status badge ────────────────────────────────────────────── */
+    /* ── Status badge ─────────────────────────────────────────── */
     .badge-status {
         display: inline-flex;
         align-items: center;
@@ -126,7 +114,7 @@
         border: 1px solid rgba(var(--phoenix-secondary-rgb), .25);
     }
 
-    /* ── User badge ──────────────────────────────────────────────── */
+    /* ── User / Dept badge ────────────────────────────────────── */
     .badge-user {
         display: inline-flex;
         align-items: center;
@@ -144,7 +132,6 @@
         text-overflow: ellipsis;
     }
 
-    /* ── Dept badge ──────────────────────────────────────────────── */
     .badge-dept {
         display: inline-flex;
         align-items: center;
@@ -162,7 +149,7 @@
         text-overflow: ellipsis;
     }
 
-    /* ── Filter toggle ───────────────────────────────────────────── */
+    /* ── Filter toggle ────────────────────────────────────────── */
     .filter-toggle {
         position: fixed;
         right: 0;
@@ -206,7 +193,7 @@
         display: block;
     }
 
-    /* ── DataTables layout ───────────────────────────────────────── */
+    /* ── DataTables layout ────────────────────────────────────── */
     #employee-table_wrapper .top {
         display: flex;
         justify-content: center;
@@ -275,7 +262,19 @@
         width: 100% !important;
     }
 
-    /* ── Print ───────────────────────────────────────────────────── */
+    /* ── RowGroup style ───────────────────────────────────────── */
+    table.dataTable tbody tr.dtrg-group td {
+        font-size: .72rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: .06em;
+        padding: .45rem .75rem !important;
+        background: var(--phoenix-secondary-bg) !important;
+        color: var(--phoenix-primary);
+        border-bottom: 2px solid var(--phoenix-primary) !important;
+    }
+
+    /* ── Print ────────────────────────────────────────────────── */
     .print-header {
         display: none;
     }
@@ -295,7 +294,7 @@
         }
     }
 
-    /* ── Select2 ─────────────────────────────────────────────────── */
+    /* ── Select2 ──────────────────────────────────────────────── */
     .select2-container--bootstrap-5 .select2-selection {
         min-height: 31px;
         font-size: .875rem;
@@ -330,26 +329,25 @@
                 <ol class="breadcrumb mb-0">
                     <?php foreach ($breadcrumbs as $crumb): ?>
                         <?php if (!empty($crumb['active'])): ?>
-                            <li class="breadcrumb-item active"><?= esc((string)(string) $crumb['name']) ?></li>
+                            <li class="breadcrumb-item active"><?= esc((string) $crumb['name']) ?></li>
                         <?php else: ?>
-                            <li class="breadcrumb-item"><a href="<?= $crumb['url'] ?>"><?= esc((string)(string) $crumb['name']) ?></a></li>
+                            <li class="breadcrumb-item"><a href="<?= $crumb['url'] ?>"><?= esc((string) $crumb['name']) ?></a></li>
                         <?php endif; ?>
                     <?php endforeach; ?>
                 </ol>
             </nav>
-            <h1 class="h3 mb-1 fw-bold"><?= esc((string)(string) $page_title) ?></h1>
-            <p class="text-body-tertiary mb-0"><?= esc((string)(string) $page_description) ?></p>
+            <h1 class="h3 mb-1 fw-bold"><?= esc((string) $page_title) ?></h1>
+            <p class="text-body-tertiary mb-0"><?= esc((string) $page_description) ?></p>
         </div>
     </div>
 
     <!-- Stat Cards -->
     <div class="row g-3 mb-4 no-print">
-        <?php
-        $statCards = [
-            ['id' => 'stat-total',    'label' => 'Total Karyawan', 'icon' => 'fa-users',       'color' => 'primary'],
-            ['id' => 'stat-active',   'label' => 'Aktif',          'icon' => 'fa-check-circle', 'color' => 'success'],
-            ['id' => 'stat-male',     'label' => 'Laki-laki',      'icon' => 'fa-mars',         'color' => 'info'],
-            ['id' => 'stat-female',   'label' => 'Perempuan',      'icon' => 'fa-venus',        'color' => 'danger'],
+        <?php $statCards = [
+            ['id' => 'stat-total',  'label' => 'Total Karyawan', 'icon' => 'fa-users',       'color' => 'primary'],
+            ['id' => 'stat-active', 'label' => 'Aktif',          'icon' => 'fa-check-circle', 'color' => 'success'],
+            ['id' => 'stat-male',   'label' => 'Laki-laki',      'icon' => 'fa-mars',         'color' => 'info'],
+            ['id' => 'stat-female', 'label' => 'Perempuan',      'icon' => 'fa-venus',        'color' => 'danger'],
         ];
         foreach ($statCards as $s): ?>
             <div class="col-md-3 col-6">
@@ -381,6 +379,19 @@
             <?php endif; ?>
         </div>
         <div class="d-flex gap-2">
+            <div class="btn-group">
+                <button type="button" class="btn btn-subtle-success btn-sm dropdown-toggle" data-bs-toggle="dropdown">
+                    <span class="fas fa-download me-1"></span>Export
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end">
+                    <li><a class="dropdown-item" href="#" id="btn-export-excel"><span class="fas fa-file-excel text-success me-2"></span>Excel (XLSX)</a></li>
+                    <li><a class="dropdown-item" href="#" id="btn-export-pdf"><span class="fas fa-file-pdf text-danger me-2"></span>PDF</a></li>
+                    <li>
+                        <hr class="dropdown-divider">
+                    </li>
+                    <li><a class="dropdown-item" href="#" id="btn-print"><span class="fas fa-print text-primary me-2"></span>Print</a></li>
+                </ul>
+            </div>
             <button class="btn btn-subtle-secondary btn-sm" id="btn-refresh" type="button">
                 <span class="fas fa-sync-alt me-1"></span>Refresh
             </button>
@@ -392,30 +403,22 @@
         </div>
     </div>
 
+    <!-- Group By -->
+    <div class="d-flex align-items-center gap-2 mb-3 no-print flex-wrap">
+        <span class="text-muted fw-semibold" style="font-size:.7rem;text-transform:uppercase;letter-spacing:.05em">Group:</span>
+        <?php foreach (['none' => 'Tidak Ada', 'department' => 'Departemen', 'position' => 'Posisi', 'shift' => 'Shift', 'gender' => 'Jenis Kelamin'] as $key => $label): ?>
+            <button class="btn btn-sm group-by-btn <?= $key === 'none' ? 'btn-primary' : 'btn-subtle-secondary' ?>"
+                data-group="<?= $key ?>"><?= $label ?></button>
+        <?php endforeach; ?>
+    </div>
+
     <!-- Print header -->
     <div class="print-header mb-3">
         <h5 class="fw-bold mb-1">Daftar Karyawan</h5>
         <div class="text-muted small">Dicetak: <span id="print-date"></span></div>
         <hr class="my-2">
     </div>
-    <!-- Group By -->
-    <div class="d-flex align-items-center gap-2 mb-3 no-print flex-wrap">
-        <span class="text-muted fw-semibold" style="font-size:.7rem;text-transform:uppercase;letter-spacing:.05em">Group:</span>
-        <?php
-        $groups = [
-            'none'       => 'Tidak Ada',
-            'department' => 'Departemen',
-            'position'   => 'Posisi',
-            'shift'      => 'Shift',
-            'gender'     => 'Jenis Kelamin',
-        ];
-        foreach ($groups as $key => $label): ?>
-            <button class="btn btn-sm group-by-btn <?= $key === 'none' ? 'btn-primary' : 'btn-subtle-secondary' ?>"
-                data-group="<?= $key ?>">
-                <?= $label ?>
-            </button>
-        <?php endforeach; ?>
-    </div>
+
     <!-- Table -->
     <div class="mx-n4 px-4 mx-lg-n6 px-lg-6 bg-body-emphasis py-5 border-y">
         <table class="table table-hover fs-9 nowrap align-middle" id="employee-table">
@@ -459,26 +462,19 @@
     </div>
     <div class="offcanvas-body d-flex flex-column">
         <div class="flex-grow-1">
-
             <div class="mb-3">
                 <label class="form-label fw-semibold fs-9 text-uppercase text-muted">NIK / Nama</label>
                 <input type="text" class="form-control form-control-sm" id="filter-name" placeholder="Cari NIK atau nama...">
             </div>
-
             <div class="mb-3">
                 <label class="form-label fw-semibold fs-9 text-uppercase text-muted">Departemen</label>
-                <select class="form-select form-select-sm" id="filter-department" style="width:100%">
-                    <option value="">Semua Departemen</option>
-                </select>
+                <!-- Hanya Select2 AJAX, tidak ada static option -->
+                <select class="form-select form-select-sm" id="filter-department" style="width:100%"></select>
             </div>
-
             <div class="mb-3">
                 <label class="form-label fw-semibold fs-9 text-uppercase text-muted">Posisi</label>
-                <select class="form-select form-select-sm" id="filter-position" style="width:100%">
-                    <option value="">Semua Posisi</option>
-                </select>
+                <select class="form-select form-select-sm" id="filter-position" style="width:100%"></select>
             </div>
-
             <div class="mb-3">
                 <label class="form-label fw-semibold fs-9 text-uppercase text-muted">Shift</label>
                 <select class="form-select form-select-sm" id="filter-shift">
@@ -491,7 +487,6 @@
                     <option value="E">Shift E</option>
                 </select>
             </div>
-
             <div class="mb-3">
                 <label class="form-label fw-semibold fs-9 text-uppercase text-muted">Area Kerja</label>
                 <select class="form-select form-select-sm" id="filter-work-area">
@@ -503,7 +498,6 @@
                     <?php endforeach; ?>
                 </select>
             </div>
-
             <div class="mb-3">
                 <label class="form-label fw-semibold fs-9 text-uppercase text-muted">Status Kerja</label>
                 <select class="form-select form-select-sm" id="filter-employment-status">
@@ -513,7 +507,6 @@
                     <option value="magang">Magang</option>
                 </select>
             </div>
-
             <div class="mb-4">
                 <label class="form-label fw-semibold fs-9 text-uppercase text-muted">Status</label>
                 <select class="form-select form-select-sm" id="filter-status">
@@ -522,23 +515,16 @@
                     <option value="inactive">Inactive</option>
                 </select>
             </div>
-
         </div>
-
         <div id="filter-summary" class="mb-3 d-none">
             <div class="alert alert-subtle-info py-2 px-3 mb-0 fs-10">
                 <span class="fas fa-info-circle me-1"></span>
                 <span id="filter-summary-text"></span>
             </div>
         </div>
-
         <div class="d-grid gap-2">
-            <button class="btn btn-primary btn-sm" id="btn-apply-filter">
-                <span class="fas fa-search me-1"></span>Terapkan
-            </button>
-            <button class="btn btn-subtle-secondary btn-sm" id="btn-reset-filter">
-                <span class="fas fa-times me-1"></span>Reset
-            </button>
+            <button class="btn btn-primary btn-sm" id="btn-apply-filter"><span class="fas fa-search me-1"></span>Terapkan</button>
+            <button class="btn btn-subtle-secondary btn-sm" id="btn-reset-filter"><span class="fas fa-times me-1"></span>Reset</button>
         </div>
     </div>
 </div>
@@ -546,6 +532,7 @@
 <?= $this->endSection() ?>
 
 <?= $this->section('scripts') ?>
+<script src="https://cdn.datatables.net/rowgroup/1.5.0/js/dataTables.rowGroup.min.js"></script>
 <script>
     const CAN_EDIT = <?= json_encode(canDo('hrm.employees.edit')) ?>;
     const CAN_DELETE = <?= json_encode(canDo('hrm.employees.delete')) ?>;
@@ -553,6 +540,7 @@
     const Employee = {
         BASE: '<?= base_url() ?>',
         dt: null,
+        currentGroup: 'none',
         filters: {
             name: '',
             department: '',
@@ -560,7 +548,7 @@
             shift: '',
             work_area: '',
             employment_status: '',
-            status: '',
+            status: ''
         },
 
         init() {
@@ -585,7 +573,7 @@
             if (m && h) m.content = h;
         },
 
-        /* ── HTTP helpers ─────────────────────────────────────────── */
+        /* ── HTTP helpers (semua pakai fetch) ─────────────────────── */
         async post(url, fd) {
             fd.set(this.csrfName(), this.csrfToken());
             const r = await fetch(url, {
@@ -601,7 +589,6 @@
             if (d?.csrfHash) this.updateCsrf(d.csrfHash);
             return d;
         },
-
         async get(url) {
             const r = await fetch(url, {
                 headers: {
@@ -630,9 +617,10 @@
             }
         },
 
-        /* ── Select2 ──────────────────────────────────────────────── */
+        /* ── Select2 (semua AJAX, tidak ada static option) ───────── */
         initSelect2() {
-            // Filter: Departemen
+            const base = this.BASE;
+
             $('#filter-department').select2({
                 theme: 'bootstrap-5',
                 width: '100%',
@@ -640,7 +628,7 @@
                 allowClear: true,
                 dropdownParent: $('#filter-offcanvas'),
                 ajax: {
-                    url: this.BASE + 'hrm/departments/select2',
+                    url: base + 'hrm/departments/select2',
                     dataType: 'json',
                     delay: 250,
                     data: p => ({
@@ -648,21 +636,18 @@
                     }),
                     processResults: d => ({
                         results: [{
-                                id: '',
-                                text: 'Semua Departemen'
-                            },
-                            ...(d.data ?? []).map(r => ({
-                                id: r.id,
-                                text: r.name
-                            }))
-                        ]
+                            id: '',
+                            text: '— Semua Departemen —'
+                        }, ...(d.data ?? []).map(r => ({
+                            id: r.id,
+                            text: r.name
+                        }))]
                     }),
-                    cache: true
+                    cache: true,
                 },
                 minimumInputLength: 0,
             });
 
-            // Filter: Posisi
             $('#filter-position').select2({
                 theme: 'bootstrap-5',
                 width: '100%',
@@ -670,7 +655,7 @@
                 allowClear: true,
                 dropdownParent: $('#filter-offcanvas'),
                 ajax: {
-                    url: this.BASE + 'hrm/positions/select2',
+                    url: base + 'hrm/positions/select2',
                     dataType: 'json',
                     delay: 250,
                     data: p => ({
@@ -678,16 +663,14 @@
                     }),
                     processResults: d => ({
                         results: [{
-                                id: '',
-                                text: 'Semua Posisi'
-                            },
-                            ...(d.data ?? []).map(r => ({
-                                id: r.id,
-                                text: r.name
-                            }))
-                        ]
+                            id: '',
+                            text: '— Semua Posisi —'
+                        }, ...(d.data ?? []).map(r => ({
+                            id: r.id,
+                            text: r.name
+                        }))]
                     }),
-                    cache: true
+                    cache: true,
                 },
                 minimumInputLength: 0,
             });
@@ -722,9 +705,11 @@
                     },
                     processing: '<span class="spinner-border spinner-border-sm text-primary"></span>',
                 },
+                // RowGroup: mulai disabled, enable via groupBy()
                 rowGroup: {
-                    dataSrc: null,
-                    enable: true
+                    enable: false,
+                    dataSrc: 'department_name', // default; diubah dinamis
+                    emptyMessage: '—',
                 },
                 ajax: {
                     url: this.BASE + 'hrm/employees/datatables',
@@ -737,68 +722,62 @@
                         d.filter_work_area = self.filters.work_area;
                         d.filter_employment_status = self.filters.employment_status;
                         d.filter_status = self.filters.status;
+                        d.group_by = self.currentGroup !== 'none' ? self.currentGroup : '';
                     },
                     error: () => self.toast('error', 'Gagal memuat data'),
                 },
                 columnDefs: [{
                         targets: 0,
                         width: '45px'
-                    },
-                    {
+                    }, {
                         targets: 1,
-                        width: '200px'
+                        width: '220px'
                     },
                     {
                         targets: 2,
-                        width: '40px'
-                    },
-                    {
+                        width: '50px'
+                    }, {
                         targets: 3,
                         width: '150px'
                     },
                     {
                         targets: 4,
-                        width: '130px'
-                    },
-                    {
+                        width: '150px'
+                    }, {
                         targets: 5,
-                        width: '110px'
+                        width: '120px'
                     },
                     {
                         targets: 6,
                         width: '90px'
-                    },
-                    {
+                    }, {
                         targets: 7,
-                        width: '90px'
+                        width: '100px'
                     },
                     {
                         targets: 8,
-                        width: '85px'
-                    },
-                    {
+                        width: '90px'
+                    }, {
                         targets: 9,
                         width: '110px'
                     },
                     {
                         targets: 10,
                         width: '110px'
-                    },
-                    {
+                    }, {
                         targets: 11,
                         width: '110px'
                     },
                     {
                         targets: 12,
                         width: '110px'
-                    },
-                    {
+                    }, {
                         targets: 13,
                         width: '110px'
                     },
                     {
                         targets: 14,
-                        width: '80px'
+                        width: '100px'
                     },
                 ],
                 columns: [
@@ -811,117 +790,115 @@
                     /* 1  Karyawan */
                     {
                         data: null,
-                        orderable: true,
                         render: (d, t, r) => {
                             const initial = (r.fullname || '?')[0].toUpperCase();
                             const avatar = r.photo ?
-                                `<img src="${self.e(r.photo)}" class="emp-avatar me-2"
-                                       onerror="this.src='<?= base_url('assets/img/avatar-default.png') ?>'">` :
+                                `<img src="${self.BASE}uploads/employees/${self.e(r.photo)}" class="emp-avatar me-2" onerror="this.src='<?= base_url('assets/img/avatar-default.png') ?>'">` :
                                 `<span class="emp-avatar-placeholder me-2">${self.e(initial)}</span>`;
-                            return `<div class="d-flex align-items-center">
-                                        ${avatar}
-                                        <div>
-                                            <div class="fw-semibold">
-                                                <a href="${self.BASE}hrm/employees/show/${r.id}"
-                                                   class="text-primary text-decoration-none">${self.e(r.fullname)}</a>
-                                                ${r.nickname ? `<small class="text-body-quaternary ms-1">${self.e(r.nickname)}</small>` : ''}
-                                            </div>
-                                            <div class="text-muted small font-monospace">${self.e(r.nik)}</div>
-                                        </div>
-                                    </div>`;
+                            return `<div class="d-flex align-items-center">${avatar}<div>
+                        <div class="fw-semibold">
+                            <a href="${self.BASE}hrm/employees/show/${r.id}" class="text-primary text-decoration-none">${self.e(r.fullname)}</a>
+                            ${r.nickname ? `<small class="text-body-quaternary ms-1">(${self.e(r.nickname)})</small>` : ''}
+                        </div>
+                        <div class="text-muted small font-monospace">${self.e(r.nik)}</div>
+                    </div></div>`;
                         }
                     },
                     /* 2  JK       */
                     {
                         data: 'gender',
-                        orderable: true,
                         render: d => {
                             if (d === 'L') return `<span class="badge-gender male" title="Laki-laki"><span class="fas fa-mars"></span></span>`;
                             if (d === 'P') return `<span class="badge-gender female" title="Perempuan"><span class="fas fa-venus"></span></span>`;
                             return '<span class="text-muted">—</span>';
                         }
                     },
-                    /* 3  Posisi   */
+                    /* 3  Posisi */
                     {
                         data: 'position_name',
-                        render: d => d ?
-                            `<span class="fw-semibold fs-9">${self.e(d)}</span>` : '<span class="text-muted fst-italic">—</span>'
+                        render: (d, t, r) => {
+                            if (!d) return '<span class="text-muted fst-italic">—</span>';
+                            const isManagement = d.toLowerCase().includes('manager') ||
+                                d.toLowerCase().includes('manajer') ||
+                                d.toLowerCase().includes('kadiv') ||
+                                d.toLowerCase().includes('direktur');
+                            const icon = isManagement ? `<span class="fas fa-star text-warning me-1"></span>` : '';
+                            return `<span class="fw-semibold fs-9">${icon}${self.e(d)}</span>`;
+                        }
                     },
                     /* 4  Dept     */
                     {
                         data: 'department_name',
-                        render: d => d ?
+                        render: d => d && d !== '—' ?
                             `<span class="badge-dept"><span class="fas fa-building me-1"></span>${self.e(d)}</span>` : '<span class="text-muted fst-italic">—</span>'
                     },
                     /* 5  Area     */
                     {
                         data: 'work_area',
-                        render: d => d ?
-                            `<span class="text-muted fs-9">${self.e(d)}</span>` : '<span class="text-muted">—</span>'
+                        render: d => d ? `<span class="text-muted fs-9">${self.e(d)}</span>` : '<span class="text-muted">—</span>'
                     },
-                    /* 6  Shift    */
+                    /* 6  Shift */
                     {
                         data: 'shift',
-                        orderable: true,
                         render: d => {
                             if (!d) return '<span class="text-muted">—</span>';
-                            const map = {
+                            const m = {
                                 NS: {
-                                    text: 'Non-Shift',
-                                    cls: 'badge badge-phoenix badge-phoenix-secondary'
+                                    t: 'Non-Shift',
+                                    c: 'badge-phoenix-secondary'
                                 },
                                 A: {
-                                    text: 'Shift A',
-                                    cls: 'bg-primary  bg-opacity-10 text-primary  border'
+                                    t: 'Shift A',
+                                    c: 'badge-phoenix-primary'
                                 },
                                 B: {
-                                    text: 'Shift B',
-                                    cls: 'bg-info     bg-opacity-10 text-info     border'
+                                    t: 'Shift B',
+                                    c: 'badge-phoenix-info'
                                 },
                                 C: {
-                                    text: 'Shift C',
-                                    cls: 'bg-success  bg-opacity-10 text-success  border'
+                                    t: 'Shift C',
+                                    c: 'badge-phoenix-success'
                                 },
                                 D: {
-                                    text: 'Shift D',
-                                    cls: 'bg-warning  bg-opacity-10 text-warning  border'
+                                    t: 'Shift D',
+                                    c: 'badge-phoenix-warning'
                                 },
                                 E: {
-                                    text: 'Shift E',
-                                    cls: 'bg-danger   bg-opacity-10 text-danger   border'
+                                    t: 'Shift E',
+                                    c: 'badge-phoenix-danger'
                                 },
                             };
-                            const s = map[d] ?? {
-                                text: d,
-                                cls: 'bg-secondary bg-opacity-10 text-secondary border'
+                            const s = m[d] ?? {
+                                t: d,
+                                c: 'badge-phoenix-secondary'
                             };
-                            return `<span class="badge-shift ${s.cls}"><span class="fas fa-clock me-1"></span>${s.text}</span>`;
+                            return `<span class="badge badge-phoenix rounded-pill p-2 fs-10 ${s.c}"><span class="fas fa-clock me-1"></span>${s.t}</span>`;
                         }
                     },
-                    /* 7  Emp.status */
+                    /* 7  Emp.st */
                     {
                         data: 'employment_status',
                         render: d => {
                             if (!d) return '<span class="text-muted">—</span>';
-                            const map = {
+                            const m = {
                                 tetap: {
-                                    text: 'Tetap',
-                                    cls: 'bg-success  bg-opacity-10 text-success  border'
+                                    t: 'Tetap',
+                                    c: 'badge-phoenix-success'
                                 },
                                 kontrak: {
-                                    text: 'Kontrak',
-                                    cls: 'bg-warning  bg-opacity-10 text-warning  border'
+                                    t: 'Kontrak',
+                                    c: 'badge-phoenix-warning'
                                 },
                                 magang: {
-                                    text: 'Magang',
-                                    cls: 'bg-info     bg-opacity-10 text-info     border'
+                                    t: 'Magang',
+                                    c: 'badge-phoenix-info'
                                 },
                             };
-                            const s = map[d] ?? {
-                                text: d,
-                                cls: 'bg-secondary bg-opacity-10 text-secondary border'
+                            const s = m[d.toLowerCase()] ?? {
+                                t: d,
+                                c: 'badge-phoenix-secondary'
                             };
-                            return `<span class="badge ${s.cls} rounded-pill">${s.text}</span>`;
+                            return `<span class="badge badge-phoenix p-1 fs-10 ${s.c}">${s.t}</span>`;
                         }
                     },
                     /* 8  Status   */
@@ -929,32 +906,21 @@
                         data: 'status',
                         render: d => {
                             if (!d) return '—';
-                            const cfg = d === 'active' ? {
-                                cls: 'active',
-                                icon: 'fa-check-circle',
-                                label: 'Active'
-                            } : {
-                                cls: 'inactive',
-                                icon: 'fa-times-circle',
-                                label: 'Inactive'
-                            };
-                            return `<span class="badge-status ${cfg.cls}">
-                                        <span class="fas ${cfg.icon}"></span>${cfg.label}
-                                    </span>`;
+                            const ok = d.toLowerCase() === 'active';
+                            return `<span class="badge-status ${ok?'active':'inactive'}"><span class="fas ${ok?'fa-check-circle':'fa-times-circle'}"></span>${ok?'Active':'Inactive'}</span>`;
                         }
                     },
                     /* 9  Phone    */
                     {
                         data: 'phone',
-                        render: d => d ?
-                            `<a href="tel:${self.e(d)}" class="text-decoration-none fs-9">${self.e(d)}</a>` : '<span class="text-muted">—</span>'
+                        render: d => d ? `<a href="tel:${self.e(d)}" class="text-decoration-none fs-9">${self.e(d)}</a>` : '<span class="text-muted">—</span>'
                     },
                     /* 10 Created  */
                     {
                         data: 'created_at',
                         render: d => self.fmtDate(d)
                     },
-                    /* 11 Cr. by   */
+                    /* 11 Cr.by    */
                     {
                         data: 'created_by_name',
                         render: d => self.fmtUser(d),
@@ -965,7 +931,7 @@
                         data: 'updated_at',
                         render: d => self.fmtDate(d)
                     },
-                    /* 13 Up. by   */
+                    /* 13 Up.by    */
                     {
                         data: 'updated_by_name',
                         render: d => self.fmtUser(d),
@@ -978,25 +944,72 @@
                         searchable: false,
                         className: 'text-end no-print',
                         render: (d, t, r) => {
-                            const view = `<a href="${self.BASE}hrm/employees/show/${r.id}"
-                                             class="btn btn-subtle-info btn-sm" title="Detail">
-                                              <span class="fas fa-eye"></span>
-                                          </a>`;
-                            const edit = CAN_EDIT ?
-                                `<a href="${self.BASE}hrm/employees/edit/${r.id}"
-                                       class="btn btn-subtle-primary btn-sm" title="Edit">
-                                       <span class="fas fa-pencil-alt"></span>
-                                   </a>` : '';
-                            const del = CAN_DELETE ?
-                                `<button class="btn btn-subtle-danger btn-sm btn-delete"
-                                           data-id="${r.id}" data-name="${self.e(r.fullname)}" title="Hapus">
-                                       <span class="fas fa-trash"></span>
-                                   </button>` : '';
+                            const view = `<a href="${self.BASE}hrm/employees/show/${r.id}" class="btn btn-subtle-info btn-sm" title="Detail"><span class="fas fa-eye"></span></a>`;
+                            const edit = CAN_EDIT ? `<a href="${self.BASE}hrm/employees/edit/${r.id}" class="btn btn-subtle-primary btn-sm" title="Edit"><span class="fas fa-pencil-alt"></span></a>` : '';
+                            const del = CAN_DELETE ? `<button class="btn btn-subtle-danger btn-sm btn-delete" data-id="${r.id}" data-name="${self.e(r.fullname)}" title="Hapus"><span class="fas fa-trash"></span></button>` : '';
                             return `<div class="btn-group btn-group-sm">${view}${edit}${del}</div>`;
                         }
                     },
                 ],
             });
+        },
+
+        /* ── Group By ─────────────────────────────────────────────── */
+        // Map group key → kolom data untuk RowGroup dataSrc
+        groupSrcMap: {
+            department: 'department_name',
+            position: 'position_name',
+            shift: 'shift',
+            gender: (row) => row.gender === 'L' ? 'Laki-laki' : 'Perempuan'
+        },
+
+        groupBy(group) {
+            this.currentGroup = group;
+
+            // Update button styles
+            document.querySelectorAll('.group-by-btn').forEach(b => {
+                b.className = 'btn btn-sm group-by-btn ' + (b.dataset.group === group ? 'btn-primary' : 'btn-subtle-secondary');
+            });
+
+            if (group === 'none') {
+                // Disable RowGroup lalu reload
+                Employee.dt.rowGroup().disable();
+                Employee.dt.ajax.reload();
+            } else {
+                const src = Employee.groupSrcMap[group];
+                if (src) {
+                    Employee.dt.rowGroup().dataSrc(src).enable();
+                }
+                Employee.dt.ajax.reload();
+            }
+        },
+
+        /* ── Export (semua pakai fetch / window.location) ─────────── */
+        buildExportParams() {
+            const f = this.filters;
+            const p = new URLSearchParams();
+            if (f.name) p.set('filter_name', f.name);
+            if (f.department) p.set('filter_department', f.department);
+            if (f.position) p.set('filter_position', f.position);
+            if (f.shift) p.set('filter_shift', f.shift);
+            if (f.work_area) p.set('filter_work_area', f.work_area);
+            if (f.employment_status) p.set('filter_employment_status', f.employment_status);
+            if (f.status) p.set('filter_status', f.status);
+            if (this.currentGroup !== 'none') p.set('group_by', this.currentGroup);
+            return p;
+        },
+
+        exportToExcel() {
+            // Download langsung — controller return file download, bukan JSON
+            window.location.href = this.BASE + 'hrm/employees/export?' + this.buildExportParams().toString() + '&format=excel';
+        },
+
+        exportToPdf() {
+            window.location.href = this.BASE + 'hrm/employees/export?' + this.buildExportParams().toString() + '&format=pdf';
+        },
+
+        print() {
+            window.open(this.BASE + 'hrm/employees/print?' + this.buildExportParams().toString(), '_blank');
         },
 
         /* ── Filter ───────────────────────────────────────────────── */
@@ -1044,7 +1057,6 @@
             if (f.work_area) labels.push(`Area: ${f.work_area}`);
             if (f.employment_status) labels.push(`Kerja: ${f.employment_status}`);
             if (f.status) labels.push(`Status: ${f.status}`);
-
             document.getElementById('filter-toggle').classList.toggle('has-filter', labels.length > 0);
             document.getElementById('filter-summary-text').textContent = labels.join(' · ');
             document.getElementById('filter-summary').classList.toggle('d-none', labels.length === 0);
@@ -1054,8 +1066,7 @@
         async deleteItem(id, name) {
             const result = await Swal.fire({
                 title: 'Hapus Karyawan?',
-                html: `<strong>${name}</strong> akan dipindahkan ke sampah.<br>
-                       <small class="text-muted">Dapat dipulihkan dari menu Sampah.</small>`,
+                html: `<strong>${name}</strong> akan dipindahkan ke sampah.<br><small class="text-muted">Dapat dipulihkan dari menu Sampah.</small>`,
                 icon: 'warning',
                 showCancelButton: true,
                 reverseButtons: true,
@@ -1065,16 +1076,13 @@
                 cancelButtonText: 'Batal',
             });
             if (!result.isConfirmed) return;
-
             try {
                 const res = await this.post(this.BASE + `hrm/employees/delete/${id}`, new FormData());
                 if (res.status === 'success') {
                     this.dt.ajax.reload(null, false);
                     this.loadStats();
                     this.toast('success', res.message);
-                } else {
-                    this.toast('error', res.message);
-                }
+                } else this.toast('error', res.message);
             } catch (e) {
                 this.toast('error', e.message);
             }
@@ -1084,45 +1092,38 @@
         initEvents() {
             document.getElementById('btn-refresh')
                 .addEventListener('click', () => this.dt.ajax.reload(() => this.loadStats(), false));
-
             document.getElementById('btn-apply-filter')
                 .addEventListener('click', () => this.applyFilter());
-
             document.getElementById('btn-reset-filter')
                 .addEventListener('click', () => this.resetFilter());
-
             document.getElementById('filter-name')
                 .addEventListener('keypress', e => {
                     if (e.key === 'Enter') this.applyFilter();
                 });
+            document.getElementById('btn-export-excel')
+                .addEventListener('click', e => {
+                    e.preventDefault();
+                    this.exportToExcel();
+                });
+            document.getElementById('btn-export-pdf')
+                .addEventListener('click', e => {
+                    e.preventDefault();
+                    this.exportToPdf();
+                });
+            document.getElementById('btn-print')
+                .addEventListener('click', e => {
+                    e.preventDefault();
+                    this.print();
+                });
+
+            // Group by — gunakan Employee.groupBy() bukan this (hindari masalah context)
+            document.querySelectorAll('.group-by-btn').forEach(btn => {
+                btn.addEventListener('click', () => Employee.groupBy(btn.dataset.group));
+            });
 
             $(document).on('click', '.btn-delete', e => {
                 const btn = $(e.currentTarget);
                 this.deleteItem(btn.data('id'), btn.data('name'));
-            });
-
-            // Group By
-            document.querySelectorAll('.group-by-btn').forEach(btn => {
-                btn.addEventListener('click', () => {
-                    document.querySelectorAll('.group-by-btn').forEach(b => {
-                        b.className = 'btn btn-sm group-by-btn btn-subtle-secondary';
-                    });
-                    btn.className = 'btn btn-sm group-by-btn btn-primary';
-
-                    const colMap = {
-                        department: 4,
-                        position: 3,
-                        shift: 6,
-                        gender: 2
-                    };
-                    const group = btn.dataset.group;
-
-                    if (group === 'none') {
-                        this.dt.rowGroup().disable().draw();
-                    } else {
-                        this.dt.rowGroup().dataSrc(colMap[group]).enable().draw();
-                    }
-                });
             });
         },
 
@@ -1130,22 +1131,17 @@
         fmtDate(d) {
             if (!d) return '<span class="text-muted">—</span>';
             const dt = new Date(d);
-            return `<span class="d-block">${dt.toLocaleDateString('id-ID', { day:'2-digit', month:'short', year:'numeric' })}</span>
-                    <small class="text-muted">${dt.toLocaleTimeString('id-ID', { hour:'2-digit', minute:'2-digit' })}</small>`;
+            return `<span class="d-block">${dt.toLocaleDateString('id-ID', {day:'2-digit',month:'short',year:'numeric'})}</span>
+                <small class="text-muted">${dt.toLocaleTimeString('id-ID', {hour:'2-digit',minute:'2-digit'})}</small>`;
         },
-
         fmtUser(name) {
             if (!name) return '<span class="text-muted fst-italic">—</span>';
-            return `<span class="badge-user"><span class="fas fa-user-circle"></span>${this.e(name)}</span>`;
+            return `<span class="badge-user"><span class="fas fa-user-circle me-1"></span>${this.e(name)}</span>`;
         },
-
         e(s) {
             if (!s) return '';
-            return String(s)
-                .replace(/&/g, '&amp;').replace(/</g, '&lt;')
-                .replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+            return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
         },
-
         toast(type, msg) {
             Swal.fire({
                 toast: true,
@@ -1154,7 +1150,7 @@
                 title: msg,
                 showConfirmButton: false,
                 timer: type === 'success' ? 2000 : 3500,
-                timerProgressBar: true,
+                timerProgressBar: true
             });
         },
     };

@@ -313,6 +313,7 @@
   <script src="<?= base_url('vendors/DataTables/ext/Buttons-3.2.5/js/buttons.bootstrap5.min.js') ?>"></script>
   <script src="<?= base_url('vendors/DataTables/ext/Buttons-3.2.5/js/buttons.html5.min.js') ?>"></script>
   <script src="<?= base_url('vendors/DataTables/ext/RowGroup-1.6.0/js/rowGroup.bootstrap5.min.js') ?>"></script>
+  <script src="<?= base_url('vendors/DataTables/ext/RowGroup-1.6.0/js/dataTables.rowGroup.min.js') ?>"></script>
   <script src="<?= base_url('vendors/DataTables/ext/Buttons-3.2.5/js/buttons.print.min.js') ?>"></script>
 
   <script src=" <?= base_url('vendors/flatpickr/flatpickr.min.js') ?>"></script>

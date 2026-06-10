@@ -15,6 +15,7 @@ class PositionModel extends Model
     protected $allowedFields = [
         'position_code',
         'position_name',
+        'position_level',
         'department_id',
         'description',
         'status',

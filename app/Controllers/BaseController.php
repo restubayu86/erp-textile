@@ -18,6 +18,7 @@ use Psr\Log\LoggerInterface;
  *
  * For security, be sure to declare any new methods as protected or private.
  */
+
 abstract class BaseController extends Controller
 {
     /**
@@ -41,5 +42,6 @@ abstract class BaseController extends Controller
 
         // Preload any models, libraries, etc, here.
         // $this->session = service('session');
+        helper(['url', 'auth', 'setting', 'company']);
     }
 }

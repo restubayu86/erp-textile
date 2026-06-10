@@ -144,6 +144,34 @@ class PositionController extends BaseController
             ->toJson(true);
     }
 
+    public function getPositionLevel(string $positionName)
+    {
+        $positionName = strtolower($positionName);
+
+        // Level 1: Manajer / Kadiv
+        if (preg_match('/(manajer|manager|kadiv|kepala divisi)/i', $positionName)) {
+            return 1;
+        }
+        // Level 2: Kabag / Kepala Bagian
+        if (preg_match('/(kabag|kepala bagian|head of)/i', $positionName)) {
+            return 2;
+        }
+        // Level 3: SPV / Supervisor
+        if (preg_match('/(spv|supervisor|supervisi)/i', $positionName)) {
+            return 3;
+        }
+        // Level 4: Formen / Foreman
+        if (preg_match('/(formen|foreman)/i', $positionName)) {
+            return 4;
+        }
+        // Level 5: Operator / Staff
+        if (preg_match('/(operator|staff|karyawan)/i', $positionName)) {
+            return 5;
+        }
+        // Level 6: Lainnya
+        return 99;
+    }
+
     // ============================================================
     // AJAX — CRUD
     // ============================================================
@@ -180,6 +208,7 @@ class PositionController extends BaseController
         $rules = [
             'position_code' => 'required|max_length[50]|alpha_numeric_punct',
             'position_name' => 'required|max_length[100]',
+            'position_level' => 'permit_empty|is_natural_no_zero|less_than_equal_to[99]',
             'status'        => 'required|in_list[Active,Draft,Archived]',
         ];
 
@@ -195,6 +224,7 @@ class PositionController extends BaseController
         $data = [
             'position_code' => strtoupper(trim($this->request->getPost('position_code'))),
             'position_name' => trim($this->request->getPost('position_name')),
+            'position_level' => $this->request->getPost('position_level') ?: null,
             'department_id' => $this->request->getPost('department_id') ?: null,
             'description'   => trim($this->request->getPost('description') ?? '') ?: null,
             'status'        => $this->request->getPost('status'),
@@ -314,23 +344,24 @@ class PositionController extends BaseController
 
     public function select2()
     {
-        $search  = trim($this->request->getGet('search') ?? '');
+        $search       = trim($this->request->getGet('search') ?? '');
         $departmentId = $this->request->getGet('department_id');
 
-        $builder = $this->model->db->table('positions')
-            ->select('id, position_code AS code, position_name AS name, department_id')
-            ->where('status', 'Active')
-            ->where('deleted_at', null)
-            ->orderBy('position_name', 'ASC');
+        $builder = $this->model->db->table('positions p')
+            ->select('p.id, p.position_code AS code, p.position_name AS name, p.department_id, d.department AS department_name')
+            ->join('departments d', 'd.id = p.department_id', 'left')
+            ->where('p.status', 'Active')
+            ->where('p.deleted_at', null)
+            ->orderBy('p.position_name', 'ASC');
 
         if ($departmentId) {
-            $builder->where('department_id', $departmentId);
+            $builder->where('p.department_id', $departmentId);
         }
 
         if ($search !== '') {
             $builder->groupStart()
-                ->like('position_name', $search)
-                ->orLike('position_code', $search)
+                ->like('p.position_name', $search)
+                ->orLike('p.position_code', $search)
                 ->groupEnd();
         }
 

@@ -71,34 +71,41 @@ $routes->group('hrm', ['namespace' => 'App\Modules\HRM\Controllers', 'filter' =>
 
 $routes->group('hrm', ['namespace' => 'App\Modules\HRM\Controllers', 'filter' => 'shield'], function ($routes) {
 
-    // ── Employees ──────────────────────────────────────────────────────────
-    $routes->get('employees',                           'EmployeeController::index',       ['as' => 'hrm.employees']);
-    $routes->get('employees/trash',                     'EmployeeController::trash',       ['as' => 'hrm.employees.trash']);
+    // ── Pages ──────────────────────────────────────────────────────────────
+    $routes->get('employees',                           'EmployeeController::index',          ['as' => 'hrm.employees']);
+    $routes->get('employees/trash',                     'EmployeeController::trash',          ['as' => 'hrm.employees.trash']);
+    $routes->get('employees/create',                    'EmployeeController::create',         ['as' => 'hrm.employees.create']);
+    $routes->get('employees/edit/(:num)',                'EmployeeController::edit/$1',        ['as' => 'hrm.employees.edit']);
+    $routes->get('employees/show/(:num)',                'EmployeeController::show/$1',        ['as' => 'hrm.employees.show']);
 
-    // DataTable endpoints
+    // ── DataTable endpoints ────────────────────────────────────────────────
     $routes->get('employees/datatables',                'EmployeeController::datatables');
     $routes->get('employees/trash-datatables',          'EmployeeController::trashDatatables');
 
-    // Stats & Select2
+    // ── Stats & Select2 ────────────────────────────────────────────────────
     $routes->get('employees/stats',                     'EmployeeController::stats');
     $routes->get('employees/select2',                   'EmployeeController::select2');
 
-    // Lookups
+    // ── Lookups ────────────────────────────────────────────────────────────
     $routes->get('employees/by-position/(:num)',        'EmployeeController::getByPosition/$1');
     $routes->get('employees/by-department/(:num)',      'EmployeeController::getByDepartment/$1');
     $routes->get('employees/by-shift/(:alpha)',         'EmployeeController::getByShift/$1');
     $routes->get('employees/by-work-area',              'EmployeeController::getByWorkArea');
 
-    // AJAX CRUD
+    // ── Export & Print ─────────────────────────────────────────────────────
+    $routes->get('employees/export',                    'EmployeeController::export');
+    $routes->get('employees/print',                     'EmployeeController::print');
+
+    // ── AJAX CRUD ──────────────────────────────────────────────────────────
     $routes->get('employees/get/(:num)',                'EmployeeController::get/$1');
-    $routes->post('employees/store',                    'EmployeeController::store',       ['as' => 'hrm.employees.store']);
+    $routes->post('employees/store',                    'EmployeeController::store',          ['as' => 'hrm.employees.store']);
     $routes->post('employees/delete/(:num)',            'EmployeeController::delete/$1');
     $routes->post('employees/restore/(:num)',           'EmployeeController::restore/$1');
     $routes->post('employees/force-delete/(:num)',      'EmployeeController::forceDelete/$1');
     $routes->post('employees/empty-trash',              'EmployeeController::emptyTrash');
     $routes->post('employees/check-unique',             'EmployeeController::checkUnique');
 
-    // Photo
+    // ── Photo ──────────────────────────────────────────────────────────────
     $routes->post('employees/upload-photo/(:num)',      'EmployeeController::uploadPhoto/$1');
     $routes->post('employees/delete-photo/(:num)',      'EmployeeController::deletePhoto/$1');
 });

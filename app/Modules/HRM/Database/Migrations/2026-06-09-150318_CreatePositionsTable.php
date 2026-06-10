@@ -24,6 +24,11 @@ class CreatePositionsTable extends Migration
                 'type'       => 'VARCHAR',
                 'constraint' => 100,
             ],
+            'position_level' => [
+                'type'       => 'INT',
+                'constraint' => 2,
+                'default'    => 0,
+            ],
             'department_id' => [
                 'type'       => 'INT',
                 'constraint' => 11,
@@ -80,6 +85,6 @@ class CreatePositionsTable extends Migration
 
     public function down()
     {
-        $this->forge->dropTable('positions', true);
+        $this->forge->dropColumn('positions', 'position_level');
     }
 }

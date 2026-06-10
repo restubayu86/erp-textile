@@ -1,3 +1,12 @@
 php spark make:migration CreatePositionsTable --namespace "App\Modules\HRM"
 masukan kode migrate
 php spark migrate -n "App\Modules\HRM"
+
+UPDATE ini
+# Install PhpSpreadsheet untuk Excel
+composer require phpoffice/phpspreadsheet
+# Install Dompdf untuk PDF
+composer require dompdf/dompdf
+
+mkdir -p writable/exports
+chmod 777 writable/exports
