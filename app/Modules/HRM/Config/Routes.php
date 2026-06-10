@@ -61,3 +61,44 @@ $routes->group('hrm', ['namespace' => 'App\Modules\HRM\Controllers', 'filter' =>
     $routes->post('positions/empty-trash',             'PositionController::emptyTrash');
     $routes->post('positions/check-unique',            'PositionController::checkUnique');
 });
+
+// =============================================================================
+//  HRM — Employees Routes
+//  Prefix  : /hrm/employees
+//  Filter  : shield
+//  NS      : App\Modules\HRM\Controllers
+// =============================================================================
+
+$routes->group('hrm', ['namespace' => 'App\Modules\HRM\Controllers', 'filter' => 'shield'], function ($routes) {
+
+    // ── Employees ──────────────────────────────────────────────────────────
+    $routes->get('employees',                           'EmployeeController::index',       ['as' => 'hrm.employees']);
+    $routes->get('employees/trash',                     'EmployeeController::trash',       ['as' => 'hrm.employees.trash']);
+
+    // DataTable endpoints
+    $routes->get('employees/datatables',                'EmployeeController::datatables');
+    $routes->get('employees/trash-datatables',          'EmployeeController::trashDatatables');
+
+    // Stats & Select2
+    $routes->get('employees/stats',                     'EmployeeController::stats');
+    $routes->get('employees/select2',                   'EmployeeController::select2');
+
+    // Lookups
+    $routes->get('employees/by-position/(:num)',        'EmployeeController::getByPosition/$1');
+    $routes->get('employees/by-department/(:num)',      'EmployeeController::getByDepartment/$1');
+    $routes->get('employees/by-shift/(:alpha)',         'EmployeeController::getByShift/$1');
+    $routes->get('employees/by-work-area',              'EmployeeController::getByWorkArea');
+
+    // AJAX CRUD
+    $routes->get('employees/get/(:num)',                'EmployeeController::get/$1');
+    $routes->post('employees/store',                    'EmployeeController::store',       ['as' => 'hrm.employees.store']);
+    $routes->post('employees/delete/(:num)',            'EmployeeController::delete/$1');
+    $routes->post('employees/restore/(:num)',           'EmployeeController::restore/$1');
+    $routes->post('employees/force-delete/(:num)',      'EmployeeController::forceDelete/$1');
+    $routes->post('employees/empty-trash',              'EmployeeController::emptyTrash');
+    $routes->post('employees/check-unique',             'EmployeeController::checkUnique');
+
+    // Photo
+    $routes->post('employees/upload-photo/(:num)',      'EmployeeController::uploadPhoto/$1');
+    $routes->post('employees/delete-photo/(:num)',      'EmployeeController::deletePhoto/$1');
+});

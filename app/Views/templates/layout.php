@@ -51,6 +51,7 @@
   <link rel="stylesheet" href="<?= base_url('vendors/DataTables/css/dataTables.bootstrap5.min.css') ?>">
   <link rel="stylesheet" href="<?= base_url('vendors/DataTables/css/responsive.bootstrap5.min.css') ?>">
   <link rel="stylesheet" href="<?= base_url('vendors/DataTables/ext/Buttons-3.2.5/css/buttons.bootstrap5.min.css') ?>">
+  <link rel="stylesheet" href="<?= base_url('vendors/DataTables/ext/RowGroup-1.6.0/css/rowGroup.bootstrap5.min.css') ?>">
 
   <link rel="stylesheet" href="<?= base_url('vendors/flatpickr/flatpickr.min.css') ?>">
 
@@ -311,6 +312,7 @@
   <script src="<?= base_url('vendors/DataTables/ext/Buttons-3.2.5/js/dataTables.buttons.min.js') ?>"></script>
   <script src="<?= base_url('vendors/DataTables/ext/Buttons-3.2.5/js/buttons.bootstrap5.min.js') ?>"></script>
   <script src="<?= base_url('vendors/DataTables/ext/Buttons-3.2.5/js/buttons.html5.min.js') ?>"></script>
+  <script src="<?= base_url('vendors/DataTables/ext/RowGroup-1.6.0/js/rowGroup.bootstrap5.min.js') ?>"></script>
   <script src="<?= base_url('vendors/DataTables/ext/Buttons-3.2.5/js/buttons.print.min.js') ?>"></script>
 
   <script src=" <?= base_url('vendors/flatpickr/flatpickr.min.js') ?>"></script>
