@@ -8,6 +8,11 @@
         overflow-x: hidden;
     }
 
+    .btn-group-sm .btn {
+        padding: .25rem .5rem;
+        font-size: .7rem;
+    }
+
     /* ── User badge ──────────────────────────────────────────────── */
     .badge-user {
         display: inline-flex;

@@ -18,7 +18,8 @@ class CreatePositionsTable extends Migration
             'position_code' => [
                 'type'       => 'VARCHAR',
                 'constraint' => 50,
-                'unique'     => true,
+                // TIDAK unique global — uniqueness scoped per department_id
+                // dijaga di level aplikasi (PositionModel::isDuplicateCode)
             ],
             'position_name' => [
                 'type'       => 'VARCHAR',
@@ -79,12 +80,17 @@ class CreatePositionsTable extends Migration
         $this->forge->addKey('id', true);
         $this->forge->addKey('department_id');
         $this->forge->addKey('status');
+
+        // Composite index — basis uniqueness per departemen (dicek di PositionModel)
+        $this->forge->addKey(['position_code', 'department_id'], false, false, 'idx_code_dept');
+        $this->forge->addKey(['position_name', 'department_id'], false, false, 'idx_name_dept');
+
         $this->forge->addForeignKey('department_id', 'departments', 'id', 'SET NULL', 'CASCADE');
         $this->forge->createTable('positions', true);
     }
 
     public function down()
     {
-        $this->forge->dropColumn('positions', 'position_level');
+        $this->forge->dropTable('positions', true);
     }
 }

@@ -209,13 +209,4 @@ class DepartmentModel extends Model
             ->where('deleted_at', null)
             ->countAllResults();
     }
-
-    public function isUsedByEmployees(int $id): int
-    {
-        // Cek apakah departemen dipakai di tabel employees
-        return $this->db->table('employees')
-            ->where('department_id', $id)
-            ->where('deleted_at', null)
-            ->countAllResults();
-    }
 }

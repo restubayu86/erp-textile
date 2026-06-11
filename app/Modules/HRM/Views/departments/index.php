@@ -225,6 +225,18 @@
         display: none;
     }
 
+    .form-control.is-valid,
+    .form-select.is-valid {
+        border-color: var(--phoenix-success, #198754) !important;
+        background-image: none !important;
+    }
+
+    .form-control.is-invalid,
+    .form-select.is-invalid {
+        border-color: var(--phoenix-danger, #e63757) !important;
+        background-image: none !important;
+    }
+
     @media print {
         .no-print {
             display: none !important;
@@ -498,6 +510,7 @@
         init() {
             this.initDatatable();
             this.initEvents();
+            this.initFieldEvents();
             this.loadStats();
             document.getElementById('print-date').textContent = new Date().toLocaleDateString('id-ID', {
                 day: '2-digit',
@@ -714,6 +727,10 @@
                     document.getElementById('f-desc').value = d.data.description ?? '';
                     document.getElementById('f-status').value = d.data.status ?? 'Draft';
                     document.getElementById('char-count').textContent = (d.data.description ?? '').length;
+
+                    if (d.data.department) this.markValid('f-name');
+                    if (d.data.department_code) this.markValid('f-code');
+                    if (d.data.status) this.markValid('f-status');
                 } else {
                     this.toast('error', d.message ?? 'Gagal memuat data');
                     bootstrap.Modal.getInstance(document.getElementById('deptModal'))?.hide();
@@ -770,11 +787,36 @@
         },
 
         clearErrors() {
-            document.querySelectorAll('#deptModal .is-invalid').forEach(el => el.classList.remove('is-invalid'));
+            ['f-name', 'f-code', 'f-desc', 'f-status'].forEach(id => {
+                const el = document.getElementById(id);
+                if (!el) return;
+                el.classList.remove('is-invalid', 'is-valid');
+            });
             document.querySelectorAll('#deptModal .invalid-feedback').forEach(el => {
                 el.textContent = '';
                 el.style.visibility = '';
             });
+            document.getElementById('modal-alert').classList.add('d-none');
+        },
+
+        markValid(id) {
+            const el = document.getElementById(id);
+            if (!el) return;
+            el.classList.remove('is-invalid');
+            el.classList.add('is-valid');
+        },
+
+        markInvalid(id, errId, msg) {
+            const el = document.getElementById(id);
+            if (el) {
+                el.classList.add('is-invalid');
+                el.classList.remove('is-valid');
+            }
+            const errEl = document.getElementById(errId);
+            if (errEl) {
+                errEl.textContent = msg;
+                errEl.style.visibility = 'visible';
+            }
         },
 
         showErrors(errors) {
@@ -782,18 +824,48 @@
                 department: ['f-name', 'err-name'],
                 department_code: ['f-code', 'err-code'],
                 description: ['f-desc', 'err-desc'],
-                status: ['f-status', 'err-status']
+                status: ['f-status', 'err-status'],
             };
             Object.entries(errors).forEach(([f, msg]) => {
                 const [inp, err] = map[f] ?? [];
-                if (inp) document.getElementById(inp)?.classList.add('is-invalid');
-                if (err) {
-                    const el = document.getElementById(err);
-                    if (el) {
-                        el.textContent = Array.isArray(msg) ? msg[0] : msg;
-                        el.style.visibility = 'visible';
+                if (inp && err) this.markInvalid(inp, err, Array.isArray(msg) ? msg[0] : msg);
+            });
+        },
+
+        initFieldEvents() {
+            // Department modal — is-valid saat user mengisi
+            [{
+                    input: 'f-name',
+                    required: true
+                },
+                {
+                    input: 'f-code',
+                    required: true
+                },
+                {
+                    input: 'f-status',
+                    required: true
+                },
+                {
+                    input: 'f-desc',
+                    required: false
+                },
+            ].forEach(({
+                input,
+                required
+            }) => {
+                document.getElementById(input)?.addEventListener('input', () => {
+                    const el = document.getElementById(input);
+                    if (!el) return;
+                    if (el.value.trim()) {
+                        this.markValid(input);
+                    } else if (required) {
+                        el.classList.remove('is-valid');
+                        el.classList.add('is-invalid');
+                    } else {
+                        el.classList.remove('is-valid', 'is-invalid');
                     }
-                }
+                });
             });
         },
 

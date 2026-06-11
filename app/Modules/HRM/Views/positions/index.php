@@ -4,12 +4,11 @@
 <meta name="csrf-token" content="<?= csrf_hash() ?>">
 <meta name="csrf-name" content="<?= csrf_token() ?>">
 <style>
-    /* ── Prevent horizontal page scrollbar ───────────────────────── */
     body {
         overflow-x: hidden;
     }
 
-    /* ── Stat Cards ──────────────────────────────────────────────── */
+    /* ── Stat Cards ───────────────────────────────────────────── */
     .stat-card {
         border: none;
         border-radius: 1rem;
@@ -46,7 +45,7 @@
         line-height: 1;
     }
 
-    /* ── Status badge ────────────────────────────────────────────── */
+    /* ── Badges ───────────────────────────────────────────────── */
     .badge-status {
         display: inline-flex;
         align-items: center;
@@ -59,19 +58,19 @@
     }
 
     .badge-status.active {
-        background-color: rgba(var(--phoenix-success-rgb), .12);
+        background: rgba(var(--phoenix-success-rgb), .12);
         color: var(--phoenix-success);
         border: 1px solid rgba(var(--phoenix-success-rgb), .25);
     }
 
     .badge-status.draft {
-        background-color: rgba(var(--phoenix-warning-rgb), .12);
+        background: rgba(var(--phoenix-warning-rgb), .12);
         color: var(--phoenix-warning);
         border: 1px solid rgba(var(--phoenix-warning-rgb), .25);
     }
 
     .badge-status.archived {
-        background-color: rgba(var(--phoenix-secondary-rgb), .12);
+        background: rgba(var(--phoenix-secondary-rgb), .12);
         color: var(--phoenix-secondary);
         border: 1px solid rgba(var(--phoenix-secondary-rgb), .25);
     }
@@ -81,7 +80,6 @@
         flex-shrink: 0;
     }
 
-    /* ── User badge ──────────────────────────────────────────────── */
     .badge-user {
         display: inline-flex;
         align-items: center;
@@ -90,7 +88,7 @@
         border-radius: 20px;
         font-size: .72rem;
         font-weight: 600;
-        background-color: rgba(var(--phoenix-info-rgb), .12);
+        background: rgba(var(--phoenix-info-rgb), .12);
         color: var(--phoenix-info);
         border: 1px solid rgba(var(--phoenix-info-rgb), .25);
         white-space: nowrap;
@@ -99,12 +97,6 @@
         text-overflow: ellipsis;
     }
 
-    .badge-user .fa-user-circle {
-        font-size: .8rem;
-        flex-shrink: 0;
-    }
-
-    /* ── Department badge ────────────────────────────────────────── */
     .badge-dept {
         display: inline-flex;
         align-items: center;
@@ -113,7 +105,7 @@
         border-radius: 20px;
         font-size: .72rem;
         font-weight: 600;
-        background-color: rgba(var(--phoenix-primary-rgb), .12);
+        background: rgba(var(--phoenix-primary-rgb), .12);
         color: var(--phoenix-primary);
         border: 1px solid rgba(var(--phoenix-primary-rgb), .25);
         white-space: nowrap;
@@ -122,12 +114,22 @@
         text-overflow: ellipsis;
     }
 
-    .badge-dept .fa-building {
-        font-size: .7rem;
+    .badge-level {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 24px;
+        height: 24px;
+        border-radius: 6px;
+        font-size: .68rem;
+        font-weight: 700;
+        background: rgba(var(--phoenix-primary-rgb), .1);
+        color: var(--phoenix-primary);
+        border: 1px solid rgba(var(--phoenix-primary-rgb), .2);
         flex-shrink: 0;
     }
 
-    /* ── Filter toggle ───────────────────────────────────────────── */
+    /* ── Filter toggle ────────────────────────────────────────── */
     .filter-toggle {
         position: fixed;
         right: 0;
@@ -171,7 +173,7 @@
         display: block;
     }
 
-    /* ── DataTables Custom Layout ────────────────────────────────── */
+    /* ── DataTables layout ────────────────────────────────────── */
     #position-table_wrapper .top {
         display: flex;
         justify-content: center;
@@ -181,7 +183,7 @@
     #position-table_wrapper .top input {
         width: 300px;
         border-radius: 20px;
-        padding: 0.375rem 1rem;
+        padding: .375rem 1rem;
         text-align: center;
     }
 
@@ -194,21 +196,18 @@
         gap: 1rem;
     }
 
-    /* Length Menu di KIRI */
     #position-table_wrapper .bottom .dataTables_length {
         flex: 1;
         text-align: left;
         order: 1;
     }
 
-    /* Pagination di TENGAH */
     #position-table_wrapper .bottom .dataTables_paginate {
         flex: 1;
         text-align: center;
         order: 2;
     }
 
-    /* Info di KANAN */
     #position-table_wrapper .bottom .dataTables_info {
         flex: 1;
         text-align: right;
@@ -223,14 +222,14 @@
     #position-table_wrapper .dataTables_length select {
         width: auto;
         display: inline-block;
-        margin: 0 0.5rem;
-        border-radius: 0.375rem;
+        margin: 0 .5rem;
+        border-radius: .375rem;
     }
 
     #position-table_wrapper .dataTables_paginate .paginate_button {
-        padding: 0.375rem 0.75rem;
-        margin: 0 0.25rem;
-        border-radius: 0.375rem;
+        padding: .375rem .75rem;
+        margin: 0 .25rem;
+        border-radius: .375rem;
     }
 
     #position-table_wrapper .dataTables_paginate .paginate_button.current {
@@ -243,27 +242,9 @@
         width: 100% !important;
     }
 
-    /* ── Print ───────────────────────────────────────────────────── */
+    /* ── Print ────────────────────────────────────────────────── */
     .print-header {
         display: none;
-    }
-
-    /* Select2 custom styling */
-    .select2-container--bootstrap-5 .select2-selection {
-        min-height: 31px;
-        font-size: 0.875rem;
-    }
-
-    .select2-container--bootstrap-5 .select2-selection--single .select2-selection__rendered {
-        line-height: 29px;
-    }
-
-    .select2-container--bootstrap-5 .select2-selection--single .select2-selection__arrow {
-        height: 29px;
-    }
-
-    .select2-dropdown {
-        font-size: 0.875rem;
     }
 
     @media print {
@@ -281,15 +262,34 @@
         }
     }
 
+    /* ── Select2 ──────────────────────────────────────────────── */
+    .select2-container--bootstrap-5 .select2-selection {
+        min-height: 31px;
+        font-size: .875rem;
+    }
+
+    .select2-container--bootstrap-5 .select2-selection--single .select2-selection__rendered {
+        line-height: 29px;
+    }
+
+    .select2-container--bootstrap-5 .select2-selection--single .select2-selection__arrow {
+        height: 29px;
+    }
+
+    .select2-dropdown {
+        font-size: .875rem;
+    }
+
     .btn-group-sm .btn {
-        padding: 0.25rem 0.5rem;
-        font-size: 0.7rem;
+        padding: .25rem .5rem;
+        font-size: .7rem;
     }
 </style>
 <?= $this->endSection() ?>
 
 <?= $this->section('content') ?>
 <div class="w-100">
+
     <!-- Page Header -->
     <div class="d-flex justify-content-between align-items-start mb-4">
         <div>
@@ -297,28 +297,28 @@
                 <ol class="breadcrumb mb-0">
                     <?php foreach ($breadcrumbs as $crumb): ?>
                         <?php if (!empty($crumb['active'])): ?>
-                            <li class="breadcrumb-item active"><?= esc((string)(string)$crumb['name']) ?></li>
+                            <li class="breadcrumb-item active"><?= esc((string) $crumb['name']) ?></li>
                         <?php else: ?>
-                            <li class="breadcrumb-item"><a href="<?= $crumb['url'] ?>"><?= esc((string)(string)$crumb['name']) ?></a></li>
+                            <li class="breadcrumb-item"><a href="<?= $crumb['url'] ?>"><?= esc((string) $crumb['name']) ?></a></li>
                         <?php endif; ?>
                     <?php endforeach; ?>
                 </ol>
             </nav>
-            <h1 class="h3 mb-1 fw-bold"><?= esc((string)(string)$page_title) ?></h1>
-            <p class="text-body-tertiary mb-0"><?= esc((string)(string)$page_description) ?></p>
+            <h1 class="h3 mb-1 fw-bold"><?= esc((string) $page_title) ?></h1>
+            <p class="text-body-tertiary mb-0"><?= esc((string) $page_description) ?></p>
         </div>
     </div>
 
     <!-- Stat Cards -->
     <div class="row g-3 mb-4 no-print">
-        <?php
-        $stats = [
-            ['id' => 'stat-total',    'label' => 'Total',    'icon' => 'fa-briefcase',     'color' => 'primary'],
-            ['id' => 'stat-active',   'label' => 'Active',   'icon' => 'fa-check-circle', 'color' => 'success'],
-            ['id' => 'stat-draft',    'label' => 'Draft',    'icon' => 'fa-pencil-alt',   'color' => 'warning'],
-            ['id' => 'stat-archived', 'label' => 'Archived', 'icon' => 'fa-archive',      'color' => 'secondary'],
-        ];
-        foreach ($stats as $s): ?>
+        <?php foreach (
+            [
+                ['id' => 'stat-total',    'label' => 'Total',    'icon' => 'fa-briefcase',    'color' => 'primary'],
+                ['id' => 'stat-active',   'label' => 'Active',   'icon' => 'fa-check-circle', 'color' => 'success'],
+                ['id' => 'stat-draft',    'label' => 'Draft',    'icon' => 'fa-pencil-alt',   'color' => 'warning'],
+                ['id' => 'stat-archived', 'label' => 'Archived', 'icon' => 'fa-archive',      'color' => 'secondary'],
+            ] as $s
+        ): ?>
             <div class="col-md-3 col-6">
                 <div class="card stat-card">
                     <div class="card-body">
@@ -372,6 +372,7 @@
             <thead>
                 <tr>
                     <th>No</th>
+                    <th>Lv</th>
                     <th>Posisi</th>
                     <th>Deskripsi</th>
                     <th>Departemen</th>
@@ -410,9 +411,7 @@
             </div>
             <div class="mb-3">
                 <label class="form-label fw-semibold fs-9 text-uppercase text-muted">Departemen</label>
-                <select class="form-select form-select-sm" id="filter-department" style="width: 100%;">
-                    <option value="">Semua Departemen</option>
-                </select>
+                <select class="form-select form-select-sm" id="filter-department" style="width:100%"></select>
             </div>
             <div class="mb-4">
                 <label class="form-label fw-semibold fs-9 text-uppercase text-muted">Status</label>
@@ -431,23 +430,19 @@
             </div>
         </div>
         <div class="d-grid gap-2">
-            <button class="btn btn-primary btn-sm" id="btn-apply-filter">
-                <span class="fas fa-search me-1"></span>Terapkan
-            </button>
-            <button class="btn btn-subtle-secondary btn-sm" id="btn-reset-filter">
-                <span class="fas fa-times me-1"></span>Reset
-            </button>
+            <button class="btn btn-primary btn-sm" id="btn-apply-filter"><span class="fas fa-search me-1"></span>Terapkan</button>
+            <button class="btn btn-subtle-secondary btn-sm" id="btn-reset-filter"><span class="fas fa-times me-1"></span>Reset</button>
         </div>
     </div>
 </div>
 
 <!-- Modal Tambah / Edit -->
 <div class="modal fade" id="positionModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered ">
+    <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg rounded-3 overflow-hidden">
-            <div class="modal-header border-bottom py-3 px-4" id="modal-header">
+            <div class="modal-header border-bottom py-3 px-4">
                 <div class="d-flex align-items-center gap-3">
-                    <div class="stat-icon bg-primary bg-opacity-10 text-primary" id="modal-icon">
+                    <div class="stat-icon bg-primary bg-opacity-10 text-primary">
                         <span class="fas fa-briefcase"></span>
                     </div>
                     <div>
@@ -463,14 +458,15 @@
                     <span class="fas fa-exclamation-triangle me-1"></span>
                     <span id="modal-alert-text"></span>
                 </div>
-
                 <div class="card border mb-0" style="border-radius:.75rem">
                     <div class="card-body p-3">
                         <p class="fs-10 fw-bold text-uppercase text-primary mb-3" style="letter-spacing:.08em">
                             <span class="fas fa-clipboard-list me-1"></span>Informasi Posisi
                         </p>
                         <div class="row g-3">
-                            <div class="col-md-7">
+
+                            <!-- Nama Posisi -->
+                            <div class="col-md-8">
                                 <label class="form-label fs-9 fw-semibold text-uppercase text-muted" for="f-name">
                                     Nama Posisi <span class="text-danger">*</span>
                                 </label>
@@ -478,7 +474,8 @@
                                     placeholder="cth: Kepala Dyeing" maxlength="100" autocomplete="off">
                                 <div class="invalid-feedback" id="err-name"></div>
                             </div>
-                            <div class="col-md-5">
+                            <!-- Kode -->
+                            <div class="col-md-4">
                                 <label class="form-label fs-9 fw-semibold text-uppercase text-muted" for="f-code">
                                     Kode <span class="text-danger">*</span>
                                 </label>
@@ -488,16 +485,20 @@
                                 <div class="form-text fs-10">Maks. 50 karakter</div>
                                 <div class="invalid-feedback" id="err-code"></div>
                             </div>
-                            <div class="col-md-7">
-                                <label class="form-label fs-9 fw-semibold text-uppercase text-muted" for="f-department">
-                                    Departemen
+                            <!-- Level -->
+                            <div class="col-md-3">
+                                <label class="form-label fs-9 fw-semibold text-uppercase text-muted" for="f-level">
+                                    Level
                                 </label>
-                                <select class="form-select form-select-sm" id="f-department" style="width: 100%;">
-                                    <option value="">Pilih Departemen</option>
-                                </select>
-                                <div class="invalid-feedback" id="err-department"></div>
+                                <input type="number" class="form-control form-control-sm text-center"
+                                    id="f-level" placeholder="—" min="1" max="99">
+                                <div class="form-text fs-10">1 = tertinggi</div>
+                                <div class="invalid-feedback" id="err-level"></div>
                             </div>
-                            <div class="col-md-5">
+
+
+                            <!-- Status -->
+                            <div class="col-md-4">
                                 <label class="form-label fs-9 fw-semibold text-uppercase text-muted" for="f-status">
                                     Status <span class="text-danger">*</span>
                                 </label>
@@ -508,6 +509,19 @@
                                 </select>
                                 <div class="invalid-feedback" id="err-status"></div>
                             </div>
+
+                            <!-- Departemen -->
+                            <div class="col-5">
+                                <label class="form-label fs-9 fw-semibold text-uppercase text-muted" for="f-department">
+                                    Departemen
+                                </label>
+                                <select class="form-select form-select-sm" id="f-department" style="width:100%">
+                                    <option value="">Pilih Departemen</option>
+                                </select>
+                                <div class="invalid-feedback" id="err-department"></div>
+                            </div>
+
+                            <!-- Deskripsi -->
                             <div class="col-12">
                                 <label class="form-label fs-9 fw-semibold text-uppercase text-muted" for="f-desc">
                                     Deskripsi
@@ -519,6 +533,7 @@
                                     <small class="text-muted fs-10 ms-auto"><span id="char-count">0</span>/500</small>
                                 </div>
                             </div>
+
                         </div>
                     </div>
                 </div>
@@ -541,8 +556,8 @@
 
 <?= $this->section('scripts') ?>
 <script>
-    const CAN_EDIT_POSITION = <?= json_encode(canDo('hrm.positions.edit')) ?>;
-    const CAN_DELETE_POSITION = <?= json_encode(canDo('hrm.positions.delete')) ?>;
+    const CAN_EDIT = <?= json_encode(canDo('hrm.positions.edit')) ?>;
+    const CAN_DELETE = <?= json_encode(canDo('hrm.positions.delete')) ?>;
 
     const Position = {
         BASE: '<?= base_url() ?>',
@@ -568,14 +583,15 @@
             });
         },
 
+        /* ── CSRF ─────────────────────────────────────────────────── */
         csrfName: () => document.querySelector('meta[name="csrf-name"]')?.content ?? '',
         csrfToken: () => document.querySelector('meta[name="csrf-token"]')?.content ?? '',
-
         updateCsrf(h) {
             const m = document.querySelector('meta[name="csrf-token"]');
             if (m && h) m.content = h;
         },
 
+        /* ── HTTP ─────────────────────────────────────────────────── */
         async post(url, fd) {
             fd.set(this.csrfName(), this.csrfToken());
             const r = await fetch(url, {
@@ -591,7 +607,6 @@
             if (d?.csrfHash) this.updateCsrf(d.csrfHash);
             return d;
         },
-
         async get(url) {
             const r = await fetch(url, {
                 headers: {
@@ -601,6 +616,7 @@
             return r.json();
         },
 
+        /* ── Stats ────────────────────────────────────────────────── */
         async loadStats() {
             try {
                 const d = await this.get(this.BASE + 'hrm/positions/stats');
@@ -615,76 +631,69 @@
                     badge.classList.toggle('d-none', !d.data.trash);
                 }
             } catch (e) {
-                console.error('Error loading stats:', e);
+                console.error('loadStats:', e);
             }
         },
 
+        /* ── Select2 ──────────────────────────────────────────────── */
         initSelect2() {
-            // Select2 untuk form modal
+            // Modal form
             $('#f-department').select2({
                 theme: 'bootstrap-5',
                 width: '100%',
-                placeholder: 'Pilih Departemen',
+                placeholder: '— Pilih Departemen —',
                 allowClear: true,
                 dropdownParent: $('#positionModal'),
                 ajax: {
                     url: this.BASE + 'hrm/departments/select2',
                     dataType: 'json',
                     delay: 250,
-                    data: (params) => ({
-                        search: params.term || ''
+                    data: p => ({
+                        search: p.term || ''
                     }),
-                    processResults: (data) => ({
-                        results: data.data.map(item => ({
-                            id: item.id,
-                            text: `${item.code} - ${item.name}`
+                    processResults: d => ({
+                        results: (d.data ?? []).map(r => ({
+                            id: r.id,
+                            text: `${r.code} - ${r.name}`
                         }))
                     }),
-                    cache: true
+                    cache: true,
                 },
                 minimumInputLength: 0,
-                templateResult: (item) => {
-                    if (item.loading) return item.text;
-                    return $(`<div>${item.text}</div>`);
-                },
-                templateSelection: (item) => item.text || 'Pilih Departemen'
             });
 
-            // Select2 untuk filter offcanvas
+            // Filter offcanvas
             $('#filter-department').select2({
                 theme: 'bootstrap-5',
                 width: '100%',
-                placeholder: 'Semua Departemen',
+                placeholder: '— Semua Departemen —',
                 allowClear: true,
                 dropdownParent: $('#filter-offcanvas'),
                 ajax: {
                     url: this.BASE + 'hrm/departments/select2',
                     dataType: 'json',
                     delay: 250,
-                    data: (params) => ({
-                        search: params.term || ''
+                    data: p => ({
+                        search: p.term || ''
                     }),
-                    processResults: (data) => ({
+                    processResults: d => ({
                         results: [{
-                            id: '',
-                            text: 'Semua Departemen'
-                        }, ...data.data.map(item => ({
-                            id: item.id,
-                            text: `${item.code} - ${item.name}`
-                        }))]
+                                id: '',
+                                text: '— Semua Departemen —'
+                            },
+                            ...(d.data ?? []).map(r => ({
+                                id: r.id,
+                                text: `${r.code} - ${r.name}`
+                            }))
+                        ]
                     }),
-                    cache: true
+                    cache: true,
                 },
                 minimumInputLength: 0,
-                templateResult: (item) => {
-                    if (item.loading) return item.text;
-                    if (item.id === '') return $(`<div class="fw-bold">${item.text}</div>`);
-                    return $(`<div>${item.text}</div>`);
-                },
-                templateSelection: (item) => item.text || 'Semua Departemen'
             });
         },
 
+        /* ── DataTable ────────────────────────────────────────────── */
         initDatatable() {
             const self = this;
             this.dt = $('#position-table').DataTable({
@@ -696,8 +705,10 @@
                     [-1, 10, 25, 50, 100],
                     ['Semua', 10, 25, 50, 100]
                 ],
+                // Default order: level ASC, nama ASC
                 order: [
-                    [1, 'asc']
+                    [1, 'asc'],
+                    [2, 'asc']
                 ],
                 dom: '<"top"f>rt<"bottom"lpi>',
                 language: {
@@ -716,7 +727,7 @@
                 ajax: {
                     url: this.BASE + 'hrm/positions/datatables',
                     type: 'GET',
-                    data: (d) => {
+                    data: d => {
                         d.filter_name = self.filters.name;
                         d.filter_department = self.filters.department;
                         d.filter_status = self.filters.status;
@@ -725,31 +736,32 @@
                 },
                 columnDefs: [{
                         targets: 0,
-                        width: '50px'
+                        width: '45px'
                     },
                     {
                         targets: 1,
-                        width: '200px'
+                        width: '45px',
+                        className: 'text-center'
                     },
                     {
                         targets: 2,
-                        width: '250px'
+                        width: '200px'
                     },
                     {
                         targets: 3,
-                        width: '150px'
+                        width: '220px'
                     },
                     {
                         targets: 4,
-                        width: '100px'
+                        width: '140px'
                     },
                     {
                         targets: 5,
-                        width: '120px'
+                        width: '100px'
                     },
                     {
                         targets: 6,
-                        width: '130px'
+                        width: '110px'
                     },
                     {
                         targets: 7,
@@ -757,68 +769,92 @@
                     },
                     {
                         targets: 8,
-                        width: '130px'
+                        width: '110px'
                     },
                     {
                         targets: 9,
+                        width: '120px'
+                    },
+                    {
+                        targets: 10,
                         width: '80px'
-                    }
+                    },
                 ],
-                columns: [{
+                columns: [
+                    /* 0  No     */
+                    {
                         data: 'no',
                         orderable: false,
                         searchable: false
                     },
+                    /* 1  Level  */
+                    {
+                        data: 'position_level',
+                        orderable: true,
+                        render: d => d ?
+                            `<span class="badge-level" title="Level ${d}">${d}</span>` : '<span class="text-muted">—</span>'
+                    },
+                    /* 2  Posisi */
                     {
                         data: null,
                         render: (d, t, r) =>
                             `<div class="fw-semibold">${self.e(r.position_name)}</div>
-                             <div class="text-muted small font-monospace">${self.e(r.position_code)}</div>`
+                         <div class="text-muted small font-monospace">${self.e(r.position_code)}</div>`
                     },
+                    /* 3  Desk.  */
                     {
                         data: 'description',
-                        render: (d) => d ?
-                            `<span class="text-muted">${self.e(d.substring(0, 60))}${d.length > 60 ? '…' : ''}</span>` : '<span class="text-muted fst-italic">—</span>'
+                        render: d => d ?
+                            `<span class="text-muted">${self.e(d.substring(0,60))}${d.length > 60 ? '…' : ''}</span>` : '<span class="text-muted fst-italic">—</span>'
                     },
+                    /* 4  Dept   */
                     {
                         data: 'department_name',
-                        render: (d) => d ?
-                            `<span class="badge-dept"><span class="fas fa-building"></span>${self.e(d)}</span>` : '<span class="text-muted fst-italic">—</span>'
+                        render: d => d ?
+                            `<span class="badge-dept"><span class="fas fa-building me-1"></span>${self.e(d)}</span>` : '<span class="text-muted fst-italic">—</span>'
                     },
+                    /* 5  Status */
                     {
                         data: 'status',
-                        render: (d) => self.fmtStatus(d)
+                        render: d => self.fmtStatus(d)
                     },
+                    /* 6  Cr.at  */
                     {
                         data: 'created_at',
-                        render: (d) => self.fmtDate(d)
+                        render: d => self.fmtDate(d)
                     },
+                    /* 7  Cr.by  */
                     {
                         data: 'created_by_name',
-                        render: (d) => self.fmtUser(d)
+                        render: d => self.fmtUser(d),
+                        orderable: false
                     },
+                    /* 8  Up.at  */
                     {
                         data: 'updated_at',
-                        render: (d) => self.fmtDate(d)
+                        render: d => self.fmtDate(d)
                     },
+                    /* 9  Up.by  */
                     {
                         data: 'updated_by_name',
-                        render: (d) => self.fmtUser(d)
+                        render: d => self.fmtUser(d),
+                        orderable: false
                     },
+                    /* 10 Aksi   */
                     {
                         data: null,
                         orderable: false,
                         searchable: false,
                         className: 'text-end no-print',
                         render: (d, t, r) => {
-                            const edit = CAN_EDIT_POSITION ?
-                                `<button class="btn btn-subtle-primary btn-sm btn-edit" data-id="${r.id}">
-                                    <span class="fas fa-pencil-alt"></span>
-                                </button>` : '';
-                            const del = CAN_DELETE_POSITION ?
-                                `<button class="btn btn-subtle-danger btn-sm btn-delete" data-id="${r.id}" data-name="${self.e(r.position_name)}">
-                                    <span class="fas fa-trash"></span>
-                                </button>` : '';
+                            const edit = CAN_EDIT ?
+                                `<button class="btn btn-subtle-primary btn-sm btn-edit" data-id="${r.id}" title="Edit">
+                                   <span class="fas fa-pencil-alt"></span>
+                               </button>` : '';
+                            const del = CAN_DELETE ?
+                                `<button class="btn btn-subtle-danger btn-sm btn-delete" data-id="${r.id}" data-name="${self.e(r.position_name)}" title="Hapus">
+                                   <span class="fas fa-trash"></span>
+                               </button>` : '';
                             return `<div class="btn-group btn-group-sm">${edit}${del}</div>`;
                         }
                     },
@@ -826,77 +862,76 @@
             });
         },
 
+        /* ── Modal ────────────────────────────────────────────────── */
         openCreate() {
             this.editId = null;
-            this.resetModal();
+            this._resetModal();
             document.getElementById('modal-title').textContent = 'Tambah Posisi';
             document.getElementById('modal-subtitle').textContent = 'Buat posisi/jabatan baru';
-            document.getElementById('modal-header').classList.remove('mode-edit');
             document.getElementById('save-text').textContent = 'Simpan';
-            $('#f-department').val(null).trigger('change');
             new bootstrap.Modal(document.getElementById('positionModal')).show();
         },
 
         async openEdit(id) {
             this.editId = id;
-            this.resetModal();
+            this._resetModal();
             document.getElementById('modal-title').textContent = 'Edit Posisi';
             document.getElementById('modal-subtitle').textContent = 'Perbarui data posisi';
-            document.getElementById('modal-header').classList.add('mode-edit');
             document.getElementById('save-text').textContent = 'Update';
-            this.setLoading(true);
+            this._setLoading(true);
             new bootstrap.Modal(document.getElementById('positionModal')).show();
 
             try {
                 const d = await this.get(this.BASE + `hrm/positions/get/${id}`);
-                if (d.status === 'success' && d.data) {
-                    document.getElementById('f-name').value = d.data.position_name ?? '';
-                    document.getElementById('f-code').value = d.data.position_code ?? '';
-                    document.getElementById('f-desc').value = d.data.description ?? '';
-                    document.getElementById('f-status').value = d.data.status ?? 'Draft';
-                    document.getElementById('char-count').textContent = (d.data.description ?? '').length;
-
-                    if (d.data.department_id) {
-                        const option = new Option(
-                            d.data.department_name || d.data.department_id,
-                            d.data.department_id,
-                            true,
-                            true
-                        );
-                        $('#f-department').append(option).trigger('change');
-                    }
-                } else {
+                if (d.status !== 'success' || !d.data) {
                     this.toast('error', d.message ?? 'Gagal memuat data');
                     bootstrap.Modal.getInstance(document.getElementById('positionModal'))?.hide();
+                    return;
                 }
-            } catch (error) {
-                console.error('Error:', error);
+
+                const data = d.data;
+                document.getElementById('f-name').value = data.position_name ?? '';
+                document.getElementById('f-code').value = data.position_code ?? '';
+                document.getElementById('f-level').value = data.position_level ?? '';
+                document.getElementById('f-desc').value = data.description ?? '';
+                document.getElementById('f-status').value = data.status ?? 'Draft';
+                document.getElementById('char-count').textContent = (data.description ?? '').length;
+
+                if (data.department_id) {
+                    $('#f-department')
+                        .append(new Option(data.department_name || data.department_id, data.department_id, true, true))
+                        .trigger('change');
+                }
+            } catch (e) {
                 this.toast('error', 'Gagal memuat data');
             } finally {
-                this.setLoading(false);
+                this._setLoading(false);
             }
         },
 
         async save() {
-            this.clearErrors();
+            this._clearErrors();
+
             const fd = new FormData();
             fd.set('position_name', document.getElementById('f-name').value.trim());
             fd.set('position_code', document.getElementById('f-code').value.trim().toUpperCase());
+            fd.set('position_level', document.getElementById('f-level').value.trim());
             fd.set('department_id', $('#f-department').val() || '');
             fd.set('description', document.getElementById('f-desc').value.trim());
             fd.set('status', document.getElementById('f-status').value);
             if (this.editId) fd.set('id', this.editId);
 
-            this.setLoading(true);
+            this._setLoading(true);
             try {
                 const res = await this.post(this.BASE + 'hrm/positions/store', fd);
+
                 if (res.status === 'success') {
                     bootstrap.Modal.getInstance(document.getElementById('positionModal'))?.hide();
                     this.dt.ajax.reload(null, false);
                     this.loadStats();
                     this.toast('success', res.message);
                 } else if (res.errors) {
-                    this.showErrors(res.errors);
+                    this._showErrors(res.errors);
                 } else {
                     document.getElementById('modal-alert').classList.remove('d-none');
                     document.getElementById('modal-alert-text').textContent = res.message ?? 'Terjadi kesalahan';
@@ -904,64 +939,11 @@
             } catch (e) {
                 this.toast('error', e.message);
             } finally {
-                this.setLoading(false);
+                this._setLoading(false);
             }
         },
 
-        resetModal() {
-            ['f-name', 'f-code', 'f-desc'].forEach(id => {
-                const el = document.getElementById(id);
-                if (el) {
-                    el.value = '';
-                    el.classList.remove('is-invalid');
-                }
-            });
-            $('#f-department').val(null).trigger('change');
-            document.getElementById('f-status').value = 'Draft';
-            document.getElementById('char-count').textContent = '0';
-            document.getElementById('modal-alert').classList.add('d-none');
-            this.clearErrors();
-        },
-
-        clearErrors() {
-            document.querySelectorAll('#positionModal .is-invalid').forEach(el => el.classList.remove('is-invalid'));
-            document.querySelectorAll('#positionModal .invalid-feedback').forEach(el => {
-                el.textContent = '';
-                el.style.visibility = '';
-            });
-        },
-
-        showErrors(errors) {
-            const map = {
-                position_name: ['f-name', 'err-name'],
-                position_code: ['f-code', 'err-code'],
-                department_id: ['f-department', 'err-department'],
-                description: ['f-desc', 'err-desc'],
-                status: ['f-status', 'err-status']
-            };
-            Object.entries(errors).forEach(([f, msg]) => {
-                const [inp, err] = map[f] ?? [];
-                if (inp) {
-                    const el = document.getElementById(inp);
-                    if (el) el.classList.add('is-invalid');
-                }
-                if (err) {
-                    const el = document.getElementById(err);
-                    if (el) {
-                        el.textContent = Array.isArray(msg) ? msg[0] : msg;
-                        el.style.visibility = 'visible';
-                    }
-                }
-            });
-        },
-
-        setLoading(on) {
-            const btn = document.getElementById('btn-save');
-            const ico = document.getElementById('save-icon');
-            if (btn) btn.disabled = on;
-            if (ico) ico.className = on ? 'spinner-border spinner-border-sm me-1' : 'fas fa-save me-1';
-        },
-
+        /* ── Delete ───────────────────────────────────────────────── */
         async deleteItem(id, name) {
             const result = await Swal.fire({
                 title: 'Hapus Posisi?',
@@ -990,10 +972,11 @@
             }
         },
 
+        /* ── Filter ───────────────────────────────────────────────── */
         applyFilter() {
-            this.filters.name = document.getElementById('filter-name')?.value.trim() || '';
+            this.filters.name = document.getElementById('filter-name').value.trim();
             this.filters.department = $('#filter-department').val() || '';
-            this.filters.status = document.getElementById('filter-status')?.value || '';
+            this.filters.status = document.getElementById('filter-status').value;
             this.dt.ajax.reload();
             this.updateFilterUI();
             bootstrap.Offcanvas.getInstance(document.getElementById('filter-offcanvas'))?.hide();
@@ -1005,126 +988,152 @@
                 department: '',
                 status: ''
             };
-            const filterName = document.getElementById('filter-name');
-            if (filterName) filterName.value = '';
+            document.getElementById('filter-name').value = '';
+            document.getElementById('filter-status').value = '';
             $('#filter-department').val(null).trigger('change');
-            const filterStatus = document.getElementById('filter-status');
-            if (filterStatus) filterStatus.value = '';
             this.dt.ajax.reload();
             this.updateFilterUI();
         },
 
         updateFilterUI() {
+            const f = this.filters;
             const labels = [];
-            if (this.filters.name) labels.push(`Nama: "${this.filters.name}"`);
-            if (this.filters.department) labels.push(`Departemen terpilih`);
-            if (this.filters.status) labels.push(`Status: ${this.filters.status}`);
+            if (f.name) labels.push(`Nama: "${f.name}"`);
+            if (f.department) labels.push('Departemen terpilih');
+            if (f.status) labels.push(`Status: ${f.status}`);
 
-            const toggle = document.getElementById('filter-toggle');
-            if (toggle) toggle.classList.toggle('has-filter', labels.length > 0);
-
-            const summaryText = document.getElementById('filter-summary-text');
-            if (summaryText) summaryText.textContent = labels.join(' · ');
-
-            const summary = document.getElementById('filter-summary');
-            if (summary) summary.classList.toggle('d-none', labels.length === 0);
+            document.getElementById('filter-toggle').classList.toggle('has-filter', labels.length > 0);
+            document.getElementById('filter-summary-text').textContent = labels.join(' · ');
+            document.getElementById('filter-summary').classList.toggle('d-none', labels.length === 0);
         },
 
+        /* ── Events ───────────────────────────────────────────────── */
         initEvents() {
-            const refreshBtn = document.getElementById('btn-refresh');
-            if (refreshBtn) refreshBtn.addEventListener('click', () => {
-                this.dt.ajax.reload(() => this.loadStats(), false);
-            });
+            document.getElementById('btn-refresh')
+                .addEventListener('click', () => this.dt.ajax.reload(() => this.loadStats(), false));
+            document.getElementById('btn-create')
+                ?.addEventListener('click', () => this.openCreate());
+            document.getElementById('btn-save')
+                .addEventListener('click', () => this.save());
+            document.getElementById('btn-apply-filter')
+                .addEventListener('click', () => this.applyFilter());
+            document.getElementById('btn-reset-filter')
+                .addEventListener('click', () => this.resetFilter());
+            document.getElementById('filter-name')
+                .addEventListener('keypress', e => {
+                    if (e.key === 'Enter') this.applyFilter();
+                });
 
-            const createBtn = document.getElementById('btn-create');
-            if (createBtn) createBtn.addEventListener('click', () => this.openCreate());
+            document.getElementById('f-desc')
+                ?.addEventListener('input', e => {
+                    document.getElementById('char-count').textContent = e.target.value.length;
+                });
 
-            const saveBtn = document.getElementById('btn-save');
-            if (saveBtn) saveBtn.addEventListener('click', () => this.save());
+            document.getElementById('f-code')
+                ?.addEventListener('input', e => {
+                    e.target.value = e.target.value.toUpperCase().replace(/[^A-Z0-9_\-]/g, '');
+                });
 
-            const applyFilterBtn = document.getElementById('btn-apply-filter');
-            if (applyFilterBtn) applyFilterBtn.addEventListener('click', () => this.applyFilter());
-
-            const resetFilterBtn = document.getElementById('btn-reset-filter');
-            if (resetFilterBtn) resetFilterBtn.addEventListener('click', () => this.resetFilter());
-
-            const descField = document.getElementById('f-desc');
-            if (descField) descField.addEventListener('input', (e) => {
-                const charCount = document.getElementById('char-count');
-                if (charCount) charCount.textContent = e.target.value.length;
-            });
-
-            const codeField = document.getElementById('f-code');
-            if (codeField) codeField.addEventListener('input', (e) => {
-                e.target.value = e.target.value.toUpperCase().replace(/[^A-Z0-9_\-]/g, '');
-            });
-
-            $(document).on('click', '.btn-edit', (e) => {
-                const id = $(e.currentTarget).data('id');
-                this.openEdit(id);
-            });
-
-            $(document).on('click', '.btn-delete', (e) => {
+            $(document).on('click', '.btn-edit', e => Position.openEdit($(e.currentTarget).data('id')));
+            $(document).on('click', '.btn-delete', e => {
                 const btn = $(e.currentTarget);
-                this.deleteItem(btn.data('id'), btn.data('name'));
+                Position.deleteItem(btn.data('id'), btn.data('name'));
             });
         },
 
+        /* ── Private helpers ──────────────────────────────────────── */
+        _resetModal() {
+            ['f-name', 'f-code', 'f-desc'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) {
+                    el.value = '';
+                    el.classList.remove('is-invalid');
+                }
+            });
+            document.getElementById('f-level').value = '';
+            document.getElementById('f-status').value = 'Draft';
+            document.getElementById('char-count').textContent = '0';
+            document.getElementById('modal-alert').classList.add('d-none');
+            $('#f-department').val(null).trigger('change');
+            this._clearErrors();
+        },
+
+        _clearErrors() {
+            document.querySelectorAll('#positionModal .is-invalid')
+                .forEach(el => el.classList.remove('is-invalid'));
+            document.querySelectorAll('#positionModal .invalid-feedback')
+                .forEach(el => {
+                    el.textContent = '';
+                    el.style.visibility = '';
+                });
+        },
+
+        _showErrors(errors) {
+            const map = {
+                position_name: ['f-name', 'err-name'],
+                position_code: ['f-code', 'err-code'],
+                position_level: ['f-level', 'err-level'],
+                department_id: ['f-department', 'err-department'],
+                description: ['f-desc', 'err-desc'],
+                status: ['f-status', 'err-status'],
+            };
+            Object.entries(errors).forEach(([f, msg]) => {
+                const [inp, err] = map[f] ?? [];
+                if (inp) document.getElementById(inp)?.classList.add('is-invalid');
+                if (err) {
+                    const el = document.getElementById(err);
+                    if (el) {
+                        el.textContent = Array.isArray(msg) ? msg[0] : msg;
+                        el.style.visibility = 'visible';
+                    }
+                }
+            });
+        },
+
+        _setLoading(on) {
+            const btn = document.getElementById('btn-save');
+            const ico = document.getElementById('save-icon');
+            if (btn) btn.disabled = on;
+            if (ico) ico.className = on ? 'spinner-border spinner-border-sm me-1' : 'fas fa-save me-1';
+        },
+
+        /* ── Formatters ───────────────────────────────────────────── */
         fmtStatus(status) {
             if (!status) return '<span class="text-muted fst-italic">—</span>';
-
-            let statusClass = '';
-            let statusIcon = '';
-
-            switch (status.toLowerCase()) {
-                case 'active':
-                    statusClass = 'active';
-                    statusIcon = 'fa-check-circle';
-                    break;
-                case 'draft':
-                    statusClass = 'draft';
-                    statusIcon = 'fa-pencil-alt';
-                    break;
-                case 'archived':
-                    statusClass = 'archived';
-                    statusIcon = 'fa-archive';
-                    break;
-                default:
-                    statusClass = 'draft';
-                    statusIcon = 'fa-pencil-alt';
-            }
-
-            return `<span class="badge-status ${statusClass}">
-                        <span class="fas ${statusIcon}"></span>
-                        ${this.e(status)}
-                    </span>`;
+            const map = {
+                active: {
+                    cls: 'active',
+                    icon: 'fa-check-circle'
+                },
+                draft: {
+                    cls: 'draft',
+                    icon: 'fa-pencil-alt'
+                },
+                archived: {
+                    cls: 'archived',
+                    icon: 'fa-archive'
+                },
+            };
+            const s = map[status.toLowerCase()] ?? {
+                cls: 'draft',
+                icon: 'fa-pencil-alt'
+            };
+            return `<span class="badge-status ${s.cls}"><span class="fas ${s.icon}"></span>${this.e(status)}</span>`;
         },
-
         fmtUser(name) {
             if (!name) return '<span class="text-muted fst-italic">—</span>';
-            return `<span class="badge-user">
-                        <span class="fas fa-user-circle"></span>
-                        ${this.e(name)}
-                    </span>`;
+            return `<span class="badge-user"><span class="fas fa-user-circle me-1"></span>${this.e(name)}</span>`;
         },
-
         fmtDate(d) {
             if (!d) return '<span class="text-muted">—</span>';
             const dt = new Date(d);
-            return `<span class="d-block">${dt.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
-                    <small class="text-muted">${dt.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}</small>`;
+            return `<span class="d-block">${dt.toLocaleDateString('id-ID', {day:'2-digit',month:'short',year:'numeric'})}</span>
+                <small class="text-muted">${dt.toLocaleTimeString('id-ID', {hour:'2-digit',minute:'2-digit'})}</small>`;
         },
-
         e(s) {
             if (!s) return '';
-            return String(s)
-                .replace(/&/g, '&amp;')
-                .replace(/</g, '&lt;')
-                .replace(/>/g, '&gt;')
-                .replace(/"/g, '&quot;')
-                .replace(/'/g, '&#39;');
+            return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
         },
-
         toast(type, msg) {
             Swal.fire({
                 toast: true,
@@ -1133,7 +1142,7 @@
                 title: msg,
                 showConfirmButton: false,
                 timer: type === 'success' ? 2000 : 3500,
-                timerProgressBar: true
+                timerProgressBar: true,
             });
         },
     };

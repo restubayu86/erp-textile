@@ -193,6 +193,7 @@ class DepartmentController extends BaseController
         return $this->jsonResponse($result, $result['status'] === 'success' ? 200 : 422);
     }
 
+
     public function delete(int $id)
     {
         if (!$this->request->isAJAX()) {
@@ -203,20 +204,12 @@ class DepartmentController extends BaseController
             return $this->jsonError('Akses ditolak', 403);
         }
 
-        // Cek apakah dipakai
         $positionCount = $this->model->isUsedByPositions($id);
-        $employeeCount = $this->model->isUsedByEmployees($id);
-
-        if ($positionCount > 0 || $employeeCount > 0) {
-            $msg = 'Departemen tidak dapat dihapus karena digunakan oleh ';
-            $parts = [];
-            if ($positionCount) $parts[] = "{$positionCount} jabatan";
-            if ($employeeCount) $parts[] = "{$employeeCount} karyawan";
-            return $this->jsonError(implode(' dan ', $parts), 422);
+        if ($positionCount > 0) {
+            return $this->jsonError("Departemen tidak dapat dihapus karena digunakan oleh {$positionCount} jabatan.", 422);
         }
 
         $result = $this->model->deleteData($id, auth()->id());
-
         return $this->jsonResponse($result, $result['status'] === 'success' ? 200 : 422);
     }
 

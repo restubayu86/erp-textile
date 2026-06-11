@@ -8,6 +8,26 @@
         overflow-x: hidden;
     }
 
+    .btn-group-sm .btn {
+        padding: .25rem .5rem;
+        font-size: .7rem;
+    }
+
+    .badge-level {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 24px;
+        height: 24px;
+        border-radius: 6px;
+        font-size: .68rem;
+        font-weight: 700;
+        background: rgba(var(--phoenix-primary-rgb), .1);
+        color: var(--phoenix-primary);
+        border: 1px solid rgba(var(--phoenix-primary-rgb), .2);
+        flex-shrink: 0;
+    }
+
     /* ── User badge ──────────────────────────────────────────────── */
     .badge-user {
         display: inline-flex;
@@ -223,6 +243,7 @@
             <thead>
                 <tr>
                     <th>No</th>
+                    <th>LVL</th>
                     <th>Posisi</th>
                     <th>Deskripsi</th>
                     <th>Departemen</th>
@@ -312,30 +333,34 @@
                     },
                     {
                         targets: 1,
-                        width: '200px'
+                        width: '50px'
                     },
                     {
                         targets: 2,
-                        width: '250px'
+                        width: '200px'
                     },
                     {
                         targets: 3,
-                        width: '150px'
+                        width: '250px'
                     },
                     {
                         targets: 4,
-                        width: '100px'
+                        width: '150px'
                     },
                     {
                         targets: 5,
-                        width: '120px'
+                        width: '100px'
                     },
                     {
                         targets: 6,
-                        width: '130px'
+                        width: '120px'
                     },
                     {
                         targets: 7,
+                        width: '130px'
+                    },
+                    {
+                        targets: 8,
                         width: '80px'
                     }
                 ],
@@ -343,6 +368,12 @@
                         data: 'no',
                         orderable: false,
                         searchable: false
+                    },
+                    {
+                        data: 'position_level',
+                        orderable: true,
+                        render: d => d ?
+                            `<span class="badge-level" title="Level ${d}">${d}</span>` : '<span class="text-muted">—</span>'
                     },
                     {
                         data: null,

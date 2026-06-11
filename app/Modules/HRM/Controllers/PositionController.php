@@ -70,6 +70,7 @@ class PositionController extends BaseController
                 'positions.id',
                 'positions.position_code',
                 'positions.position_name',
+                'positions.position_level',
                 'positions.description',
                 'positions.status',
                 'positions.created_at',
@@ -122,6 +123,7 @@ class PositionController extends BaseController
                 'positions.id',
                 'positions.position_code',
                 'positions.position_name',
+                'positions.position_level',
                 'positions.description',
                 'positions.status',
                 'positions.deleted_at',
@@ -377,20 +379,38 @@ class PositionController extends BaseController
             return $this->jsonError('Method not allowed', 405);
         }
 
-        $field = $this->request->getPost('field');
-        $value = trim($this->request->getPost('value') ?? '');
-        $id    = (int) $this->request->getPost('id');
+        $field    = $this->request->getPost('field');
+        $value    = trim($this->request->getPost('value') ?? '');
+        $id       = (int) $this->request->getPost('id');
+        $deptId   = (int) $this->request->getPost('department_id');
 
         if (!in_array($field, ['position_code', 'position_name'])) {
             return $this->jsonError('Field tidak valid', 422);
         }
 
-        $q = $this->model->where("LOWER({$field})", strtolower($value))->where('deleted_at', null);
-        if ($id > 0) $q->where('id !=', $id);
+        $q = $this->model->db->table('positions')
+            ->where("LOWER({$field})", strtolower($value))
+            ->where('deleted_at', null);
+
+        // Duplikat hanya diperiksa dalam department yang sama
+        if ($deptId > 0) {
+            $q->where('department_id', $deptId);
+        } else {
+            $q->where('department_id IS NULL');
+        }
+
+        if ($id > 0) {
+            $q->where('id !=', $id);
+        }
+
+        $isDuplicate = $q->countAllResults() > 0;
 
         return $this->jsonResponse([
             'status'    => 'success',
-            'available' => !$q->first(),
+            'available' => !$isDuplicate,
+            'message'   => $isDuplicate
+                ? ucfirst(str_replace('_', ' ', $field)) . ' sudah digunakan di departemen ini'
+                : 'Tersedia',
         ]);
     }
 

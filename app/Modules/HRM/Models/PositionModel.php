@@ -37,28 +37,36 @@ class PositionModel extends Model
     // DUPLICATE CHECKS
     // ============================================================
 
-    private function isDuplicateCode(string $code, ?int $excludeId = null): bool
+    private function isDuplicateCode(string $code, ?int $departmentId = null, ?int $excludeId = null): bool
     {
         $q = $this->db->table('positions')
             ->where('LOWER(position_code)', strtolower(trim($code)))
             ->where('deleted_at', null);
 
-        if ($excludeId) {
-            $q->where('id !=', $excludeId);
+        if ($departmentId) {
+            $q->where('department_id', $departmentId);
+        } else {
+            $q->where('department_id IS NULL');
         }
+
+        if ($excludeId) $q->where('id !=', $excludeId);
 
         return $q->countAllResults() > 0;
     }
 
-    private function isDuplicateName(string $name, ?int $excludeId = null): bool
+    private function isDuplicateName(string $name, ?int $departmentId = null, ?int $excludeId = null): bool
     {
         $q = $this->db->table('positions')
             ->where('LOWER(position_name)', strtolower(trim($name)))
             ->where('deleted_at', null);
 
-        if ($excludeId) {
-            $q->where('id !=', $excludeId);
+        if ($departmentId) {
+            $q->where('department_id', $departmentId);
+        } else {
+            $q->where('department_id IS NULL');
         }
+
+        if ($excludeId) $q->where('id !=', $excludeId);
 
         return $q->countAllResults() > 0;
     }
@@ -69,12 +77,13 @@ class PositionModel extends Model
 
     public function createData(array $data): array
     {
-        if ($this->isDuplicateCode($data['position_code'] ?? '')) {
-            return ['status' => 'error', 'errors' => ['position_code' => 'Kode posisi sudah digunakan']];
-        }
+        $deptId = isset($data['department_id']) ? (int) $data['department_id'] : null;
 
-        if ($this->isDuplicateName($data['position_name'] ?? '')) {
-            return ['status' => 'error', 'errors' => ['position_name' => 'Nama posisi sudah digunakan']];
+        if ($this->isDuplicateCode($data['position_code'] ?? '', $deptId)) {
+            return ['status' => 'error', 'errors' => ['position_code' => 'Kode posisi sudah digunakan di departemen ini']];
+        }
+        if ($this->isDuplicateName($data['position_name'] ?? '', $deptId)) {
+            return ['status' => 'error', 'errors' => ['position_name' => 'Nama posisi sudah digunakan di departemen ini']];
         }
 
         if (!$this->insert($data)) {
@@ -86,16 +95,13 @@ class PositionModel extends Model
 
     public function updateData(int $id, array $data): array
     {
-        if (!$this->find($id)) {
-            return ['status' => 'error', 'message' => 'Data tidak ditemukan'];
-        }
+        $deptId = isset($data['department_id']) ? (int) $data['department_id'] : null;
 
-        if ($this->isDuplicateCode($data['position_code'] ?? '', $id)) {
-            return ['status' => 'error', 'errors' => ['position_code' => 'Kode posisi sudah digunakan']];
+        if ($this->isDuplicateCode($data['position_code'] ?? '', $deptId, $id)) {
+            return ['status' => 'error', 'errors' => ['position_code' => 'Kode posisi sudah digunakan di departemen ini']];
         }
-
-        if ($this->isDuplicateName($data['position_name'] ?? '', $id)) {
-            return ['status' => 'error', 'errors' => ['position_name' => 'Nama posisi sudah digunakan']];
+        if ($this->isDuplicateName($data['position_name'] ?? '', $deptId, $id)) {
+            return ['status' => 'error', 'errors' => ['position_name' => 'Nama posisi sudah digunakan di departemen ini']];
         }
 
         if (!$this->update($id, $data)) {
@@ -107,7 +113,13 @@ class PositionModel extends Model
 
     public function getData(int $id): array
     {
-        $data = $this->find($id);
+        $data = $this->db->table($this->table . ' p')
+            ->select('p.*, d.department as department_name')
+            ->join('departments d', 'd.id = p.department_id', 'left')
+            ->where('p.id', $id)
+            ->where('p.deleted_at', null)
+            ->get()
+            ->getRowArray();
 
         if (!$data) {
             return ['status' => 'error', 'message' => 'Data tidak ditemukan'];
