@@ -637,7 +637,6 @@
 
         /* ── Select2 ──────────────────────────────────────────────── */
         initSelect2() {
-            // Modal form
             $('#f-department').select2({
                 theme: 'bootstrap-5',
                 width: '100%',
@@ -662,7 +661,6 @@
                 minimumInputLength: 0,
             });
 
-            // Filter offcanvas
             $('#filter-department').select2({
                 theme: 'bootstrap-5',
                 width: '100%',
@@ -705,7 +703,6 @@
                     [-1, 10, 25, 50, 100],
                     ['Semua', 10, 25, 50, 100]
                 ],
-                // Default order: level ASC, nama ASC
                 order: [
                     [1, 'asc'],
                     [2, 'asc']
@@ -790,28 +787,30 @@
                     /* 1  Level  */
                     {
                         data: 'position_level',
-                        orderable: true,
                         render: d => d ?
-                            `<span class="badge-level" title="Level ${d}">${d}</span>` : '<span class="text-muted">—</span>'
+                            `<span class="badge-level" title="Level ${d}">${d}</span>` :
+                            '<span class="text-muted">—</span>'
                     },
                     /* 2  Posisi */
                     {
                         data: null,
                         render: (d, t, r) =>
                             `<div class="fw-semibold">${self.e(r.position_name)}</div>
-                         <div class="text-muted small font-monospace">${self.e(r.position_code)}</div>`
+                             <div class="text-muted small font-monospace">${self.e(r.position_code)}</div>`
                     },
                     /* 3  Desk.  */
                     {
                         data: 'description',
                         render: d => d ?
-                            `<span class="text-muted">${self.e(d.substring(0,60))}${d.length > 60 ? '…' : ''}</span>` : '<span class="text-muted fst-italic">—</span>'
+                            `<span class="text-muted">${self.e(d.substring(0, 60))}${d.length > 60 ? '…' : ''}</span>` :
+                            '<span class="text-muted fst-italic">—</span>'
                     },
                     /* 4  Dept   */
                     {
                         data: 'department_name',
                         render: d => d ?
-                            `<span class="badge-dept"><span class="fas fa-building me-1"></span>${self.e(d)}</span>` : '<span class="text-muted fst-italic">—</span>'
+                            `<span class="badge-dept"><span class="fas fa-building me-1"></span>${self.e(d)}</span>` :
+                            '<span class="text-muted fst-italic">—</span>'
                     },
                     /* 5  Status */
                     {
@@ -849,12 +848,12 @@
                         render: (d, t, r) => {
                             const edit = CAN_EDIT ?
                                 `<button class="btn btn-subtle-primary btn-sm btn-edit" data-id="${r.id}" title="Edit">
-                                   <span class="fas fa-pencil-alt"></span>
-                               </button>` : '';
+                                       <span class="fas fa-pencil-alt"></span>
+                                   </button>` : '';
                             const del = CAN_DELETE ?
                                 `<button class="btn btn-subtle-danger btn-sm btn-delete" data-id="${r.id}" data-name="${self.e(r.position_name)}" title="Hapus">
-                                   <span class="fas fa-trash"></span>
-                               </button>` : '';
+                                       <span class="fas fa-trash"></span>
+                                   </button>` : '';
                             return `<div class="btn-group btn-group-sm">${edit}${del}</div>`;
                         }
                     },
@@ -902,6 +901,15 @@
                         .append(new Option(data.department_name || data.department_id, data.department_id, true, true))
                         .trigger('change');
                 }
+
+                // ── Tandai is-valid setelah populate ─────────────────
+                if (data.position_name) document.getElementById('f-name').classList.add('is-valid');
+                if (data.position_code) document.getElementById('f-code').classList.add('is-valid');
+                if (data.status) document.getElementById('f-status').classList.add('is-valid');
+                if (data.position_level) document.getElementById('f-level').classList.add('is-valid');
+                if (data.department_id) document.getElementById('f-department').classList.add('is-valid');
+                // ─────────────────────────────────────────────────────
+
             } catch (e) {
                 this.toast('error', 'Gagal memuat data');
             } finally {
@@ -1001,7 +1009,6 @@
             if (f.name) labels.push(`Nama: "${f.name}"`);
             if (f.department) labels.push('Departemen terpilih');
             if (f.status) labels.push(`Status: ${f.status}`);
-
             document.getElementById('filter-toggle').classList.toggle('has-filter', labels.length > 0);
             document.getElementById('filter-summary-text').textContent = labels.join(' · ');
             document.getElementById('filter-summary').classList.toggle('d-none', labels.length === 0);
@@ -1028,11 +1035,23 @@
                 ?.addEventListener('input', e => {
                     document.getElementById('char-count').textContent = e.target.value.length;
                 });
-
             document.getElementById('f-code')
                 ?.addEventListener('input', e => {
                     e.target.value = e.target.value.toUpperCase().replace(/[^A-Z0-9_\-]/g, '');
                 });
+
+            // ── Fix aria-hidden focus warning ────────────────────────
+            document.getElementById('positionModal')
+                ?.addEventListener('hide.bs.modal', () => {
+                    if (document.activeElement instanceof HTMLElement) {
+                        document.activeElement.blur();
+                    }
+                });
+            // ─────────────────────────────────────────────────────────
+
+            // ── Live field validation ────────────────────────────────
+            this._initFieldEvents();
+            // ─────────────────────────────────────────────────────────
 
             $(document).on('click', '.btn-edit', e => Position.openEdit($(e.currentTarget).data('id')));
             $(document).on('click', '.btn-delete', e => {
@@ -1043,15 +1062,15 @@
 
         /* ── Private helpers ──────────────────────────────────────── */
         _resetModal() {
-            ['f-name', 'f-code', 'f-desc'].forEach(id => {
+            ['f-name', 'f-code', 'f-desc', 'f-level'].forEach(id => {
                 const el = document.getElementById(id);
                 if (el) {
                     el.value = '';
-                    el.classList.remove('is-invalid');
+                    el.classList.remove('is-invalid', 'is-valid');
                 }
             });
-            document.getElementById('f-level').value = '';
             document.getElementById('f-status').value = 'Draft';
+            document.getElementById('f-status').classList.remove('is-invalid', 'is-valid');
             document.getElementById('char-count').textContent = '0';
             document.getElementById('modal-alert').classList.add('d-none');
             $('#f-department').val(null).trigger('change');
@@ -1059,13 +1078,14 @@
         },
 
         _clearErrors() {
-            document.querySelectorAll('#positionModal .is-invalid')
-                .forEach(el => el.classList.remove('is-invalid'));
+            document.querySelectorAll('#positionModal .is-invalid, #positionModal .is-valid')
+                .forEach(el => el.classList.remove('is-invalid', 'is-valid'));
             document.querySelectorAll('#positionModal .invalid-feedback')
                 .forEach(el => {
                     el.textContent = '';
                     el.style.visibility = '';
                 });
+            document.getElementById('modal-alert')?.classList.add('d-none');
         },
 
         _showErrors(errors) {
@@ -1079,7 +1099,13 @@
             };
             Object.entries(errors).forEach(([f, msg]) => {
                 const [inp, err] = map[f] ?? [];
-                if (inp) document.getElementById(inp)?.classList.add('is-invalid');
+                if (inp) {
+                    const el = document.getElementById(inp);
+                    if (el) {
+                        el.classList.add('is-invalid');
+                        el.classList.remove('is-valid');
+                    }
+                }
                 if (err) {
                     const el = document.getElementById(err);
                     if (el) {
@@ -1088,6 +1114,86 @@
                     }
                 }
             });
+        },
+
+        _initFieldEvents() {
+            [{
+                    id: 'f-name',
+                    required: true
+                },
+                {
+                    id: 'f-code',
+                    required: true
+                },
+                {
+                    id: 'f-status',
+                    required: true
+                },
+                {
+                    id: 'f-level',
+                    required: false,
+                    numeric: true,
+                    min: 1,
+                    max: 99
+                },
+                {
+                    id: 'f-desc',
+                    required: false
+                },
+            ].forEach(({
+                id,
+                required,
+                numeric,
+                min,
+                max
+            }) => {
+                const el = document.getElementById(id);
+                if (!el) return;
+
+                const revalidate = () => {
+                    // Jangan aktif sebelum pernah disentuh
+                    if (!el.classList.contains('is-invalid') && !el.classList.contains('is-valid')) return;
+
+                    const val = el.value.trim();
+                    let ok = true;
+
+                    if (required && val === '') {
+                        ok = false;
+                    } else if (numeric && val !== '') {
+                        const n = Number(val);
+                        if (isNaN(n) || n < (min ?? 1) || n > (max ?? 99)) ok = false;
+                    }
+
+                    // Optional kosong → netral
+                    if (!required && val === '') {
+                        el.classList.remove('is-valid', 'is-invalid');
+                        const errEl = document.getElementById(id.replace('f-', 'err-'));
+                        if (errEl) errEl.textContent = '';
+                        return;
+                    }
+
+                    el.classList.toggle('is-valid', ok);
+                    el.classList.toggle('is-invalid', !ok);
+                    const errEl = document.getElementById(id.replace('f-', 'err-'));
+                    if (errEl && ok) errEl.textContent = '';
+                };
+
+                el.addEventListener('input', revalidate);
+                el.addEventListener('change', revalidate);
+            });
+
+            // Select2 f-department — opsional
+            $('#f-department')
+                .on('select2:select', () => {
+                    const el = document.getElementById('f-department');
+                    if (el) {
+                        el.classList.remove('is-invalid');
+                        el.classList.add('is-valid');
+                    }
+                })
+                .on('select2:clear', () => {
+                    document.getElementById('f-department')?.classList.remove('is-valid', 'is-invalid');
+                });
         },
 
         _setLoading(on) {
@@ -1127,12 +1233,14 @@
         fmtDate(d) {
             if (!d) return '<span class="text-muted">—</span>';
             const dt = new Date(d);
-            return `<span class="d-block">${dt.toLocaleDateString('id-ID', {day:'2-digit',month:'short',year:'numeric'})}</span>
-                <small class="text-muted">${dt.toLocaleTimeString('id-ID', {hour:'2-digit',minute:'2-digit'})}</small>`;
+            return `<span class="d-block">${dt.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
+                    <small class="text-muted">${dt.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}</small>`;
         },
         e(s) {
             if (!s) return '';
-            return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+            return String(s)
+                .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
         },
         toast(type, msg) {
             Swal.fire({

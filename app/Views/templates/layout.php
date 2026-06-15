@@ -317,6 +317,7 @@
   <script src="<?= base_url('vendors/DataTables/ext/Buttons-3.2.5/js/buttons.print.min.js') ?>"></script>
 
   <script src=" <?= base_url('vendors/flatpickr/flatpickr.min.js') ?>"></script>
+  <script src=" <?= base_url('vendors/flatpickr/id.js') ?>"></script>
   <script src="<?= base_url('vendors/apexcharts/dist/apexcharts.min.js'); ?>"></script>
   <script src="<?= base_url('vendors/jquery.repeater/jquery.repeater.min.js') ?>"></script>
   <script src="<?= base_url('vendors/select2-4.1.0/dist/js/select2.min.js') ?>"></script>

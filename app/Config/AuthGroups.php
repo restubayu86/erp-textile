@@ -58,6 +58,11 @@ class AuthGroups extends ShieldAuthGroups
         'warehouse.stocks.view'         => 'Lihat stok',
         'warehouse.stocks.receive'      => 'Terima stok',
         'warehouse.stocks.issue'        => 'Keluarkan stok',
+
+        'access.users.view'   => 'Lihat daftar user',
+        'access.users.create' => 'Tambah user',
+        'access.users.edit'   => 'Edit user & assign group',
+        'access.users.delete' => 'Hapus user',
     ];
 
     public array $matrix = [

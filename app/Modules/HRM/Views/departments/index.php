@@ -225,18 +225,6 @@
         display: none;
     }
 
-    .form-control.is-valid,
-    .form-select.is-valid {
-        border-color: var(--phoenix-success, #198754) !important;
-        background-image: none !important;
-    }
-
-    .form-control.is-invalid,
-    .form-select.is-invalid {
-        border-color: var(--phoenix-danger, #e63757) !important;
-        background-image: none !important;
-    }
-
     @media print {
         .no-print {
             display: none !important;
@@ -777,7 +765,7 @@
                 const el = document.getElementById(id);
                 if (el) {
                     el.value = '';
-                    el.classList.remove('is-invalid');
+                    el.classList.remove('is-invalid', 'is-valid');
                 }
             });
             document.getElementById('f-status').value = 'Draft';
@@ -854,18 +842,24 @@
                 input,
                 required
             }) => {
-                document.getElementById(input)?.addEventListener('input', () => {
-                    const el = document.getElementById(input);
-                    if (!el) return;
-                    if (el.value.trim()) {
-                        this.markValid(input);
+                const el = document.getElementById(input);
+                if (!el) return;
+
+                const revalidate = () => {
+                    const val = el.value.trim();
+                    if (val) {
+                        el.classList.remove('is-invalid');
+                        el.classList.add('is-valid');
                     } else if (required) {
                         el.classList.remove('is-valid');
                         el.classList.add('is-invalid');
                     } else {
                         el.classList.remove('is-valid', 'is-invalid');
                     }
-                });
+                };
+
+                el.addEventListener('input', revalidate);
+                el.addEventListener('change', revalidate);
             });
         },
 
@@ -946,6 +940,15 @@
             document.getElementById('f-code')?.addEventListener('input', e => {
                 e.target.value = e.target.value.toUpperCase().replace(/[^A-Z0-9_\-]/g, '');
             });
+
+            // ── Fix aria-hidden focus warning ────────────────────────────
+            document.getElementById('deptModal')
+                ?.addEventListener('hide.bs.modal', () => {
+                    if (document.activeElement instanceof HTMLElement) {
+                        document.activeElement.blur();
+                    }
+                });
+            // ────────────────────────────────────────────────────────────
 
             $(document).on('click', '.btn-edit', e => this.openEdit($(e.currentTarget).data('id')));
             $(document).on('click', '.btn-delete', e => {

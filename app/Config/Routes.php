@@ -68,31 +68,37 @@ require APPPATH . 'Modules/Warehouse/Config/Routes.php';
 // =============================================================================
 //  6. MANAJEMEN HAK AKSES (User, Group, Permission via Shield)
 // =============================================================================
-$routes->group('access', ['filter' => 'shield', 'namespace' => 'Access'], function ($routes) {
+$routes->group('access', ['namespace' => 'App\Controllers\Access'], function ($routes) {
 
-    // Users
-    $routes->get('users',                   'UserController::index',        ['as' => 'access.users']);
-    $routes->get('users/datatables',        'UserController::datatables');
-    $routes->get('users/(:num)',            'UserController::show/$1',      ['as' => 'access.users.show']);
-    $routes->post('users/(:num)/store',     'UserController::store/$1');
-    $routes->post('users/(:num)/toggle',    'UserController::toggle/$1');
-    $routes->post('users/(:num)/delete',    'UserController::delete/$1');
-    $routes->post('users/(:num)/groups',    'UserController::assignGroups/$1');
+    // USERS
+    $routes->get('users',                    'UserController::index',        ['as' => 'access.users']);
+    $routes->get('users/datatables',         'UserController::datatables');
+    $routes->get('users/(:num)',             'UserController::show/$1',      ['as' => 'access.users.show']);
+    $routes->get('users/get/(:num)', 'UserController::show/$1');
 
-    // Groups (Role)
-    $routes->get('groups',                  'GroupController::index',       ['as' => 'access.groups']);
-    $routes->get('groups/datatables',       'GroupController::datatables');
-    $routes->get('groups/(:num)',           'GroupController::getById/$1');
-    $routes->post('groups/store',           'GroupController::store');
-    $routes->post('groups/(:num)/delete',   'GroupController::delete/$1');
+    // RESTful actions
+    $routes->post('users',                   'UserController::create');      // CREATE
+    $routes->put('users/(:num)',             'UserController::update/$1');   // UPDATE (full)
+    $routes->patch('users/(:num)/status',    'UserController::toggle/$1');   // PATCH status
+    $routes->delete('users/(:num)',          'UserController::delete/$1');   // DELETE
+    $routes->post('users/(:num)/groups',     'UserController::assignGroups/$1'); // assign groups
+
+    // GROUPS (Role)
+    $routes->get('groups',                   'GroupController::index',       ['as' => 'access.groups']);
+    $routes->get('groups/datatables',        'GroupController::datatables');
+    $routes->get('groups/(:num)',            'GroupController::getById/$1');
+    $routes->post('groups',                  'GroupController::store');      // CREATE
+    $routes->put('groups/(:num)',            'GroupController::update/$1');  // UPDATE (opsional)
+    $routes->delete('groups/(:num)',         'GroupController::delete/$1');
     $routes->post('groups/(:num)/permissions', 'GroupController::assignPermissions/$1');
 
-    // Permissions
-    $routes->get('permissions',             'PermissionController::index',  ['as' => 'access.permissions']);
-    $routes->get('permissions/datatables',  'PermissionController::datatables');
-    $routes->get('permissions/(:num)',      'PermissionController::getById/$1');
-    $routes->post('permissions/store',      'PermissionController::store');
-    $routes->post('permissions/(:num)/delete', 'PermissionController::delete/$1');
+    // PERMISSIONS
+    $routes->get('permissions',              'PermissionController::index',  ['as' => 'access.permissions']);
+    $routes->get('permissions/datatables',   'PermissionController::datatables');
+    $routes->get('permissions/(:num)',       'PermissionController::getById/$1');
+    $routes->post('permissions',             'PermissionController::store');
+    $routes->put('permissions/(:num)',       'PermissionController::update/$1');
+    $routes->delete('permissions/(:num)',    'PermissionController::delete/$1');
 });
 
 // =============================================================================

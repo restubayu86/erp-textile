@@ -657,7 +657,7 @@ $emp    = $employee ?? [];
             initData: <?= !empty($employee) ? json_encode($employee) : 'null' ?>,
         },
 
-        // Field rules — single source of truth untuk validasi
+        // ── Field rules — form utama ─────────────────────────────
         rules: [{
                 field: 'f-nik',
                 name: 'nik',
@@ -708,7 +708,7 @@ $emp    = $employee ?? [];
                 required: true,
                 msg: 'Status wajib dipilih.'
             },
-            // Optional fields — masuk FormData tapi tidak divalidasi client-side
+            // Optional — masuk FormData, tidak divalidasi client-side
             {
                 field: 'f-nickname',
                 name: 'nickname'
@@ -727,20 +727,50 @@ $emp    = $employee ?? [];
             },
         ],
 
+        // ── Field rules — modal tambah posisi ───────────────────
+        _posRules: [{
+                field: 'pos-name',
+                err: 'pos-err-name',
+                required: true,
+                msg: 'Nama posisi wajib diisi.'
+            },
+            {
+                field: 'pos-code',
+                err: 'pos-err-code',
+                required: true,
+                msg: 'Kode wajib diisi.'
+            },
+            {
+                field: 'pos-level',
+                err: 'pos-err-level',
+                required: false,
+                numeric: true,
+                min: 1,
+                max: 99,
+                msg: 'Level harus angka 1–99.'
+            },
+            {
+                field: 'pos-department',
+                err: 'pos-err-dept',
+                required: false,
+                isSelect2: true
+            },
+            // pos-status tidak perlu validasi (always has value)
+        ],
+
         // State foto
         photo: {
             file: null,
             removeExisting: false
         },
 
-        /* ── Init ─────────────────────────────────────────────────── */
+        /* ── Init ───────────────────────────────────────────────── */
         init() {
             this.initFlatpickr();
             this.initSelect2();
             this.initPhoto();
             this.initEvents();
 
-            // Populate edit data setelah Select2 siap
             if (this.cfg.isEdit && this.cfg.initData) {
                 this._populateEdit(this.cfg.initData);
             }
@@ -758,6 +788,7 @@ $emp    = $employee ?? [];
 
         initSelect2() {
             const self = this;
+
             $('#f-position').select2({
                 theme: 'bootstrap-5',
                 width: '100%',
@@ -783,7 +814,9 @@ $emp    = $employee ?? [];
                 },
                 templateResult: r => {
                     if (r.loading) return r.text;
-                    const dept = r.department_name ? `<small class="text-muted ms-1">· ${r.department_name}</small>` : '';
+                    const dept = r.department_name ?
+                        `<small class="text-muted ms-1">· ${r.department_name}</small>` :
+                        '';
                     return $(`<span>${r.text}${dept}</span>`);
                 },
                 templateSelection: r => r.text || r.id,
@@ -794,7 +827,11 @@ $emp    = $employee ?? [];
                     const d = e.params.data;
                     document.getElementById('dept-display').value = d.department_name || '';
                     document.getElementById('dept-id').value = d.department_id || '';
-                    self._clearError('f-position', 'err-position', true);
+                    self._clearFieldError({
+                        field: 'f-position',
+                        err: 'err-position',
+                        isSelect2: true
+                    });
                 })
                 .on('select2:clear', () => {
                     document.getElementById('dept-display').value = '';
@@ -827,7 +864,6 @@ $emp    = $employee ?? [];
         },
 
         _populateEdit(data) {
-            // Select2 position — append option lalu trigger
             if (data.position_id) {
                 const opt = new Option(
                     data.position_name || ('Posisi #' + data.position_id),
@@ -839,7 +875,7 @@ $emp    = $employee ?? [];
             }
         },
 
-        /* ── Photo ────────────────────────────────────────────────── */
+        /* ── Photo ──────────────────────────────────────────────── */
         initPhoto() {
             const self = this;
             const input = document.getElementById('photo-input');
@@ -886,30 +922,88 @@ $emp    = $employee ?? [];
             });
         },
 
-        /* ── Validation ───────────────────────────────────────────── */
+        /* ── Validation helpers (low-level) ─────────────────────── */
+
+        /**
+         * Tandai satu field sebagai invalid.
+         * rule: { field, err, isSelect2, msg }
+         */
+        _markInvalid(rule, msg) {
+            const el = document.getElementById(rule.field);
+            if (!el) return;
+            el.classList.remove('is-valid');
+            el.classList.add('is-invalid');
+            if (rule.isSelect2) {
+                $('#' + rule.field).next('.select2-container')
+                    .removeClass('s2-is-valid').addClass('s2-is-invalid');
+            }
+            const errEl = document.getElementById(rule.err);
+            if (errEl) errEl.textContent = msg ?? rule.msg ?? '';
+        },
+
+        /**
+         * Tandai satu field sebagai valid.
+         */
+        _markValid(rule) {
+            const el = document.getElementById(rule.field);
+            if (!el) return;
+            el.classList.remove('is-invalid');
+            el.classList.add('is-valid');
+            if (rule.isSelect2) {
+                $('#' + rule.field).next('.select2-container')
+                    .removeClass('s2-is-invalid').addClass('s2-is-valid');
+            }
+            const errEl = document.getElementById(rule.err);
+            if (errEl) errEl.textContent = '';
+        },
+
+        /**
+         * Reset field (hapus is-valid dan is-invalid).
+         */
+        _markNeutral(rule) {
+            const el = document.getElementById(rule.field);
+            if (!el) return;
+            el.classList.remove('is-valid', 'is-invalid');
+            if (rule.isSelect2) {
+                $('#' + rule.field).next('.select2-container')
+                    .removeClass('s2-is-valid', 's2-is-invalid');
+            }
+            const errEl = document.getElementById(rule.err);
+            if (errEl) errEl.textContent = '';
+        },
+
+        /**
+         * Shorthand: clear error dari satu field (hapus invalid, set valid).
+         * Dipakai untuk event on-change real-time form utama.
+         */
+        _clearFieldError(rule) {
+            this._markValid(rule);
+        },
+
+        /* ── Validation — form utama ─────────────────────────────── */
         validate() {
             this.clearAllErrors();
             let firstInvalidEl = null;
             let valid = true;
 
             this.rules.forEach(rule => {
-                if (!rule.required) return; // optional: skip
+                if (!rule.required) return;
 
                 const el = document.getElementById(rule.field);
                 if (!el) return;
 
-                const val = rule.isSelect2 ? ($('#' + rule.field).val() || '') : el.value.trim();
-                const ok = val !== '';
+                const val = rule.isSelect2 ?
+                    ($('#' + rule.field).val() || '') :
+                    el.value.trim();
 
-                if (!ok) {
+                if (val === '') {
                     valid = false;
-                    this._setError(rule.field, rule.err, rule.msg, rule.isSelect2);
+                    this._markInvalid(rule);
                     if (!firstInvalidEl) firstInvalidEl = el;
                 }
             });
 
             if (firstInvalidEl) {
-                // Scroll ke elemen pertama yang error
                 firstInvalidEl.closest('.form-section')?.scrollIntoView({
                     behavior: 'smooth',
                     block: 'start'
@@ -919,40 +1013,30 @@ $emp    = $employee ?? [];
             return valid;
         },
 
+        // Alias lama — tetap disediakan agar tidak ada kode lain yang rusak
         _setError(fieldId, errId, msg, isSelect2 = false) {
-            const el = document.getElementById(fieldId);
-            if (!el) return;
-            el.classList.add('is-invalid');
-            if (isSelect2) $('#' + fieldId).next('.select2-container').addClass('s2-is-invalid');
-            const errEl = document.getElementById(errId);
-            if (errEl) errEl.textContent = msg;
+            this._markInvalid({
+                field: fieldId,
+                err: errId,
+                isSelect2
+            }, msg);
         },
 
         _clearError(fieldId, errId, isSelect2 = false) {
-            const el = document.getElementById(fieldId);
-            if (!el) return;
-            el.classList.remove('is-invalid');
-            el.classList.add('is-valid');
-            if (isSelect2) $('#' + fieldId).next('.select2-container').removeClass('s2-is-invalid').addClass('s2-is-valid');
-            const errEl = document.getElementById(errId);
-            if (errEl) errEl.textContent = '';
+            this._markValid({
+                field: fieldId,
+                err: errId,
+                isSelect2
+            });
         },
 
         clearAllErrors() {
             this.rules.forEach(rule => {
-                const el = document.getElementById(rule.field);
-                if (el) el.classList.remove('is-invalid', 'is-valid');
-                if (rule.isSelect2) {
-                    $('#' + rule.field).next('.select2-container')
-                        .removeClass('s2-is-invalid s2-is-valid');
-                }
-                const errEl = document.getElementById(rule.err);
-                if (errEl) errEl.textContent = '';
+                this._markNeutral(rule);
             });
         },
 
         applyServerErrors(errors) {
-            // Map nama field server → id elemen
             const serverMap = {
                 nik: {
                     field: 'f-nik',
@@ -987,11 +1071,10 @@ $emp    = $employee ?? [];
 
             let first = null;
             Object.entries(errors).forEach(([key, msg]) => {
-                const m = serverMap[key];
-                if (!m) return;
-                const errMsg = Array.isArray(msg) ? msg[0] : msg;
-                this._setError(m.field, m.err, errMsg, m.isSelect2 ?? false);
-                if (!first) first = document.getElementById(m.field);
+                const rule = serverMap[key];
+                if (!rule) return;
+                this._markInvalid(rule, Array.isArray(msg) ? msg[0] : msg);
+                if (!first) first = document.getElementById(rule.field);
             });
 
             first?.closest('.form-section')?.scrollIntoView({
@@ -1000,7 +1083,7 @@ $emp    = $employee ?? [];
             });
         },
 
-        /* ── Save ─────────────────────────────────────────────────── */
+        /* ── Save — form utama ──────────────────────────────────── */
         async save() {
             if (!this.validate()) return;
 
@@ -1009,9 +1092,7 @@ $emp    = $employee ?? [];
             this._showLoading('Menyimpan data karyawan...');
 
             try {
-                // 1. Simpan data utama (tanpa foto)
-                const fd = this._buildFormData();
-                const res = await this._post(this.cfg.base + 'hrm/employees/store', fd);
+                const res = await this._post(this.cfg.base + 'hrm/employees/store', this._buildFormData());
 
                 if (res.status !== 'success') {
                     if (res.errors) this.applyServerErrors(res.errors);
@@ -1020,8 +1101,6 @@ $emp    = $employee ?? [];
                 }
 
                 const savedId = res.id ?? this.cfg.empId;
-
-                // 2. Upload / hapus foto jika ada perubahan
                 await this._handlePhoto(savedId);
 
                 this.toast('success', res.message || 'Data berhasil disimpan.');
@@ -1040,11 +1119,8 @@ $emp    = $employee ?? [];
 
         _buildFormData() {
             const fd = new FormData();
-
-            // Tambahkan id jika edit
             if (this.cfg.isEdit) fd.set('id', this.cfg.empId);
 
-            // Ambil nilai semua field dari rules
             this.rules.forEach(rule => {
                 const el = document.getElementById(rule.field);
                 if (!el) return;
@@ -1052,25 +1128,21 @@ $emp    = $employee ?? [];
                 fd.set(rule.name, val);
             });
 
-            // department_id (hidden)
             fd.set('department_id', document.getElementById('dept-id').value);
-
             return fd;
         },
 
         async _handlePhoto(empId) {
             if (this.photo.file) {
-                // Upload foto baru
                 const fd = new FormData();
                 fd.set('photo', this.photo.file);
                 await this._post(this.cfg.base + `hrm/employees/upload-photo/${empId}`, fd);
             } else if (this.photo.removeExisting && this.cfg.isEdit) {
-                // Hapus foto lama
                 await this._post(this.cfg.base + `hrm/employees/delete-photo/${empId}`, new FormData());
             }
         },
 
-        /* ── HTTP ─────────────────────────────────────────────────── */
+        /* ── HTTP ───────────────────────────────────────────────── */
         async _post(url, fd) {
             fd.set(this.cfg.csrfName, this.cfg.csrfHash);
             const r = await fetch(url, {
@@ -1078,7 +1150,7 @@ $emp    = $employee ?? [];
                 body: fd,
                 headers: {
                     'X-Requested-With': 'XMLHttpRequest',
-                    'X-CSRF-TOKEN': this.cfg.csrfHash
+                    'X-CSRF-TOKEN': this.cfg.csrfHash,
                 },
             });
             const data = await r.json();
@@ -1090,87 +1162,25 @@ $emp    = $employee ?? [];
             return data;
         },
 
-        /* ── Events ───────────────────────────────────────────────── */
-        initEvents() {
-            document.getElementById('btn-submit')
-                ?.addEventListener('click', () => this.save());
-
-            document.getElementById('employee-form')
-                ?.addEventListener('submit', e => e.preventDefault());
-
-            // Clear error on change — hanya required fields
-            this.rules.filter(r => r.required).forEach(rule => {
-                const el = document.getElementById(rule.field);
-                if (!el || rule.isSelect2) return;
-                el.addEventListener('change', () => this._clearError(rule.field, rule.err));
-                el.addEventListener('input', () => this._clearError(rule.field, rule.err));
-            });
-
-            // Auto-capitalize fullname on blur
-            document.getElementById('f-fullname')
-                ?.addEventListener('blur', function() {
-                    this.value = this.value.trim().replace(/\b\w/g, c => c.toUpperCase());
-                });
-
-            // Auto-uppercase NIK on blur
-            document.getElementById('f-nik')
-                ?.addEventListener('blur', function() {
-                    this.value = this.value.trim().toUpperCase();
-                });
-
-            //add position
-            document.getElementById('btn-add-position')
-                ?.addEventListener('click', () => this.openAddPosition());
-            document.getElementById('btn-save-position')
-                ?.addEventListener('click', () => this.savePosition());
-            document.getElementById('pos-desc')?.addEventListener('input', e => {
-                document.getElementById('pos-char-count').textContent = e.target.value.length;
-            });
-        },
-
+        /* ── Modal Tambah Posisi ─────────────────────────────────── */
         openAddPosition() {
+            // Reset nilai input
             ['pos-name', 'pos-code', 'pos-level', 'pos-desc'].forEach(id => {
                 const el = document.getElementById(id);
-                if (el) {
-                    el.value = '';
-                    el.classList.remove('is-invalid');
-                }
+                if (el) el.value = '';
             });
-
-            // Reset error texts — pakai optional chaining
-            ['pos-err-name', 'pos-err-code', 'pos-err-level', 'pos-err-desc'].forEach(id => {
-                const el = document.getElementById(id);
-                if (el) el.textContent = '';
-            });
-
             document.getElementById('pos-status').value = 'Draft';
             document.getElementById('pos-char-count').textContent = '0';
-            document.getElementById('pos-modal-alert').classList.add('d-none');
             $('#pos-department').val(null).trigger('change');
+
+            this._clearPositionModal();
             new bootstrap.Modal(document.getElementById('modalAddPosition')).show();
         },
 
         async savePosition() {
-            // Reset semua state validasi dan error
-            const modalFields = ['pos-name', 'pos-code', 'pos-level', 'pos-department'];
-            modalFields.forEach(id => {
-                const el = document.getElementById(id);
-                if (el) {
-                    el.classList.remove('is-valid', 'is-invalid');
-                    if (id === 'pos-department') {
-                        $(el).next('.select2-container').removeClass('s2-is-valid s2-is-invalid');
-                    }
-                }
-            });
+            this._clearPositionModal();
+            if (!this._validatePositionModal()) return;
 
-            ['pos-err-name', 'pos-err-code', 'pos-err-level', 'pos-err-dept'].forEach(id => {
-                const el = document.getElementById(id);
-                if (el) el.textContent = '';
-            });
-
-            document.getElementById('pos-modal-alert').classList.add('d-none');
-
-            // Ambil nilai
             const name = document.getElementById('pos-name').value.trim();
             const code = document.getElementById('pos-code').value.trim();
             const level = document.getElementById('pos-level').value.trim();
@@ -1178,37 +1188,12 @@ $emp    = $employee ?? [];
             const status = document.getElementById('pos-status').value;
             const description = document.getElementById('pos-desc').value.trim();
 
-            // Validasi client-side
-            let hasError = false;
-
-            if (!name) {
-                const nameEl = document.getElementById('pos-name');
-                nameEl.classList.add('is-invalid');
-                document.getElementById('pos-err-name').textContent = 'Nama posisi wajib diisi.';
-                hasError = true;
-            } else {
-                document.getElementById('pos-name').classList.add('is-valid');
-            }
-
-            if (!code) {
-                const codeEl = document.getElementById('pos-code');
-                codeEl.classList.add('is-invalid');
-                document.getElementById('pos-err-code').textContent = 'Kode posisi wajib diisi.';
-                hasError = true;
-            } else {
-                document.getElementById('pos-code').classList.add('is-valid');
-            }
-
-            if (hasError) return;
-
-            // Disable button & show loading
             const btn = document.getElementById('btn-save-position');
             btn.disabled = true;
             document.getElementById('pos-save-icon').className = 'spinner-border spinner-border-sm me-1';
             document.getElementById('pos-save-text').textContent = 'Menyimpan...';
 
             try {
-                // Build FormData
                 const fd = new FormData();
                 fd.set('position_name', name);
                 fd.set('position_code', code.toUpperCase());
@@ -1217,99 +1202,161 @@ $emp    = $employee ?? [];
                 fd.set('status', status);
                 if (description) fd.set('description', description);
 
-                // Kirim request
                 const res = await this._post(this.cfg.base + 'hrm/positions/store', fd);
 
                 if (res.status === 'success') {
-                    // Set valid style semua field
-                    modalFields.forEach(id => {
-                        const el = document.getElementById(id);
-                        if (el && el.value) {
-                            el.classList.add('is-valid');
-                            el.classList.remove('is-invalid');
-                        }
-                    });
-                    $('#pos-department').next('.select2-container').addClass('s2-is-valid');
+                    // Inject opsi baru ke Select2 posisi
+                    $('#f-position').append(new Option(name, res.id, true, true)).trigger('change');
 
-                    // Tambahkan ke select2 utama
-                    const newOpt = new Option(name, res.id, true, true);
-                    $('#f-position').append(newOpt).trigger('change');
-
-                    // Ambil detail posisi untuk department
-                    const posRes = await fetch(this.cfg.base + `hrm/positions/get/${res.id}`, {
-                        headers: {
-                            'X-Requested-With': 'XMLHttpRequest'
+                    // Ambil info departemen dari posisi baru
+                    const posRes = await fetch(
+                        this.cfg.base + `hrm/positions/get/${res.id}`, {
+                            headers: {
+                                'X-Requested-With': 'XMLHttpRequest'
+                            }
                         }
-                    }).then(r => r.json());
+                    ).then(r => r.json());
 
                     if (posRes.status === 'success') {
                         document.getElementById('dept-display').value = posRes.data.department_name || '';
                         document.getElementById('dept-id').value = posRes.data.department_id || '';
                     }
 
-                    // Tutup modal & notifikasi
                     bootstrap.Modal.getInstance(document.getElementById('modalAddPosition'))?.hide();
-                    this._clearError('f-position', 'err-position', true);
+                    this._markValid({
+                        field: 'f-position',
+                        err: 'err-position',
+                        isSelect2: true
+                    });
                     this.toast('success', `Posisi "${name}" berhasil ditambahkan.`);
 
                 } else if (res.errors) {
-                    // Tampilkan error dari server
+                    // Map server errors → field modal
                     const errorMap = {
                         position_name: {
-                            input: 'pos-name',
-                            error: 'pos-err-name'
+                            field: 'pos-name',
+                            err: 'pos-err-name'
                         },
                         position_code: {
-                            input: 'pos-code',
-                            error: 'pos-err-code'
+                            field: 'pos-code',
+                            err: 'pos-err-code'
                         },
                         position_level: {
-                            input: 'pos-level',
-                            error: 'pos-err-level'
+                            field: 'pos-level',
+                            err: 'pos-err-level'
                         },
                         department_id: {
-                            input: 'pos-department',
-                            error: 'pos-err-dept'
-                        }
+                            field: 'pos-department',
+                            err: 'pos-err-dept',
+                            isSelect2: true
+                        },
                     };
-
-                    Object.entries(res.errors).forEach(([field, msg]) => {
-                        const mapped = errorMap[field];
-                        if (mapped) {
-                            const inputEl = document.getElementById(mapped.input);
-                            inputEl.classList.add('is-invalid');
-                            inputEl.classList.remove('is-valid');
-
-                            if (field === 'department_id') {
-                                $(inputEl).next('.select2-container').addClass('s2-is-invalid');
-                            }
-
-                            const errMsg = Array.isArray(msg) ? msg[0] : msg;
-                            document.getElementById(mapped.error).textContent = errMsg;
-                        }
+                    Object.entries(res.errors).forEach(([key, msg]) => {
+                        const rule = errorMap[key];
+                        if (!rule) return;
+                        this._markInvalid(rule, Array.isArray(msg) ? msg[0] : msg);
                     });
 
                 } else {
-                    // Error umum
-                    document.getElementById('pos-modal-alert').classList.remove('d-none');
-                    document.getElementById('pos-modal-alert-text').textContent = res.message || 'Terjadi kesalahan.';
+                    this._showModalAlert(res.message || 'Terjadi kesalahan.');
                 }
 
-            } catch (error) {
-                console.error('Save position error:', error);
-                this.toast('error', 'Gagal menyimpan posisi. Periksa koneksi Anda.');
-                document.getElementById('pos-modal-alert').classList.remove('d-none');
-                document.getElementById('pos-modal-alert-text').textContent = 'Gagal terhubung ke server.';
-
+            } catch (err) {
+                console.error('Save position error:', err);
+                this._showModalAlert('Gagal terhubung ke server.');
             } finally {
-                // Reset button
                 btn.disabled = false;
                 document.getElementById('pos-save-icon').className = 'fas fa-save me-1';
                 document.getElementById('pos-save-text').textContent = 'Simpan';
             }
         },
 
-        /* ── UI Helpers ───────────────────────────────────────────── */
+        /* ── Validation — modal posisi ───────────────────────────── */
+        _validatePositionModal() {
+            let valid = true;
+            let firstEl = null;
+
+            this._posRules.forEach(rule => {
+                const el = document.getElementById(rule.field);
+                if (!el) return;
+
+                const val = rule.isSelect2 ?
+                    ($('#' + rule.field).val() || '') :
+                    el.value.trim();
+
+                let ok = true;
+
+                if (rule.required && val === '') {
+                    ok = false;
+                } else if (rule.numeric && val !== '') {
+                    const n = Number(val);
+                    if (isNaN(n) || n < (rule.min ?? 1) || n > (rule.max ?? 99)) ok = false;
+                }
+
+                if (!ok) {
+                    valid = false;
+                    this._markInvalid(rule);
+                    if (!firstEl) firstEl = el;
+                } else {
+                    // Tandai valid hanya jika field wajib, atau optional yang sudah diisi
+                    if (rule.required || val !== '') {
+                        this._markValid(rule);
+                    }
+                }
+            });
+
+            firstEl?.focus();
+            return valid;
+        },
+
+        _clearPositionModal() {
+            this._posRules.forEach(rule => this._markNeutral(rule));
+            document.getElementById('pos-modal-alert')?.classList.add('d-none');
+        },
+
+        _initModalLiveValidation() {
+            this._posRules.forEach(rule => {
+                const el = document.getElementById(rule.field);
+                if (!el) return;
+
+                const revalidate = () => {
+                    // Jangan apa-apa kalau field belum pernah disentuh (masih neutral)
+                    if (!el.classList.contains('is-invalid') && !el.classList.contains('is-valid')) return;
+
+                    const val = rule.isSelect2 ?
+                        ($('#' + rule.field).val() || '') :
+                        el.value.trim();
+
+                    let ok = true;
+                    if (rule.required && val === '') ok = false;
+                    if (rule.numeric && val !== '') {
+                        const n = Number(val);
+                        if (isNaN(n) || n < (rule.min ?? 1) || n > (rule.max ?? 99)) ok = false;
+                    }
+
+                    // Optional kosong → netral (tidak valid, tidak invalid)
+                    if (!rule.required && val === '') {
+                        this._markNeutral(rule);
+                    } else {
+                        ok ? this._markValid(rule) : this._markInvalid(rule);
+                    }
+                };
+
+                if (rule.isSelect2) {
+                    $('#' + rule.field).on('select2:select select2:clear', revalidate);
+                } else {
+                    el.addEventListener('input', revalidate);
+                    el.addEventListener('change', revalidate);
+                }
+            });
+        },
+
+        _showModalAlert(msg) {
+            document.getElementById('pos-modal-alert').classList.remove('d-none');
+            document.getElementById('pos-modal-alert-text').textContent = msg;
+        },
+
+        /* ── UI Helpers ─────────────────────────────────────────── */
         _showLoading(msg = 'Memproses...') {
             document.getElementById('loading-text').textContent = msg;
             document.getElementById('loading-overlay').style.display = 'flex';
@@ -1338,6 +1385,56 @@ $emp    = $employee ?? [];
                 timer: type === 'success' ? 2000 : 4000,
                 timerProgressBar: true,
             });
+        },
+
+        /* ── Events ─────────────────────────────────────────────── */
+        initEvents() {
+            document.getElementById('btn-submit')
+                ?.addEventListener('click', () => this.save());
+
+            document.getElementById('employee-form')
+                ?.addEventListener('submit', e => e.preventDefault());
+
+            // Live clear-error untuk field wajib form utama (non-Select2)
+            this.rules.filter(r => r.required && !r.isSelect2).forEach(rule => {
+                const el = document.getElementById(rule.field);
+                if (!el) return;
+                el.addEventListener('change', () => this._clearFieldError(rule));
+                el.addEventListener('input', () => this._clearFieldError(rule));
+            });
+
+            // Auto-format
+            document.getElementById('f-fullname')
+                ?.addEventListener('blur', function() {
+                    this.value = this.value.trim().replace(/\b\w/g, c => c.toUpperCase());
+                });
+            document.getElementById('f-nik')
+                ?.addEventListener('blur', function() {
+                    this.value = this.value.trim().toUpperCase();
+                });
+
+            // Modal posisi
+            document.getElementById('btn-add-position')
+                ?.addEventListener('click', () => this.openAddPosition());
+            document.getElementById('btn-save-position')
+                ?.addEventListener('click', () => this.savePosition());
+
+            // Perbaiki aria-hidden focus warning — pindahkan fokus sebelum modal hide
+            document.getElementById('modalAddPosition')
+                ?.addEventListener('hide.bs.modal', () => {
+                    if (document.activeElement instanceof HTMLElement) {
+                        document.activeElement.blur();
+                    }
+                });
+            document.getElementById('pos-desc')?.addEventListener('input', e => {
+                document.getElementById('pos-char-count').textContent = e.target.value.length;
+            });
+            document.getElementById('pos-code')?.addEventListener('input', function() {
+                this.value = this.value.toUpperCase();
+            });
+
+            // Live validation modal
+            this._initModalLiveValidation();
         },
     };
 
