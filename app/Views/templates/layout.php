@@ -321,6 +321,7 @@
   <script src="<?= base_url('vendors/jquery.repeater/jquery.repeater.min.js') ?>"></script>
   <script src="<?= base_url('vendors/select2-4.1.0/dist/js/select2.min.js') ?>"></script>
   <script src="<?= base_url('vendors/sweetalert2/dist/sweetalert2.all.min.js') ?>"></script>
+
   <?= $this->renderSection('scripts') ?>
 </body>
 

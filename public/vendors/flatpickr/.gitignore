@@ -1,0 +1,36 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Virtual Environment
+venv/
+env/
+ENV/
+.venv
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Logs
+*.log
+file_organizer_log.json
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Model files (large)
+*.h5
+*.pkl
+*.pb
+
+# Test folders
+test_folder/
+temp/

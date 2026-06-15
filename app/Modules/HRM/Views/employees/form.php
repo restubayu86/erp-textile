@@ -249,6 +249,14 @@
         align-items: center;
         justify-content: center;
     }
+
+    #modalAddPosition .select2-invalid+.select2-container--bootstrap-5 .select2-selection {
+        border-color: var(--phoenix-danger) !important;
+    }
+
+    #pos-err-dept {
+        display: block;
+    }
 </style>
 <?= $this->endSection() ?>
 
@@ -637,9 +645,6 @@ $emp    = $employee ?? [];
 <?= $this->endSection() ?>
 
 <?= $this->section('scripts') ?>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
-<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-<script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/id.js"></script>
 <script>
     const EmployeeForm = {
 
@@ -1146,43 +1151,91 @@ $emp    = $employee ?? [];
         },
 
         async savePosition() {
-            // Validasi minimal
+            // Reset semua state validasi dan error
+            const modalFields = ['pos-name', 'pos-code', 'pos-level', 'pos-department'];
+            modalFields.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) {
+                    el.classList.remove('is-valid', 'is-invalid');
+                    if (id === 'pos-department') {
+                        $(el).next('.select2-container').removeClass('s2-is-valid s2-is-invalid');
+                    }
+                }
+            });
+
+            ['pos-err-name', 'pos-err-code', 'pos-err-level', 'pos-err-dept'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.textContent = '';
+            });
+
+            document.getElementById('pos-modal-alert').classList.add('d-none');
+
+            // Ambil nilai
             const name = document.getElementById('pos-name').value.trim();
             const code = document.getElementById('pos-code').value.trim();
+            const level = document.getElementById('pos-level').value.trim();
+            const departmentId = $('#pos-department').val();
+            const status = document.getElementById('pos-status').value;
+            const description = document.getElementById('pos-desc').value.trim();
+
+            // Validasi client-side
+            let hasError = false;
+
             if (!name) {
-                document.getElementById('pos-name').classList.add('is-invalid');
+                const nameEl = document.getElementById('pos-name');
+                nameEl.classList.add('is-invalid');
                 document.getElementById('pos-err-name').textContent = 'Nama posisi wajib diisi.';
-                return;
-            }
-            if (!code) {
-                document.getElementById('pos-code').classList.add('is-invalid');
-                document.getElementById('pos-err-code').textContent = 'Kode wajib diisi.';
-                return;
+                hasError = true;
+            } else {
+                document.getElementById('pos-name').classList.add('is-valid');
             }
 
+            if (!code) {
+                const codeEl = document.getElementById('pos-code');
+                codeEl.classList.add('is-invalid');
+                document.getElementById('pos-err-code').textContent = 'Kode posisi wajib diisi.';
+                hasError = true;
+            } else {
+                document.getElementById('pos-code').classList.add('is-valid');
+            }
+
+            if (hasError) return;
+
+            // Disable button & show loading
             const btn = document.getElementById('btn-save-position');
             btn.disabled = true;
             document.getElementById('pos-save-icon').className = 'spinner-border spinner-border-sm me-1';
             document.getElementById('pos-save-text').textContent = 'Menyimpan...';
 
-            const fd = new FormData();
-            fd.set('position_name', name);
-            fd.set('position_code', code.toUpperCase());
-            fd.set('position_level', document.getElementById('pos-level').value || '');
-            fd.set('department_id', $('#pos-department').val() || '');
-            fd.set('status', document.getElementById('pos-status').value);
-            fd.set('description', document.getElementById('pos-desc').value || '');
-
             try {
+                // Build FormData
+                const fd = new FormData();
+                fd.set('position_name', name);
+                fd.set('position_code', code.toUpperCase());
+                if (level) fd.set('position_level', level);
+                if (departmentId) fd.set('department_id', departmentId);
+                fd.set('status', status);
+                if (description) fd.set('description', description);
+
+                // Kirim request
                 const res = await this._post(this.cfg.base + 'hrm/positions/store', fd);
 
                 if (res.status === 'success') {
-                    // Auto-select posisi baru di Select2
+                    // Set valid style semua field
+                    modalFields.forEach(id => {
+                        const el = document.getElementById(id);
+                        if (el && el.value) {
+                            el.classList.add('is-valid');
+                            el.classList.remove('is-invalid');
+                        }
+                    });
+                    $('#pos-department').next('.select2-container').addClass('s2-is-valid');
+
+                    // Tambahkan ke select2 utama
                     const newOpt = new Option(name, res.id, true, true);
                     $('#f-position').append(newOpt).trigger('change');
 
-                    // Trigger select2:select untuk auto-fill departemen
-                    // Fetch department info dari server
+                    // Ambil detail posisi untuk department
                     const posRes = await fetch(this.cfg.base + `hrm/positions/get/${res.id}`, {
                         headers: {
                             'X-Requested-With': 'XMLHttpRequest'
@@ -1194,27 +1247,62 @@ $emp    = $employee ?? [];
                         document.getElementById('dept-id').value = posRes.data.department_id || '';
                     }
 
+                    // Tutup modal & notifikasi
                     bootstrap.Modal.getInstance(document.getElementById('modalAddPosition'))?.hide();
                     this._clearError('f-position', 'err-position', true);
                     this.toast('success', `Posisi "${name}" berhasil ditambahkan.`);
+
                 } else if (res.errors) {
-                    const errMap = {
-                        position_name: ['pos-name', 'pos-err-name'],
-                        position_code: ['pos-code', 'pos-err-code'],
-                        position_level: ['pos-level', 'pos-err-level'],
+                    // Tampilkan error dari server
+                    const errorMap = {
+                        position_name: {
+                            input: 'pos-name',
+                            error: 'pos-err-name'
+                        },
+                        position_code: {
+                            input: 'pos-code',
+                            error: 'pos-err-code'
+                        },
+                        position_level: {
+                            input: 'pos-level',
+                            error: 'pos-err-level'
+                        },
+                        department_id: {
+                            input: 'pos-department',
+                            error: 'pos-err-dept'
+                        }
                     };
-                    Object.entries(res.errors).forEach(([f, msg]) => {
-                        const [inp, err] = errMap[f] ?? [];
-                        if (inp) document.getElementById(inp)?.classList.add('is-invalid');
-                        if (err) document.getElementById(err).textContent = Array.isArray(msg) ? msg[0] : msg;
+
+                    Object.entries(res.errors).forEach(([field, msg]) => {
+                        const mapped = errorMap[field];
+                        if (mapped) {
+                            const inputEl = document.getElementById(mapped.input);
+                            inputEl.classList.add('is-invalid');
+                            inputEl.classList.remove('is-valid');
+
+                            if (field === 'department_id') {
+                                $(inputEl).next('.select2-container').addClass('s2-is-invalid');
+                            }
+
+                            const errMsg = Array.isArray(msg) ? msg[0] : msg;
+                            document.getElementById(mapped.error).textContent = errMsg;
+                        }
                     });
+
                 } else {
+                    // Error umum
                     document.getElementById('pos-modal-alert').classList.remove('d-none');
                     document.getElementById('pos-modal-alert-text').textContent = res.message || 'Terjadi kesalahan.';
                 }
-            } catch (e) {
-                this.toast('error', 'Gagal menyimpan posisi.');
+
+            } catch (error) {
+                console.error('Save position error:', error);
+                this.toast('error', 'Gagal menyimpan posisi. Periksa koneksi Anda.');
+                document.getElementById('pos-modal-alert').classList.remove('d-none');
+                document.getElementById('pos-modal-alert-text').textContent = 'Gagal terhubung ke server.';
+
             } finally {
+                // Reset button
                 btn.disabled = false;
                 document.getElementById('pos-save-icon').className = 'fas fa-save me-1';
                 document.getElementById('pos-save-text').textContent = 'Simpan';
