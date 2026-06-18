@@ -695,7 +695,7 @@
         initDatatable() {
             const self = this;
             this.dt = $('#position-table').DataTable({
-                scrollX: false,
+                scrollX: true,
                 processing: true,
                 serverSide: true,
                 pageLength: 25,

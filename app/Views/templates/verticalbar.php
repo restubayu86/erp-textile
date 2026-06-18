@@ -547,17 +547,6 @@ function navActive(string $seg1, string $seg2 = ''): string
                                         </a>
                                     </li>
 
-                                    <?php if (canDo('group.view')): ?>
-                                        <li class="nav-item">
-                                            <a class="nav-link<?= navActive('access', 'groups') ?>"
-                                                href="<?= base_url('access/groups') ?>">
-                                                <div class="d-flex align-items-center">
-                                                    <span class="nav-link-text">Group & Role</span>
-                                                </div>
-                                            </a>
-                                        </li>
-                                    <?php endif; ?>
-
                                     <?php if (canDo('permission.view')): ?>
                                         <li class="nav-item">
                                             <a class="nav-link<?= navActive('access', 'permissions') ?>"

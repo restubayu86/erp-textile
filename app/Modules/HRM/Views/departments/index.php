@@ -562,7 +562,7 @@
             const self = this;
             this.dt = $('#dept-table').DataTable({
                 responsive: true,
-                scrollX: false,
+                scrollX: true,
                 processing: true,
                 serverSide: true,
                 pageLength: 25,

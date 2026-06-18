@@ -24,17 +24,32 @@ $routes->group('production', [
     // Reports
     $routes->get('reports',                       'ReportController::index');
 
-    // Master: Machines (modal)
-    $routes->get('master/machines',               'MachineController::index');
-    $routes->get('master/machines/datatables',    'MachineController::datatables');
-    $routes->get('master/machines/(:num)',       'MachineController::getById/$1');
-    $routes->post('master/machines/store',        'MachineController::store');
-    $routes->post('master/machines/(:num)/delete','MachineController::delete/$1');
+    // =============================================
+    // FIXED: Machine Routes
+    // =============================================
+    // Main endpoints (without "master/" prefix to match JS)
+    $routes->get('machines',                      'MachineController::index');
+    $routes->get('machines/datatables',           'MachineController::datatables');
+    $routes->get('machines/stats',                'MachineController::stats');  // NEW
+    $routes->get('machines/get/(:num)',           'MachineController::getById/$1');
+    $routes->post('machines/store',               'MachineController::store');
+    $routes->post('machines/delete/(:num)',      'MachineController::delete/$1');
 
-    // Master: Machine Types (modal)
-    $routes->get('master/machine-types',          'MachineTypeController::index');
-    $routes->get('master/machine-types/datatables','MachineTypeController::datatables');
-    $routes->get('master/machine-types/(:num)',  'MachineTypeController::getById/$1');
-    $routes->post('master/machine-types/store',   'MachineTypeController::store');
-    $routes->post('master/machine-types/(:num)/delete','MachineTypeController::delete/$1');
+    // Trash route
+    $routes->get('machines/trash',                'MachineController::trash');
+
+    // Keep master routes for backward compatibility if needed
+    $routes->group('master', function ($routes) {
+        $routes->get('machines',                  'MachineController::index');
+        $routes->get('machines/datatables',       'MachineController::datatables');
+        $routes->get('machines/(:num)',           'MachineController::getById/$1');
+        $routes->post('machines/store',           'MachineController::store');
+        $routes->post('machines/(:num)/delete',   'MachineController::delete/$1');
+
+        $routes->get('machine-types',             'MachineTypeController::index');
+        $routes->get('machine-types/datatables',  'MachineTypeController::datatables');
+        $routes->get('machine-types/(:num)',      'MachineTypeController::getById/$1');
+        $routes->post('machine-types/store',      'MachineTypeController::store');
+        $routes->post('machine-types/(:num)/delete', 'MachineTypeController::delete/$1');
+    });
 });

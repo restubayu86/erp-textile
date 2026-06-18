@@ -824,7 +824,7 @@
             const self = this;
 
             this.dt = $('#employee-table').DataTable({
-                scrollX: false,
+                scrollX: true,
                 processing: true,
                 serverSide: true,
                 pageLength: 25,

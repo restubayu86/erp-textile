@@ -297,7 +297,7 @@
             const self = this;
             this.dt = $('#trash-table').DataTable({
                 responsive: true,
-                scrollX: false,
+                scrollX: true,
                 processing: true,
                 serverSide: true,
                 pageLength: 25,
