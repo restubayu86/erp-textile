@@ -241,8 +241,8 @@
     }
 
     .btn-group-sm .btn {
-        padding: 0.25rem 0.5rem;
-        font-size: 0.7rem;
+        padding: .5rem .75rem;
+        font-size: .7rem;
     }
 </style>
 <?= $this->endSection() ?>
@@ -659,7 +659,7 @@
                     },
                     {
                         data: 'created_by_name',
-                        render: d => self.fmtUser(d)
+                        render: (d, t, r) => self._fmtUser(d, r.created_by_employee)
                     },
                     {
                         data: 'updated_at',
@@ -667,7 +667,7 @@
                     },
                     {
                         data: 'updated_by_name',
-                        render: d => self.fmtUser(d)
+                        render: (d, t, r) => self._fmtUser(d, r.updated_by_employee)
                     },
                     {
                         data: null,
@@ -785,6 +785,37 @@
                 el.style.visibility = '';
             });
             document.getElementById('modal-alert').classList.add('d-none');
+        },
+
+        /* HTML escape — cegah XSS di semua kolom render */
+        _e(s) {
+            if (s == null) return '';
+            return String(s)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        },
+
+        _fmtUser(name, employeeName = null) {
+            if (!name && !employeeName) return '<span class="text-muted fst-italic">—</span>';
+
+            // Jika tidak ada employeeName, tampilkan username saja
+            if (!employeeName) {
+                return `<span class="badge badge-phoenix badge-phoenix-info fs-10 p-1 px-2" 
+                     title="Username: ${this._e(name)}">
+                    <span class="fas fa-user-circle me-1"></span>${this._e(name)}
+                </span>`;
+            }
+
+            // Tampilkan employee name sebagai badge utama, username sebagai badge kecil
+            return `<span class="badge badge-phoenix badge-phoenix-primary fs-10 p-1 px-3" 
+                 title="Karyawan: ${this._e(employeeName)}&#013;Username: ${this._e(name)}"
+                 style="cursor:help;border-radius:50px;display:inline-flex;align-items:center;gap:0.3rem;">
+                <span class="fas fa-user me-1"></span>
+                ${this._e(employeeName)}
+            </span>`;
         },
 
         markValid(id) {
@@ -1001,11 +1032,6 @@
                 <span class="fas ${statusIcon}"></span>
                 ${this.e(status)}
             </span>`;
-        },
-
-        fmtUser(d) {
-            if (!d) return '<span class="text-muted fst-italic">—</span>';
-            return `<span class="badge-user"><span class="fas fa-user-circle"></span>${this.e(d)}</span>`;
         },
 
         toast(type, msg) {

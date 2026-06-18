@@ -281,7 +281,7 @@
     }
 
     .btn-group-sm .btn {
-        padding: .25rem .5rem;
+        padding: .5rem .75rem;
         font-size: .7rem;
     }
 </style>
@@ -788,8 +788,7 @@
                     {
                         data: 'position_level',
                         render: d => d ?
-                            `<span class="badge-level" title="Level ${d}">${d}</span>` :
-                            '<span class="text-muted">—</span>'
+                            `<span class="badge-level" title="Level ${d}">${d}</span>` : '<span class="text-muted">—</span>'
                     },
                     /* 2  Posisi */
                     {
@@ -802,15 +801,13 @@
                     {
                         data: 'description',
                         render: d => d ?
-                            `<span class="text-muted">${self.e(d.substring(0, 60))}${d.length > 60 ? '…' : ''}</span>` :
-                            '<span class="text-muted fst-italic">—</span>'
+                            `<span class="text-muted">${self.e(d.substring(0, 60))}${d.length > 60 ? '…' : ''}</span>` : '<span class="text-muted fst-italic">—</span>'
                     },
                     /* 4  Dept   */
                     {
                         data: 'department_name',
                         render: d => d ?
-                            `<span class="badge-dept"><span class="fas fa-building me-1"></span>${self.e(d)}</span>` :
-                            '<span class="text-muted fst-italic">—</span>'
+                            `<span class="badge-dept"><span class="fas fa-building me-1"></span>${self.e(d)}</span>` : '<span class="text-muted fst-italic">—</span>'
                     },
                     /* 5  Status */
                     {
@@ -825,7 +822,7 @@
                     /* 7  Cr.by  */
                     {
                         data: 'created_by_name',
-                        render: d => self.fmtUser(d),
+                        render: (d, t, r) => self._fmtUser(d, r.created_by_employee),
                         orderable: false
                     },
                     /* 8  Up.at  */
@@ -836,7 +833,7 @@
                     /* 9  Up.by  */
                     {
                         data: 'updated_by_name',
-                        render: d => self.fmtUser(d),
+                        render: (d, t, r) => self._fmtUser(d, r.updated_by_employee),
                         orderable: false
                     },
                     /* 10 Aksi   */
@@ -1226,9 +1223,34 @@
             };
             return `<span class="badge-status ${s.cls}"><span class="fas ${s.icon}"></span>${this.e(status)}</span>`;
         },
-        fmtUser(name) {
-            if (!name) return '<span class="text-muted fst-italic">—</span>';
-            return `<span class="badge-user"><span class="fas fa-user-circle me-1"></span>${this.e(name)}</span>`;
+        /* HTML escape — cegah XSS di semua kolom render */
+        _e(s) {
+            if (s == null) return '';
+            return String(s)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        },
+        _fmtUser(name, employeeName = null) {
+            if (!name && !employeeName) return '<span class="text-muted fst-italic">—</span>';
+
+            // Jika tidak ada employeeName, tampilkan username saja
+            if (!employeeName) {
+                return `<span class="badge badge-phoenix badge-phoenix-info fs-10 p-1 px-2" 
+                     title="Username: ${this._e(name)}">
+                    <span class="fas fa-user-circle me-1"></span>${this._e(name)}
+                </span>`;
+            }
+
+            // Tampilkan employee name sebagai badge utama, username sebagai badge kecil
+            return `<span class="badge badge-phoenix badge-phoenix-primary fs-10 p-1 px-3" 
+                 title="Karyawan: ${this._e(employeeName)}&#013;Username: ${this._e(name)}"
+                 style="cursor:help;border-radius:50px;display:inline-flex;align-items:center;gap:0.3rem;">
+                <span class="fas fa-user me-1"></span>
+                ${this._e(employeeName)}
+            </span>`;
         },
         fmtDate(d) {
             if (!d) return '<span class="text-muted">—</span>';

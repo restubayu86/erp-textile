@@ -28,20 +28,77 @@ abstract class BaseController extends Controller
 
     // protected $session;
 
+    protected $currentUser;
+    protected $userEmployee;
+    protected $userIdentities;
+
     /**
      * @return void
      */
     public function initController(RequestInterface $request, ResponseInterface $response, LoggerInterface $logger)
     {
-        // Load here all helpers you want to be available in your controllers that extend BaseController.
-        // Caution: Do not put the this below the parent::initController() call below.
-        // $this->helpers = ['form', 'url'];
-
-        // Caution: Do not edit this line.
         parent::initController($request, $response, $logger);
 
-        // Preload any models, libraries, etc, here.
-        // $this->session = service('session');
         helper(['url', 'auth', 'setting', 'company']);
+
+        $this->currentUser = auth()->getUser();
+        $this->userIdentities = $this->currentUser ? $this->currentUser->getIdentities() : [];
+
+        // Load employee data
+        $this->userEmployee = null;
+        if ($this->currentUser && !empty($this->currentUser->employee_id)) {
+            $db = \Config\Database::connect();
+
+            // Query dengan column yang benar
+            $query = $db->table('employees')
+                ->select('employees.*, departments.department as department_name, positions.position_name')
+                ->join('positions', 'positions.id = employees.position_id', 'left')
+                ->join('departments', 'departments.id = positions.department_id', 'left')
+                ->where('employees.id', $this->currentUser->employee_id)
+                ->get();
+
+            $this->userEmployee = $query->getRowArray();
+        }
+
+        // Share to all views
+        $viewData = [
+            'user' => $this->currentUser,
+            'user_identities' => $this->userIdentities,
+            'user_employee' => $this->userEmployee,
+        ];
+
+        \Config\Services::renderer()->setData($viewData);
+    }
+
+    /**
+     * Get current user with employee data
+     */
+    protected function getCurrentUser()
+    {
+        return $this->currentUser;
+    }
+
+    /**
+     * Get employee data of current user
+     */
+    protected function getUserEmployee()
+    {
+        return $this->userEmployee;
+    }
+
+    /**
+     * Get user identities
+     */
+    protected function getUserIdentities()
+    {
+        return $this->userIdentities;
+    }
+
+    /**
+     * Check if current user has employee relation
+     */
+    protected function hasEmployeeRelation(): bool
+    {
+        return !empty($this->userEmployee);
     }
 }

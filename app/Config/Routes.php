@@ -68,37 +68,43 @@ require APPPATH . 'Modules/Warehouse/Config/Routes.php';
 // =============================================================================
 //  6. MANAJEMEN HAK AKSES (User, Group, Permission via Shield)
 // =============================================================================
-$routes->group('access', ['namespace' => 'App\Controllers\Access'], function ($routes) {
+// =============================================================================
+//  Access Management — Users Routes
+//  Prefix  : /access
+//  Filter  : shield
+//  NS      : App\Controllers\Access
+// =============================================================================
 
-    // USERS
-    $routes->get('users',                    'UserController::index',        ['as' => 'access.users']);
-    $routes->get('users/datatables',         'UserController::datatables');
-    $routes->get('users/(:num)',             'UserController::show/$1',      ['as' => 'access.users.show']);
-    $routes->get('users/get/(:num)', 'UserController::show/$1');
+$routes->group('access', ['namespace' => 'App\Controllers\Access', 'filter' => 'shield'], function ($routes) {
 
-    // RESTful actions
-    $routes->post('users',                   'UserController::create');      // CREATE
-    $routes->put('users/(:num)',             'UserController::update/$1');   // UPDATE (full)
-    $routes->patch('users/(:num)/status',    'UserController::toggle/$1');   // PATCH status
-    $routes->delete('users/(:num)',          'UserController::delete/$1');   // DELETE
-    $routes->post('users/(:num)/groups',     'UserController::assignGroups/$1'); // assign groups
+    // ── Users ────────────────────────────────────────────────────────────────
+    $routes->get('users',                       'UserController::index',        ['as' => 'access.users']);
+    $routes->get('users/trash',                  'UserController::trash',        ['as' => 'access.users.trash']);
 
-    // GROUPS (Role)
-    $routes->get('groups',                   'GroupController::index',       ['as' => 'access.groups']);
-    $routes->get('groups/datatables',        'GroupController::datatables');
-    $routes->get('groups/(:num)',            'GroupController::getById/$1');
-    $routes->post('groups',                  'GroupController::store');      // CREATE
-    $routes->put('groups/(:num)',            'GroupController::update/$1');  // UPDATE (opsional)
-    $routes->delete('groups/(:num)',         'GroupController::delete/$1');
-    $routes->post('groups/(:num)/permissions', 'GroupController::assignPermissions/$1');
+    // DataTable
+    $routes->get('users/datatables',             'UserController::datatables');
+    $routes->get('users/trash-datatables',       'UserController::trashDatatables');
 
-    // PERMISSIONS
-    $routes->get('permissions',              'PermissionController::index',  ['as' => 'access.permissions']);
-    $routes->get('permissions/datatables',   'PermissionController::datatables');
-    $routes->get('permissions/(:num)',       'PermissionController::getById/$1');
-    $routes->post('permissions',             'PermissionController::store');
-    $routes->put('permissions/(:num)',       'PermissionController::update/$1');
-    $routes->delete('permissions/(:num)',    'PermissionController::delete/$1');
+    // Stats & Select2
+    $routes->get('users/stats',                  'UserController::stats');
+    $routes->get('users/select2-employees',      'UserController::select2Employees');
+
+    // AJAX CRUD — semua POST, konsisten dengan modul lain
+    $routes->get('users/get/(:num)',              'UserController::show/$1');
+    $routes->post('users/store',                  'UserController::store',        ['as' => 'access.users.store']);
+    $routes->post('users/toggle/(:num)',           'UserController::toggle/$1');
+    $routes->post('users/delete/(:num)',           'UserController::delete/$1');
+    $routes->post('users/restore/(:num)',          'UserController::restore/$1');
+    $routes->post('users/force-delete/(:num)',     'UserController::forceDelete/$1');
+    $routes->post('users/empty-trash',             'UserController::emptyTrash');
+    $routes->post('users/assign-groups/(:num)',    'UserController::assignGroups/$1');
+    $routes->get('users/activity/(:num)',          'UserController::activity/$1');
+
+    // ── Groups (Role) — placeholder, lanjut di sesi berikutnya ─────────────────
+    // $routes->get('groups', 'GroupController::index', ['as' => 'access.groups']);
+
+    // ── Permissions — placeholder ──────────────────────────────────────────────
+    // $routes->get('permissions', 'PermissionController::index', ['as' => 'access.permissions']);
 });
 
 // =============================================================================

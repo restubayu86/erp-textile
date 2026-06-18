@@ -83,9 +83,7 @@ class EmployeeController extends BaseController
 
         $employee = $result['data'];
 
-        // ── Resolve department_name, department_id, position_name ──
-        // getData() hanya return position_id. Kita JOIN ke positions
-        // dan departments untuk mendapatkan nama yang dibutuhkan view.
+        // Resolve department_name, department_id, position_name via JOIN ke positions + departments
         if (!empty($employee['position_id'])) {
             $db  = \Config\Database::connect();
             $row = $db->table('positions p')
@@ -107,7 +105,6 @@ class EmployeeController extends BaseController
             $employee['department_id']   = null;
             $employee['department_name'] = '';
         }
-        // ──────────────────────────────────────────────────────────
 
         return view('App\Modules\HRM\Views\employees\form', [
             'title'            => 'Edit Karyawan',
@@ -188,17 +185,20 @@ class EmployeeController extends BaseController
                 'positions.position_code',
                 "COALESCE(departments.department, '—') as department_name",
                 'cu.username as created_by_name',
+                'cu_emp.nickname as created_by_employee',
                 'uu.username as updated_by_name',
+                'uu_emp.nickname as updated_by_employee',
             ])
             ->join('positions',    'positions.id = employees.position_id',         'left')
             ->join('departments',  'departments.id = positions.department_id',      'left')
             ->join('users cu',     'cu.id = employees.created_by',                  'left')
+            ->join('employees cu_emp', 'cu_emp.id = cu.employee_id', 'left')
             ->join('users uu',     'uu.id = employees.updated_by',                  'left')
+            ->join('employees uu_emp', 'uu_emp.id = uu.employee_id', 'left')
             ->where('employees.deleted_at', null);
 
         $this->applyDatatableFilters($builder);
 
-        // Server-side ordering untuk group
         $orderMap = [
             'position'   => 'positions.position_level',
             'department' => 'departments.department',
@@ -244,12 +244,16 @@ class EmployeeController extends BaseController
                 'positions.position_name',
                 'departments.department as department_name',
                 'cu.username as created_by_name',
+                'cu_emp.nickname as created_by_employee',
                 'du.username as deleted_by_name',
+                'du_emp.nickname as deleted_by_employee',
             ])
             ->join('positions',   'positions.id = employees.position_id',     'left')
             ->join('departments', 'departments.id = positions.department_id',  'left')
             ->join('users cu',    'cu.id = employees.created_by',              'left')
+            ->join('employees cu_emp', 'cu_emp.id = cu.employee_id', 'left')
             ->join('users du',    'du.id = employees.deleted_by',              'left')
+            ->join('employees du_emp', 'du_emp.id = du.employee_id', 'left')
             ->where('employees.deleted_at IS NOT NULL');
 
         return DataTable::of($builder)
@@ -337,7 +341,6 @@ class EmployeeController extends BaseController
             ->join('departments', 'departments.id = positions.department_id', 'left')
             ->where('employees.deleted_at', null);
 
-        // Reuse filter logic (GET params sudah tersedia)
         $this->applyDatatableFilters($builder);
 
         $orderMap = [
@@ -375,7 +378,7 @@ class EmployeeController extends BaseController
             'Departemen',
             'Status Kerja',
             'Status',
-            'Tgl Bergabung'
+            'Tgl Bergabung',
         ];
 
         $col = 'A';
@@ -391,7 +394,6 @@ class EmployeeController extends BaseController
         $lastGroup = null;
 
         foreach ($data as $item) {
-            // Group header row
             if ($groupBy && $groupBy !== 'none') {
                 $groupValue = match ($groupBy) {
                     'department' => $item['department_name'] ?? '—',
@@ -429,8 +431,7 @@ class EmployeeController extends BaseController
             $row++;
         }
 
-        // Save to writable
-        $dir      = WRITEPATH . 'exports/';
+        $dir = WRITEPATH . 'exports/';
         if (!is_dir($dir)) mkdir($dir, 0755, true);
         $filename = 'employees_' . date('Ymd_His') . '.xlsx';
         $filepath = $dir . $filename;
@@ -440,7 +441,7 @@ class EmployeeController extends BaseController
         return $this->response->download($filepath, null)->setFileName($filename);
     }
 
-    private function exportPdf(array $data): void
+    private function exportPdf(array $data): ResponseInterface
     {
         helper('company');
         $company = getCompanyProfile();
@@ -450,7 +451,7 @@ class EmployeeController extends BaseController
         $filters     = $this->request->getGet();
         $currentUser = auth()->user()->username ?? (session()->get('username') ?? 'System');
 
-        // Logo kiri — encode base64 (dompdf tidak support path lokal)
+        // Logo — encode base64 (dompdf tidak support path lokal)
         $logoPath = FCPATH . 'assets/img/logo-left.png';
         $logoTag  = '';
         if (file_exists($logoPath)) {
@@ -458,7 +459,7 @@ class EmployeeController extends BaseController
             $logoTag  = '<img src="data:image/png;base64,' . $logoData . '" alt="Logo" style="max-width:70px;max-height:70px;">';
         }
 
-        // ── Build rows ─────────────────────────────────────────────────────────
+        // Build rows
         $no          = 1;
         $lastGroup   = null;
         $groupCounts = [];
@@ -476,14 +477,11 @@ class EmployeeController extends BaseController
                 };
             }
 
-            // Subtotal group lama + header group baru
             if ($currentGroup !== '' && $lastGroup !== $currentGroup) {
                 if ($lastGroup !== null) {
                     $rows .= '<tr class="subtotal-row">
-                        <td colspan="9">
-                            Subtotal <strong>' . esc((string) $lastGroup) . '</strong>:
-                            ' . ($groupCounts[$lastGroup] ?? 0) . ' Karyawan
-                        </td>
+                        <td colspan="9">Subtotal <strong>' . esc((string) $lastGroup) . '</strong>: '
+                        . ($groupCounts[$lastGroup] ?? 0) . ' Karyawan</td>
                     </tr>';
                 }
                 $rows .= '<tr class="group-row">
@@ -512,17 +510,14 @@ class EmployeeController extends BaseController
             </tr>';
         }
 
-        // Subtotal group terakhir
         if ($lastGroup !== null && $groupBy && $groupBy !== 'none') {
             $rows .= '<tr class="subtotal-row">
-                <td colspan="9">
-                    Subtotal <strong>' . esc((string) $lastGroup) . '</strong>:
-                    ' . ($groupCounts[$lastGroup] ?? 0) . ' Karyawan
-                </td>
+                <td colspan="9">Subtotal <strong>' . esc((string) $lastGroup) . '</strong>: '
+                . ($groupCounts[$lastGroup] ?? 0) . ' Karyawan</td>
             </tr>';
         }
 
-        // ── Filter info rows ───────────────────────────────────────────────────
+        // Filter info
         $filterRows  = '<tr>';
         $filterRows .= '<td width="15%"><strong>Dicetak:</strong></td>';
         $filterRows .= '<td width="35%">' . $printDate . '</td>';
@@ -544,7 +539,7 @@ class EmployeeController extends BaseController
         }
         $filterRows .= '<tr><td><strong>Total:</strong></td><td colspan="3"><strong>' . count($data) . ' Karyawan</strong></td></tr>';
 
-        // ── HTML ───────────────────────────────────────────────────────────────
+        // HTML template
         $html = '<!DOCTYPE html>
         <html>
         <head>
@@ -552,146 +547,39 @@ class EmployeeController extends BaseController
             <title>Laporan Data Karyawan</title>
             <style>
                 * { margin:0; padding:0; box-sizing:border-box; }
-
-                body {
-                    font-family: Arial, sans-serif;
-                    font-size: 11px;
-                    color: #2c3e50;
-                    /* Margin halaman via body padding — lebih reliable di dompdf */
-                    margin: 28px 28px 28px 28px;
-                }
-
-                /* ── Header ──────────────────────────────────────────── */
-                .print-header {
-                    text-align: center;
-                    margin-bottom: 18px;
-                    padding-bottom: 12px;
-                    border-bottom: 3px solid #2c3e50;
-                }
-                .logo-container {
-                    width: 100%;
-                    margin-bottom: 10px;
-                }
+                body { font-family: Arial, sans-serif; font-size: 11px; color: #2c3e50; margin: 28px; }
+                .print-header { text-align: center; margin-bottom: 18px; padding-bottom: 12px; border-bottom: 3px solid #2c3e50; }
+                .logo-container { width: 100%; margin-bottom: 10px; }
                 .logo-cell-left  { width: 80px; vertical-align: middle; }
                 .logo-cell-right { width: 80px; vertical-align: middle; }
                 .logo-cell-center { text-align: center; vertical-align: middle; }
-                .company-name {
-                    font-size: 17px;
-                    font-weight: bold;
-                    text-transform: uppercase;
-                    color: #2c3e50;
-                    letter-spacing: 1px;
-                    margin-bottom: 4px;
-                }
+                .company-name { font-size: 17px; font-weight: bold; text-transform: uppercase; color: #2c3e50; letter-spacing: 1px; margin-bottom: 4px; }
                 .company-address { font-size: 10px; color: #7f8c8d; line-height: 1.4; }
-                .doc-title {
-                    font-size: 14px;
-                    font-weight: bold;
-                    text-transform: uppercase;
-                    color: #2c3e50;
-                    margin: 8px 0 2px;
-                }
-                .doc-subtitle-sm {
-                    font-size: 11px;
-                    font-weight: bold;
-                    text-transform: uppercase;
-                    color: #2c3e50;
-                    margin-bottom: 2px;
-                }
+                .doc-title { font-size: 14px; font-weight: bold; text-transform: uppercase; color: #2c3e50; margin: 8px 0 2px; }
+                .doc-subtitle-sm { font-size: 11px; font-weight: bold; text-transform: uppercase; color: #2c3e50; margin-bottom: 2px; }
                 .doc-periode { font-size: 10px; color: #7f8c8d; }
-
-                /* ── Filter info ─────────────────────────────────────── */
-                .filter-box {
-                    background: #ecf0f1;
-                    padding: 8px 12px;
-                    margin-bottom: 14px;
-                    border-radius: 5px;
-                    font-size: 10px;
-                }
+                .filter-box { background: #ecf0f1; padding: 8px 12px; margin-bottom: 14px; border-radius: 5px; font-size: 10px; }
                 .filter-box table { width: 100%; border-collapse: collapse; }
                 .filter-box td    { padding: 3px 6px; border: none; color: #2c3e50; background: transparent; }
-
-                /* ── Main table ──────────────────────────────────────── */
-                .main-table {
-                    width: 100%;
-                    border-collapse: collapse;
-                    margin-top: 8px;
-                    font-size: 10px;
-                }
-                .main-table th {
-                    background: #34495e;
-                    color: white;
-                    padding: 6px 5px;
-                    font-weight: bold;
-                    text-align: left;
-                    font-size: 10px;
-                    text-transform: uppercase;
-                    letter-spacing: .3px;
-                    border: 1px solid #2c3e50;
-                }
-                .main-table td {
-                    border: 1px solid #dde0e3;
-                    padding: 5px;
-                    color: #2c3e50;
-                }
+                .main-table { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 10px; }
+                .main-table th { background: #34495e; color: white; padding: 6px 5px; font-weight: bold; text-align: left; font-size: 10px; text-transform: uppercase; letter-spacing: .3px; border: 1px solid #2c3e50; }
+                .main-table td { border: 1px solid #dde0e3; padding: 5px; color: #2c3e50; }
                 .main-table tr.even td { background: #f7f8fa; }
-
-                .group-row td {
-                    background: #d6eaf8;
-                    font-weight: bold;
-                    color: #1a5276;
-                    border-left: 3px solid #2980b9;
-                    padding-left: 8px;
-                }
-                .subtotal-row td {
-                    background: #fef9e7;
-                    font-weight: bold;
-                    color: #b7770d;
-                }
-                .total-row td {
-                    background: #34495e;
-                    color: white;
-                    font-weight: bold;
-                }
-
-                /* ── Signature ───────────────────────────────────────── */
-                .sig-table {
-                    width: 100%;
-                    margin-top: 22px;
-                    border-collapse: collapse;
-                }
-                .sig-table td {
-                    border: none;
-                    text-align: center;
-                    width: 33%;
-                    padding: 0 10px;
-                    color: #2c3e50;
-                    font-size: 10px;
-                }
+                .group-row td { background: #d6eaf8; font-weight: bold; color: #1a5276; border-left: 3px solid #2980b9; padding-left: 8px; }
+                .subtotal-row td { background: #fef9e7; font-weight: bold; color: #b7770d; }
+                .total-row td { background: #34495e; color: white; font-weight: bold; }
+                .sig-table { width: 100%; margin-top: 22px; border-collapse: collapse; }
+                .sig-table td { border: none; text-align: center; width: 33%; padding: 0 10px; color: #2c3e50; font-size: 10px; }
                 .sig-title { color: #7f8c8d; margin-bottom: 2px; }
                 .sig-space { height: 42px; }
                 .sig-line  { width: 120px; height: 1px; background: #2c3e50; margin: 0 auto 5px; }
                 .sig-name  { font-weight: bold; }
-
-                /* ── Footer ──────────────────────────────────────────── */
-                .footer-table {
-                    width: 100%;
-                    border-collapse: collapse;
-                    margin-top: 12px;
-                    padding-top: 8px;
-                    border-top: 1px solid #d5d8dc;
-                    font-size: 9px;
-                    color: #7f8c8d;
-                }
+                .footer-table { width: 100%; border-collapse: collapse; margin-top: 12px; padding-top: 8px; border-top: 1px solid #d5d8dc; font-size: 9px; color: #7f8c8d; }
                 .footer-table td { border: none; padding: 0; }
-
-                /* dompdf: gunakan margin body, bukan @page */
                 @page { size: A4 portrait; margin: 0; }
             </style>
         </head>
         <body>
-
-            <!-- Header -->
             <div class="print-header">
                 <table class="logo-container" cellpadding="0" cellspacing="0">
                     <tr>
@@ -707,13 +595,9 @@ class EmployeeController extends BaseController
                 <div class="doc-subtitle-sm">Divisi Dyeing &amp; Finishing</div>
                 <div class="doc-periode">Periode: ' . date('F Y') . '</div>
             </div>
-
-            <!-- Filter Info -->
             <div class="filter-box">
                 <table>' . $filterRows . '</table>
             </div>
-
-            <!-- Tabel Utama -->
             <table class="main-table">
                 <thead>
                     <tr>
@@ -736,8 +620,6 @@ class EmployeeController extends BaseController
                     </tr>
                 </tfoot>
             </table>
-
-            <!-- Tanda Tangan -->
             <table class="sig-table">
                 <tr>
                     <td>
@@ -755,8 +637,6 @@ class EmployeeController extends BaseController
                     </td>
                 </tr>
             </table>
-
-            <!-- Footer -->
             <table class="footer-table">
                 <tr>
                     <td style="text-align:left">Dicetak oleh: ' . esc((string) $currentUser) . '</td>
@@ -764,11 +644,10 @@ class EmployeeController extends BaseController
                     <td style="text-align:right">Dokumen Rahasia</td>
                 </tr>
             </table>
-
         </body>
         </html>';
 
-        // ── Render dompdf ──────────────────────────────────────────────────────
+        // Render via dompdf, kembalikan sebagai ResponseInterface (tidak pakai exit())
         $options = new Options();
         $options->set('defaultFont', 'Arial');
         $options->set('isHtml5ParserEnabled', true);
@@ -778,8 +657,17 @@ class EmployeeController extends BaseController
         $dompdf->loadHtml($html);
         $dompdf->setPaper('A4', 'portrait');
         $dompdf->render();
-        $dompdf->stream('employees_' . date('Ymd_His') . '.pdf', ['Attachment' => true]);
-        exit();
+
+        // Ambil output PDF sebagai string lalu kirim via CI4 response — tidak pakai exit()
+        $pdfContent = $dompdf->output();
+        $filename   = 'employees_' . date('Ymd_His') . '.pdf';
+
+        return $this->response
+            ->setHeader('Content-Type', 'application/pdf')
+            ->setHeader('Content-Disposition', 'attachment; filename="' . $filename . '"')
+            ->setHeader('Content-Length', (string) strlen($pdfContent))
+            ->setHeader('Cache-Control', 'private, max-age=0, must-revalidate')
+            ->setBody($pdfContent);
     }
 
     // ============================================================
@@ -871,6 +759,10 @@ class EmployeeController extends BaseController
         return $this->jsonResponse($result, $result['status'] === 'success' ? 200 : 422);
     }
 
+    /**
+     * FIX: gunakan transaksi DB agar tidak ada data yang terhapus sebagian
+     * jika salah satu forceDelete gagal di tengah loop.
+     */
     public function emptyTrash()
     {
         if (!$this->request->isAJAX()) return $this->jsonError('Method not allowed', 405);
@@ -881,13 +773,27 @@ class EmployeeController extends BaseController
             return $this->jsonResponse(['status' => 'success', 'message' => 'Sampah sudah kosong']);
         }
 
+        $db = \Config\Database::connect();
+        $db->transStart();
+
         $deleted = $skipped = 0;
         foreach ($trashed as $row) {
-            $this->model->forceDeleteData($row['id'])['status'] === 'success' ? $deleted++ : $skipped++;
+            if ($this->model->forceDeleteData($row['id'])['status'] === 'success') {
+                $deleted++;
+            } else {
+                $skipped++;
+            }
+        }
+
+        $db->transComplete();
+
+        if (!$db->transStatus()) {
+            return $this->jsonError('Gagal mengosongkan sampah, silakan coba lagi', 500);
         }
 
         $msg = "{$deleted} karyawan berhasil dihapus permanen";
         if ($skipped) $msg .= ", {$skipped} gagal dihapus";
+
         return $this->jsonResponse(['status' => 'success', 'message' => $msg]);
     }
 
@@ -897,37 +803,205 @@ class EmployeeController extends BaseController
 
     public function uploadPhoto(int $id)
     {
-        if (!$this->request->isAJAX()) return $this->jsonError('Method not allowed', 405);
-        if (!canDo('hrm.employees.edit')) return $this->jsonError('Akses ditolak', 403);
+        if (!$this->request->isAJAX()) {
+            return $this->jsonError('Method not allowed', 405);
+        }
+
+        if (!canDo('hrm.employees.edit')) {
+            return $this->jsonError('Akses ditolak', 403);
+        }
 
         $result = $this->model->getData($id);
-        if ($result['status'] !== 'success') return $this->jsonError('Karyawan tidak ditemukan', 404);
+        if ($result['status'] !== 'success') {
+            return $this->jsonError('Karyawan tidak ditemukan', 404);
+        }
 
         $file = $this->request->getFile('photo');
-        if (!$file || !$file->isValid()) return $this->jsonError('File tidak valid', 422);
 
-        if (!$this->validate(['photo' => 'uploaded[photo]|is_image[photo]|mime_in[photo,image/jpeg,image/png]|max_size[photo,2048]'])) {
-            return $this->jsonResponse(['status' => 'error', 'errors' => $this->validator->getErrors()], 422);
+        if (!$file) {
+            log_message('error', 'uploadPhoto: no file object from getFile()');
+            return $this->jsonError('Tidak ada file yang diupload', 422);
         }
 
+        if (!$file->isValid()) {
+            $errorCode    = $file->getError();
+            $errorMessage = $this->getUploadErrorMessage($errorCode);
+            log_message('error', "uploadPhoto: file invalid — code {$errorCode}: {$errorMessage}");
+            return $this->jsonError('File tidak valid: ' . $errorMessage, 422);
+        }
+
+        // Validasi server-side (pertahanan kedua setelah validasi JS di frontend)
+        $validationRules = [
+            'photo' => [
+                'uploaded[photo]',
+                'is_image[photo]',
+                'mime_in[photo,image/jpeg,image/png,image/webp]',
+                'max_size[photo,2048]',
+                'max_dims[photo,1024,1024]',
+            ],
+        ];
+
+        if (!$this->validate($validationRules)) {
+            return $this->jsonResponse([
+                'status' => 'error',
+                'errors' => $this->validator->getErrors(),
+            ], 422);
+        }
+
+        // Siapkan direktori upload
         $uploadPath = FCPATH . 'uploads/employees/';
-        if (!is_dir($uploadPath)) mkdir($uploadPath, 0755, true);
-
-        $employee = $result['data'];
-        if (!empty($employee['photo']) && file_exists($uploadPath . $employee['photo'])) {
-            @unlink($uploadPath . $employee['photo']);
+        if (!is_dir($uploadPath)) {
+            if (!mkdir($uploadPath, 0755, true)) {
+                log_message('error', 'uploadPhoto: gagal membuat direktori ' . $uploadPath);
+                return $this->jsonError('Gagal membuat direktori upload', 500);
+            }
         }
 
-        $newName = 'EMP_' . strtoupper($employee['nik']) . '_' . time() . '.' . $file->getExtension();
-        $file->move($uploadPath, $newName);
+        if (!is_writable($uploadPath)) {
+            log_message('error', 'uploadPhoto: direktori tidak writable ' . $uploadPath);
+            return $this->jsonError('Direktori upload tidak dapat ditulis', 500);
+        }
 
-        $this->model->updateData($id, ['photo' => $newName, 'updated_by' => auth()->id()]);
+        // Hapus foto lama sebelum simpan yang baru
+        $employee = $result['data'];
+        if (!empty($employee['photo'])) {
+            $oldPhoto = $uploadPath . $employee['photo'];
+            if (file_exists($oldPhoto) && !@unlink($oldPhoto)) {
+                log_message('warning', 'uploadPhoto: gagal hapus foto lama — ' . $oldPhoto);
+            }
+        }
 
-        return $this->jsonResponse([
-            'status'  => 'success',
-            'message' => 'Foto berhasil diperbarui',
-            'data'    => ['photo' => $newName, 'photo_url' => base_url('uploads/employees/' . $newName)],
-        ]);
+        // Generate nama file baru
+        $extension = strtolower($file->getExtension());
+        $nik       = strtoupper($employee['nik'] ?? 'UNKNOWN');
+        $newName   = 'EMP_' . $nik . '_' . time() . '.' . $extension;
+
+        try {
+            // FIX: pindahkan file ke disk TERLEBIH DAHULU, baru resize
+            if (!$file->move($uploadPath, $newName)) {
+                log_message('error', 'uploadPhoto: gagal memindahkan file ke disk');
+                return $this->jsonError('Gagal menyimpan file', 500);
+            }
+
+            $uploadedFilePath = $uploadPath . $newName;
+
+            if (!file_exists($uploadedFilePath)) {
+                log_message('error', 'uploadPhoto: file tidak ditemukan setelah move — ' . $uploadedFilePath);
+                return $this->jsonError('File tidak ditemukan setelah upload', 500);
+            }
+
+            // FIX: resize dipanggil SETELAH file ada di disk
+            if (!$this->resizeImage($uploadedFilePath, $uploadedFilePath, 400, 400, 80)) {
+                // Resize gagal tidak fatal — file original tetap tersimpan
+                log_message('warning', 'uploadPhoto: resize gagal untuk ' . $newName . ', file original dipakai');
+            }
+
+            // FIX: cek return value array dari updateData(), bukan bool
+            $updateResult = $this->model->updateData($id, [
+                'photo'      => $newName,
+                'updated_by' => auth()->id(),
+            ]);
+
+            if ($updateResult['status'] !== 'success') {
+                // Rollback: hapus file yang sudah diupload jika DB gagal
+                if (file_exists($uploadedFilePath)) {
+                    @unlink($uploadedFilePath);
+                }
+                log_message('error', 'uploadPhoto: gagal update DB — ' . ($updateResult['message'] ?? ''));
+                return $this->jsonError('Gagal memperbarui data karyawan', 500);
+            }
+
+            return $this->jsonResponse([
+                'status'  => 'success',
+                'message' => 'Foto berhasil diperbarui',
+                'data'    => [
+                    'photo'     => $newName,
+                    'photo_url' => base_url('uploads/employees/' . $newName),
+                ],
+            ]);
+        } catch (\Exception $e) {
+            log_message('error', 'uploadPhoto exception: ' . $e->getMessage());
+            return $this->jsonError('Terjadi kesalahan: ' . $e->getMessage(), 500);
+        }
+    }
+
+    private function getUploadErrorMessage(int $errorCode): string
+    {
+        return match ($errorCode) {
+            UPLOAD_ERR_INI_SIZE   => 'File melebihi upload_max_filesize di php.ini',
+            UPLOAD_ERR_FORM_SIZE  => 'File melebihi MAX_FILE_SIZE yang diatur di form',
+            UPLOAD_ERR_PARTIAL    => 'File hanya terupload sebagian',
+            UPLOAD_ERR_NO_FILE    => 'Tidak ada file yang diupload',
+            UPLOAD_ERR_NO_TMP_DIR => 'Folder tmp tidak ditemukan',
+            UPLOAD_ERR_CANT_WRITE => 'Gagal menulis file ke disk',
+            UPLOAD_ERR_EXTENSION  => 'Upload dihentikan oleh ekstensi PHP',
+            default               => 'Unknown error code: ' . $errorCode,
+        };
+    }
+
+    /**
+     * Resize image ke dimensi maksimal dengan mempertahankan aspect ratio.
+     * File sumber dan tujuan boleh sama (in-place resize).
+     */
+    private function resizeImage(
+        string $sourcePath,
+        string $destPath,
+        int $maxWidth  = 400,
+        int $maxHeight = 400,
+        int $quality   = 80
+    ): bool {
+        try {
+            $imageInfo = @getimagesize($sourcePath);
+            if (!$imageInfo) return false;
+
+            [$width, $height, $type] = $imageInfo;
+
+            // Tidak perlu resize jika sudah lebih kecil dari batas
+            if ($width <= $maxWidth && $height <= $maxHeight) return true;
+
+            $ratio     = min($maxWidth / $width, $maxHeight / $height);
+            $newWidth  = (int) ($width  * $ratio);
+            $newHeight = (int) ($height * $ratio);
+
+            $src = match ($type) {
+                IMAGETYPE_JPEG => @imagecreatefromjpeg($sourcePath),
+                IMAGETYPE_PNG  => @imagecreatefrompng($sourcePath),
+                IMAGETYPE_WEBP => @imagecreatefromwebp($sourcePath),
+                default        => false,
+            };
+            if (!$src) return false;
+
+            $dest = imagecreatetruecolor($newWidth, $newHeight);
+            if (!$dest) {
+                imagedestroy($src);
+                return false;
+            }
+
+            // Pertahankan transparansi PNG
+            if ($type === IMAGETYPE_PNG) {
+                imagealphablending($dest, false);
+                imagesavealpha($dest, true);
+                $transparent = imagecolorallocatealpha($dest, 255, 255, 255, 127);
+                imagefilledrectangle($dest, 0, 0, $newWidth, $newHeight, $transparent);
+            }
+
+            imagecopyresampled($dest, $src, 0, 0, 0, 0, $newWidth, $newHeight, $width, $height);
+
+            $saved = match ($type) {
+                IMAGETYPE_JPEG => imagejpeg($dest, $destPath, $quality),
+                IMAGETYPE_PNG  => imagepng($dest, $destPath, 8),
+                IMAGETYPE_WEBP => imagewebp($dest, $destPath, $quality),
+                default        => false,
+            };
+
+            imagedestroy($src);
+            imagedestroy($dest);
+
+            return (bool) $saved;
+        } catch (\Exception $e) {
+            log_message('error', 'resizeImage exception: ' . $e->getMessage());
+            return false;
+        }
     }
 
     public function deletePhoto(int $id)
@@ -940,7 +1014,9 @@ class EmployeeController extends BaseController
 
         $employee  = $result['data'];
         $photoPath = FCPATH . 'uploads/employees/' . ($employee['photo'] ?? '');
-        if (!empty($employee['photo']) && file_exists($photoPath)) @unlink($photoPath);
+        if (!empty($employee['photo']) && file_exists($photoPath)) {
+            @unlink($photoPath);
+        }
 
         $this->model->updateData($id, ['photo' => null, 'updated_by' => auth()->id()]);
         return $this->jsonResponse(['status' => 'success', 'message' => 'Foto berhasil dihapus']);
@@ -973,7 +1049,7 @@ class EmployeeController extends BaseController
                 'employees.shift',
                 'employees.work_area',
                 'positions.position_name',
-                'departments.department as department_name'
+                'departments.department as department_name',
             ])
             ->join('positions',   'positions.id = employees.position_id',    'left')
             ->join('departments', 'departments.id = positions.department_id', 'left')
@@ -994,7 +1070,10 @@ class EmployeeController extends BaseController
                 ->groupEnd();
         }
 
-        return $this->response->setJSON(['status' => 'success', 'data' => $builder->limit(50)->get()->getResultArray()]);
+        return $this->response->setJSON([
+            'status' => 'success',
+            'data'   => $builder->limit(50)->get()->getResultArray(),
+        ]);
     }
 
     public function checkUnique()
@@ -1016,13 +1095,19 @@ class EmployeeController extends BaseController
     public function getByPosition(int $positionId)
     {
         if (!$this->request->isAJAX()) return $this->jsonError('Method not allowed', 405);
-        return $this->response->setJSON(['status' => 'success', 'data' => $this->model->getByPosition($positionId)]);
+        return $this->response->setJSON([
+            'status' => 'success',
+            'data'   => $this->model->getByPosition($positionId),
+        ]);
     }
 
     public function getByDepartment(int $departmentId)
     {
         if (!$this->request->isAJAX()) return $this->jsonError('Method not allowed', 405);
-        return $this->response->setJSON(['status' => 'success', 'data' => $this->model->getByDepartment($departmentId)]);
+        return $this->response->setJSON([
+            'status' => 'success',
+            'data'   => $this->model->getByDepartment($departmentId),
+        ]);
     }
 
     public function getByShift(string $shift)
@@ -1030,7 +1115,10 @@ class EmployeeController extends BaseController
         if (!$this->request->isAJAX()) return $this->jsonError('Method not allowed', 405);
         $valid = ['NS', 'A', 'B', 'C', 'D', 'E'];
         if (!in_array(strtoupper($shift), $valid)) return $this->jsonError('Shift tidak valid', 422);
-        return $this->response->setJSON(['status' => 'success', 'data' => $this->model->getByShift(strtoupper($shift))]);
+        return $this->response->setJSON([
+            'status' => 'success',
+            'data'   => $this->model->getByShift(strtoupper($shift)),
+        ]);
     }
 
     public function getByWorkArea()
@@ -1038,7 +1126,10 @@ class EmployeeController extends BaseController
         if (!$this->request->isAJAX()) return $this->jsonError('Method not allowed', 405);
         $workArea = trim($this->request->getGet('work_area') ?? '');
         if ($workArea === '') return $this->jsonError('Work area tidak boleh kosong', 422);
-        return $this->response->setJSON(['status' => 'success', 'data' => $this->model->getByWorkArea($workArea)]);
+        return $this->response->setJSON([
+            'status' => 'success',
+            'data'   => $this->model->getByWorkArea($workArea),
+        ]);
     }
 
     // ============================================================
@@ -1062,7 +1153,7 @@ class EmployeeController extends BaseController
         return array_merge($base, $extra);
     }
 
-    private function forbidden()
+    private function forbidden(): ResponseInterface
     {
         return redirect()->to(site_url('errors/403'));
     }

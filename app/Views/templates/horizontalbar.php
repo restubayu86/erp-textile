@@ -2,13 +2,78 @@
 
 /**
  * horizontalbar.php
- * Top navigation bar — ERP Textile Dyeing & Finishing
- * Variabel yang dibutuhkan dari Controller / BaseController:
- *   $user              → auth()->getUser()
- *   $user_identities   → $user->getIdentities() atau hasil query identitas
  */
-$currentUser       = auth()->getUser();
-$displayName       = $user_identities[0]->name ?? $currentUser->username ?? 'User';
+
+// Load helpers
+helper(['text', 'string']);
+
+$currentUser = $user ?? auth()->getUser();
+$employeeData = $user_employee ?? null;
+
+// Jika employeeData null, coba load langsung
+if (empty($employeeData) && $currentUser && !empty($currentUser->employee_id)) {
+    $db = \Config\Database::connect();
+    $query = $db->table('employees')
+        ->select('employees.*, departments.department as department_name, positions.position as position_name')
+        ->join('departments', 'departments.id = employees.department_id', 'left')
+        ->join('positions', 'positions.id = employees.position_id', 'left')
+        ->where('employees.id', $currentUser->employee_id)
+        ->get();
+
+    $employeeData = $query->getRowArray();
+}
+
+// Get user groups
+$userGroups = [];
+if ($currentUser) {
+    $db = \Config\Database::connect();
+    $groups = $db->table('auth_groups_users')
+        ->select('group')
+        ->where('user_id', $currentUser->id)
+        ->get()
+        ->getResultArray();
+
+    $userGroups = array_column($groups, 'group');
+}
+
+// Get display name
+$displayName = 'User';
+
+// Priority 1: Employee fullname
+if ($employeeData && !empty($employeeData['fullname'])) {
+    $displayName = ucwords(strtolower($employeeData['fullname']));
+}
+// Priority 2: Username
+elseif ($currentUser && !empty($currentUser->username)) {
+    $displayName = ucwords(str_replace(['_', '-'], ' ', $currentUser->username));
+}
+
+// Avatar
+$avatarPhoto = '';
+if ($employeeData && !empty($employeeData['photo'])) {
+    $avatarPhoto = base_url('uploads/employees/' . $employeeData['photo']);
+}
+
+// Department & Position
+$deptName = $employeeData['department_name'] ?? '';
+$positionName = $employeeData['position_name'] ?? '';
+
+// Format groups untuk display
+$groupLabels = [
+    'superadmin' => 'Super Admin',
+    'admin' => 'Administrator',
+    'manager' => 'Manager',
+    'user' => 'User',
+    'operator' => 'Operator',
+    'staff' => 'Staff'
+];
+
+$groupDisplay = array_map(function ($g) use ($groupLabels) {
+    return $groupLabels[$g] ?? ucfirst($g);
+}, $userGroups);
+
+$groupText = implode(' • ', $groupDisplay);
+
 ?>
 <nav class="navbar navbar-top navbar-slim fixed-top navbar-expand" id="topNavSlim" data-navbar-appearance="darker">
     <div class="collapse navbar-collapse justify-content-between">
@@ -59,7 +124,7 @@ $displayName       = $user_identities[0]->name ?? $currentUser->username ?? 'Use
                 </div>
             </li>
 
-            <!-- Notifikasi (placeholder — bisa dihubungkan ke sistem notifikasi nanti) -->
+            <!-- Notifikasi -->
             <li class="nav-item dropdown">
                 <a class="nav-link" id="navbarDropdownNotification" href="#"
                     role="button" data-bs-toggle="dropdown" data-bs-auto-close="outside"
@@ -98,11 +163,13 @@ $displayName       = $user_identities[0]->name ?? $currentUser->username ?? 'Use
 
             <!-- User Dropdown -->
             <li class="nav-item dropdown">
-                <a class="nav-link lh-1 pe-0 white-space-nowrap"
+                <a class="nav-link lh-1 pe-0 white-space-nowrap fs-8 fw-semibold"
                     id="navbarDropdownUser" href="#!"
                     role="button" data-bs-toggle="dropdown"
                     aria-haspopup="true" data-bs-auto-close="outside" aria-expanded="false">
-                    <?= esc((string)$displayName) ?>
+
+                    <span class="fw-bold fs-8"><?= esc((string)$displayName) ?></span>
+
                     <span class="d-inline-block" style="height:10.2px;width:10.2px;">
                         <span class="fa-solid fa-chevron-down fs-10"></span>
                     </span>
@@ -112,27 +179,83 @@ $displayName       = $user_identities[0]->name ?? $currentUser->username ?? 'Use
                     <div class="card position-relative border-0">
                         <div class="card-body p-0">
                             <div class="text-center pt-4 pb-3">
-                                <div class="avatar avatar-xl">
-                                    <div class="avatar-name rounded-circle bg-soft-primary">
-                                        <span class="fs-6 fw-bold text-primary">
-                                            <?= strtoupper(substr($displayName, 0, 1)) ?>
+                                <!-- Avatar -->
+                                <div style="height:80px; display:flex; align-items:center; justify-content:center; margin-bottom:8px;">
+                                    <?php if ($avatarPhoto): ?>
+                                        <img src="<?= $avatarPhoto ?>" alt="<?= esc((string)$displayName) ?>"
+                                            class="rounded-circle" style="width:80px;height:80px;object-fit:cover;">
+                                    <?php else: ?>
+                                        <div class="avatar-name rounded-circle bg-soft-primary d-flex align-items-center justify-content-center"
+                                            style="width:80px;height:80px;">
+                                            <span class="fs-6 fw-bold text-primary">
+                                                <?= strtoupper(substr($displayName, 0, 1)) ?>
+                                            </span>
+                                        </div>
+                                    <?php endif; ?>
+                                </div>
+
+                                <!-- Nama -->
+                                <h5 class="text-body-emphasis fw-bold fs-6 mb-1"><?= esc((string)$displayName) ?></h5>
+
+                                <!-- GROUP -->
+                                <?php if (!empty($groupText)): ?>
+                                    <div class="mb-1">
+                                        <span class="badge bg-soft-primary text-primary fs-9 fw-semibold px-3 py-1">
+                                            <i class="fas fa-shield-alt me-1"></i>
+                                            <?= esc((string)$groupText) ?>
                                         </span>
                                     </div>
-                                </div>
-                                <h6 class="mt-2 text-body-emphasis"><?= esc((string)$displayName) ?></h6>
-                                <p class="fs-10 text-body-tertiary mb-0"><?= esc((string)$currentUser->email ?? '') ?></p>
+                                <?php endif; ?>
+
+                                <!-- Info Employee -->
+                                <?php if ($employeeData): ?>
+                                    <p class="fs-9 text-body-tertiary mb-1 fw-medium">
+                                        <?= esc((string)$positionName ?: 'Posisi tidak tersedia') ?>
+                                    </p>
+                                    <p class="fs-9 text-body-tertiary mb-0">
+                                        <span class="badge bg-soft-info text-info fs-10">
+                                            <i class="fas fa-id-card me-1"></i>
+                                            <?= esc((string)$employeeData['nik'] ?? '') ?>
+                                        </span>
+                                        <?php if ($deptName): ?>
+                                            <span class="badge bg-soft-primary text-primary fs-10 ms-1">
+                                                <i class="fas fa-building me-1"></i>
+                                                <?= esc((string)$deptName) ?>
+                                            </span>
+                                        <?php endif; ?>
+                                    </p>
+                                <?php else: ?>
+                                    <p class="fs-8 text-body-tertiary mb-1">
+                                        <?= esc((string)$currentUser->email ?? '') ?>
+                                    </p>
+                                    <p class="fs-9 text-body-tertiary mb-0">
+                                        <span class="badge bg-soft-warning text-warning fs-10">
+                                            <i class="fas fa-exclamation-triangle me-1"></i>
+                                            Belum terhubung ke employee
+                                        </span>
+                                    </p>
+                                <?php endif; ?>
                             </div>
                         </div>
+
                         <div class="overflow-auto scrollbar" style="height:6rem;">
                             <ul class="nav d-flex flex-column mb-2 pb-1">
                                 <li class="nav-item">
-                                    <a class="nav-link px-3 d-block" href="<?= base_url('profile') ?>">
+                                    <a class="nav-link px-3 d-block fs-8" href="<?= base_url('profile') ?>">
                                         <span class="me-2 text-body align-bottom" data-feather="user"></span>
                                         <span>Profil Saya</span>
                                     </a>
                                 </li>
+                                <?php if ($employeeData): ?>
+                                    <li class="nav-item">
+                                        <a class="nav-link px-3 d-block fs-8" href="<?= base_url('hrm/employees/show/' . $employeeData['id']) ?>">
+                                            <span class="me-2 text-body align-bottom" data-feather="briefcase"></span>
+                                            <span>Data Karyawan</span>
+                                        </a>
+                                    </li>
+                                <?php endif; ?>
                                 <li class="nav-item">
-                                    <a class="nav-link px-3 d-block" href="<?= base_url('profile/password') ?>">
+                                    <a class="nav-link px-3 d-block fs-8" href="<?= base_url('profile/password') ?>">
                                         <span class="me-2 text-body align-bottom" data-feather="lock"></span>
                                         <span>Ganti Password</span>
                                     </a>
@@ -143,7 +266,7 @@ $displayName       = $user_identities[0]->name ?? $currentUser->username ?? 'Use
                             <div class="p-3">
                                 <form action="<?= site_url('logout') ?>" method="post" class="w-100">
                                     <?= csrf_field() ?>
-                                    <button type="submit" class="btn btn-phoenix-secondary d-flex flex-center w-100">
+                                    <button type="submit" class="btn btn-phoenix-secondary d-flex flex-center w-100 fs-8 fw-semibold">
                                         <span class="me-2" data-feather="log-out"></span>
                                         Keluar
                                     </button>
@@ -152,7 +275,7 @@ $displayName       = $user_identities[0]->name ?? $currentUser->username ?? 'Use
                         </div>
                     </div>
                 </div>
-            </li>
+            </li><!-- User Dropdown -->
 
         </ul>
     </div>

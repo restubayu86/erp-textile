@@ -9,7 +9,7 @@
     }
 
     .btn-group-sm .btn {
-        padding: .25rem .5rem;
+        padding: .5rem .75rem;
         font-size: .7rem;
     }
 

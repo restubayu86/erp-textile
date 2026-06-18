@@ -78,11 +78,15 @@ class PositionController extends BaseController
                 'positions.department_id',
                 'departments.department as department_name',
                 'cu.username as created_by_name',
+                'cu_emp.nickname as created_by_employee',
                 'uu.username as updated_by_name',
+                'uu_emp.nickname as updated_by_employee',
             ])
             ->join('departments', 'departments.id = positions.department_id', 'left')
             ->join('users cu', 'cu.id = positions.created_by', 'left')
+            ->join('employees cu_emp', 'cu_emp.id = cu.employee_id', 'left')
             ->join('users uu', 'uu.id = positions.updated_by', 'left')
+            ->join('employees uu_emp', 'uu_emp.id = uu.employee_id', 'left')
             ->where('positions.deleted_at', null);
 
         // Filter tambahan
@@ -130,11 +134,15 @@ class PositionController extends BaseController
                 'positions.department_id',
                 'departments.department as department_name',
                 'cu.username as created_by_name',
+                'cu_emp.nickname as created_by_employee',
                 'du.username as deleted_by_name',
+                'du_emp.nickname as deleted_by_employee',
             ])
             ->join('departments', 'departments.id = positions.department_id', 'left')
             ->join('users cu', 'cu.id = positions.created_by', 'left')
+            ->join('employees cu_emp', 'cu_emp.id = cu.employee_id', 'left')
             ->join('users du', 'du.id = positions.deleted_by', 'left')
+            ->join('employees du_emp', 'du_emp.id = du.employee_id', 'left')
             ->where('positions.deleted_at IS NOT NULL');
 
         return DataTable::of($builder)
