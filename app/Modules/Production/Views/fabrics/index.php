@@ -4,6 +4,11 @@
 <meta name="csrf-token" content="<?= csrf_hash() ?>">
 <meta name="csrf-name" content="<?= csrf_token() ?>">
 <style>
+    /* ── Prevent horizontal page scrollbar ───────────────────────── */
+    body {
+        overflow-x: hidden;
+    }
+
     /* ── Stat Cards ──────────────────────────────────────────────── */
     .stat-card {
         border: none;
@@ -41,7 +46,7 @@
         line-height: 1;
     }
 
-    /* ── Status badge (disamakan dengan pattern Department) ───────── */
+    /* ── Status badge ───────────────────────────────────────────── */
     .badge-status {
         display: inline-flex;
         align-items: center;
@@ -57,12 +62,6 @@
         background-color: rgba(var(--phoenix-success-rgb), .12);
         color: var(--phoenix-success);
         border: 1px solid rgba(var(--phoenix-success-rgb), .25);
-    }
-
-    .badge-status.maintenance {
-        background-color: rgba(var(--phoenix-info-rgb), .12);
-        color: var(--phoenix-info);
-        border: 1px solid rgba(var(--phoenix-info-rgb), .25);
     }
 
     .badge-status.draft {
@@ -126,29 +125,25 @@
         display: block;
     }
 
-    /* ── DataTables ──────────────────────────────────────────────── */
-    body {
-        overflow-x: hidden;
+    /* ── DataTables Custom Layout ────────────────────────────────── */
+    #fabric-table_wrapper {
+        max-width: 100%;
     }
 
-    #machine-table_wrapper {
-        width: 100%;
-    }
-
-    #machine-table_wrapper .top {
+    #fabric-table_wrapper .top {
         display: flex;
         justify-content: center;
         margin-bottom: 1rem;
     }
 
-    #machine-table_wrapper .top input {
+    #fabric-table_wrapper .top input {
         width: 300px;
         border-radius: 20px;
         padding: 0.375rem 1rem;
         text-align: center;
     }
 
-    #machine-table_wrapper .bottom {
+    #fabric-table_wrapper .bottom {
         display: flex;
         justify-content: space-between;
         align-items: center;
@@ -157,49 +152,49 @@
         gap: 1rem;
     }
 
-    #machine-table_wrapper .bottom .dataTables_length {
+    #fabric-table_wrapper .bottom .dataTables_length {
         flex: 1;
         text-align: left;
         order: 1;
     }
 
-    #machine-table_wrapper .bottom .dataTables_paginate {
+    #fabric-table_wrapper .bottom .dataTables_paginate {
         flex: 1;
         text-align: center;
         order: 2;
     }
 
-    #machine-table_wrapper .bottom .dataTables_info {
+    #fabric-table_wrapper .bottom .dataTables_info {
         flex: 1;
         text-align: right;
         order: 3;
     }
 
-    #machine-table_wrapper .dataTables_filter label,
-    #machine-table_wrapper .dataTables_length label {
+    #fabric-table_wrapper .dataTables_filter label,
+    #fabric-table_wrapper .dataTables_length label {
         margin-bottom: 0;
     }
 
-    #machine-table_wrapper .dataTables_length select {
+    #fabric-table_wrapper .dataTables_length select {
         width: auto;
         display: inline-block;
         margin: 0 0.5rem;
         border-radius: 0.375rem;
     }
 
-    #machine-table_wrapper .dataTables_paginate .paginate_button {
+    #fabric-table_wrapper .dataTables_paginate .paginate_button {
         padding: 0.375rem 0.75rem;
         margin: 0 0.25rem;
         border-radius: 0.375rem;
     }
 
-    #machine-table_wrapper .dataTables_paginate .paginate_button.current {
+    #fabric-table_wrapper .dataTables_paginate .paginate_button.current {
         background: var(--phoenix-primary);
         border-color: var(--phoenix-primary);
         color: white !important;
     }
 
-    #machine-table {
+    #fabric-table {
         width: 100% !important;
     }
 
@@ -227,110 +222,105 @@
         padding: .5rem .75rem;
         font-size: .7rem;
     }
-
-    .select2-container .select2-selection--single {
-        height: calc(1.5em + 1.1rem + 2px) !important;
-    }
 </style>
 <?= $this->endSection() ?>
 
 <?= $this->section('content') ?>
-
-<!-- Page Header -->
-<div class="d-flex justify-content-between align-items-start mb-4">
-    <div>
-        <nav aria-label="breadcrumb" class="mb-2">
-            <ol class="breadcrumb mb-0">
-                <?php foreach ($breadcrumbs as $crumb): ?>
-                    <?php if (!empty($crumb['active'])): ?>
-                        <li class="breadcrumb-item active"><?= esc((string)$crumb['name']) ?></li>
-                    <?php else: ?>
-                        <li class="breadcrumb-item"><a href="<?= $crumb['url'] ?>"><?= esc((string)$crumb['name']) ?></a></li>
-                    <?php endif; ?>
-                <?php endforeach; ?>
-            </ol>
-        </nav>
-        <h1 class="h3 mb-1 fw-bold"><?= esc((string)$page_title) ?></h1>
-        <p class="text-body-tertiary mb-0"><?= esc((string)$page_description) ?></p>
+<div class="w-100">
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-start mb-4">
+        <div>
+            <nav aria-label="breadcrumb" class="mb-2">
+                <ol class="breadcrumb mb-0">
+                    <?php foreach ($breadcrumbs as $crumb): ?>
+                        <?php if (!empty($crumb['active'])): ?>
+                            <li class="breadcrumb-item active"><?= esc((string)$crumb['name']) ?></li>
+                        <?php else: ?>
+                            <li class="breadcrumb-item"><a href="<?= $crumb['url'] ?>"><?= esc((string)$crumb['name']) ?></a></li>
+                        <?php endif; ?>
+                    <?php endforeach; ?>
+                </ol>
+            </nav>
+            <h1 class="h3 mb-1 fw-bold"><?= esc((string)$page_title) ?></h1>
+            <p class="text-body-tertiary mb-0"><?= esc((string)$page_description) ?></p>
+        </div>
     </div>
-</div>
 
-<!-- Stat Cards -->
-<div class="row g-3 mb-4 no-print">
-    <?php
-    $stats = [
-        ['id' => 'stat-total',       'label' => 'Total',       'icon' => 'fa-cogs',          'color' => 'primary'],
-        ['id' => 'stat-active',      'label' => 'Active',      'icon' => 'fa-check-circle',  'color' => 'success'],
-        ['id' => 'stat-maintenance', 'label' => 'Maintenance', 'icon' => 'fa-tools',          'color' => 'info'],
-        ['id' => 'stat-draft',       'label' => 'Draft',       'icon' => 'fa-pencil-alt',     'color' => 'warning'],
-        ['id' => 'stat-archived',    'label' => 'Archived',    'icon' => 'fa-archive',        'color' => 'secondary'],
-    ];
-    foreach ($stats as $s): ?>
-        <div class="col-md col-6">
-            <div class="card stat-card">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <div class="info-label"><?= $s['label'] ?></div>
-                            <div class="info-value text-<?= $s['color'] ?>" id="<?= $s['id'] ?>">—</div>
-                        </div>
-                        <div class="stat-icon bg-<?= $s['color'] ?> bg-opacity-10 text-<?= $s['color'] ?>">
-                            <span class="fas <?= $s['icon'] ?>"></span>
+    <!-- Stat Cards -->
+    <div class="row g-3 mb-4 no-print">
+        <?php
+        $stats = [
+            ['id' => 'stat-total',    'label' => 'Total',    'icon' => 'fa-layer-group',  'color' => 'primary'],
+            ['id' => 'stat-active',   'label' => 'Active',   'icon' => 'fa-check-circle', 'color' => 'success'],
+            ['id' => 'stat-draft',    'label' => 'Draft',    'icon' => 'fa-pencil-alt',   'color' => 'warning'],
+            ['id' => 'stat-archived', 'label' => 'Archived', 'icon' => 'fa-archive',      'color' => 'secondary'],
+        ];
+        foreach ($stats as $s): ?>
+            <div class="col-md-3 col-6">
+                <div class="card stat-card">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <div class="info-label"><?= $s['label'] ?></div>
+                                <div class="info-value text-<?= $s['color'] ?>" id="<?= $s['id'] ?>">—</div>
+                            </div>
+                            <div class="stat-icon bg-<?= $s['color'] ?> bg-opacity-10 text-<?= $s['color'] ?>">
+                                <span class="fas <?= $s['icon'] ?>"></span>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
+        <?php endforeach; ?>
+    </div>
+
+    <!-- Toolbar -->
+    <div class="d-flex justify-content-between align-items-center mb-3 gap-2 flex-wrap no-print">
+        <div class="d-flex gap-2">
+            <?php if (canDo('production.fabrics.delete')): ?>
+                <a href="<?= site_url('production/master/fabrics/trash') ?>" class="btn btn-subtle-danger btn-sm">
+                    <span class="fas fa-trash-alt me-1"></span>Sampah
+                    <span class="badge bg-danger ms-1 d-none" id="trash-badge">0</span>
+                </a>
+            <?php endif; ?>
         </div>
-    <?php endforeach; ?>
-</div>
-
-<!-- Toolbar -->
-<div class="d-flex justify-content-between align-items-center mb-3 gap-2 flex-wrap no-print">
-    <div class="d-flex gap-2">
-        <?php if (canDo('production.machines.delete')): ?>
-            <a href="<?= site_url('production/master/machines/trash') ?>" class="btn btn-subtle-danger btn-sm">
-                <span class="fas fa-trash-alt me-1"></span>Sampah
-                <span class="badge bg-danger ms-1 d-none" id="trash-badge">0</span>
-            </a>
-        <?php endif; ?>
-    </div>
-    <div class="d-flex gap-2">
-        <button class="btn btn-subtle-secondary btn-sm" id="btn-refresh" type="button">
-            <span class="fas fa-sync-alt me-1"></span>Refresh
-        </button>
-        <?php if (canDo('production.machines.create')): ?>
-            <button class="btn btn-primary btn-sm" id="btn-create" type="button">
-                <span class="fas fa-plus me-1"></span>Tambah Mesin
+        <div class="d-flex gap-2">
+            <button class="btn btn-subtle-secondary btn-sm" id="btn-refresh" type="button">
+                <span class="fas fa-sync-alt me-1"></span>Refresh
             </button>
-        <?php endif; ?>
+            <?php if (canDo('production.fabrics.create')): ?>
+                <button class="btn btn-primary btn-sm" id="btn-create" type="button">
+                    <span class="fas fa-plus me-1"></span>Tambah Fabric
+                </button>
+            <?php endif; ?>
+        </div>
     </div>
-</div>
 
-<!-- Print header -->
-<div class="print-header mb-3">
-    <h5 class="fw-bold mb-1">Daftar Mesin</h5>
-    <div class="text-muted small">Dicetak: <span id="print-date"></span></div>
-    <hr class="my-2">
-</div>
+    <!-- Print header -->
+    <div class="print-header mb-3">
+        <h5 class="fw-bold mb-1">Daftar Fabric</h5>
+        <div class="text-muted small">Dicetak: <span id="print-date"></span></div>
+        <hr class="my-2">
+    </div>
 
-<!-- Table -->
-<div class="mx-n4 px-4 mx-lg-n6 px-lg-6 bg-body-emphasis py-5 border-y">
-    <table class="table table-hover fs-9 nowrap align-middle" id="machine-table">
-        <thead>
-            <tr>
-                <th>No</th>
-                <th>Mesin</th>
-                <th>Departemen</th>
-                <th>Kapasitas</th>
-                <th>Status</th>
-                <th>Dibuat</th>
-                <th>Oleh</th>
-                <th>Diupdate</th>
-                <th>Oleh</th>
-                <th class="text-end no-print">Aksi</th>
-            </tr>
-        </thead>
-    </table>
+    <!-- Table -->
+    <div class="mx-n4 px-4 mx-lg-n6 px-lg-6 bg-body-emphasis py-5 border-y">
+        <table class="table table-hover fs-9 nowrap align-middle" id="fabric-table">
+            <thead>
+                <tr>
+                    <th>No</th>
+                    <th>Fabric</th>
+                    <th>Deskripsi</th>
+                    <th>Status</th>
+                    <th>Dibuat</th>
+                    <th>Oleh</th>
+                    <th>Diupdate</th>
+                    <th>Oleh</th>
+                    <th class="text-end no-print">Aksi</th>
+                </tr>
+            </thead>
+        </table>
+    </div>
 </div>
 
 <!-- Filter toggle -->
@@ -354,18 +344,11 @@
                 <label class="form-label fw-semibold fs-9 text-uppercase text-muted">Nama / Kode</label>
                 <input type="text" class="form-control form-control-sm" id="filter-name" placeholder="Cari...">
             </div>
-            <div class="mb-3">
-                <label class="form-label fw-semibold fs-9 text-uppercase text-muted">Departemen</label>
-                <select class="form-select form-select-sm" id="filter-department">
-                    <option value="">Semua Departemen</option>
-                </select>
-            </div>
             <div class="mb-4">
                 <label class="form-label fw-semibold fs-9 text-uppercase text-muted">Status</label>
                 <select class="form-select form-select-sm" id="filter-status">
                     <option value="">Semua</option>
                     <option value="Active">Active</option>
-                    <option value="Maintenance">Maintenance</option>
                     <option value="Draft">Draft</option>
                     <option value="Archived">Archived</option>
                 </select>
@@ -389,17 +372,17 @@
 </div>
 
 <!-- Modal Tambah / Edit -->
-<div class="modal fade" id="machineModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered modal-lg">
+<div class="modal fade" id="fabricModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg rounded-3 overflow-hidden">
             <div class="modal-header border-bottom py-3 px-4" id="modal-header">
                 <div class="d-flex align-items-center gap-3">
                     <div class="stat-icon bg-primary bg-opacity-10 text-primary" id="modal-icon">
-                        <span class="fas fa-cogs"></span>
+                        <span class="fas fa-layer-group"></span>
                     </div>
                     <div>
-                        <h5 class="modal-title fw-bold mb-0" id="modal-title">Tambah Mesin</h5>
-                        <p class="text-muted fs-10 mb-0" id="modal-subtitle">Buat data mesin baru</p>
+                        <h5 class="modal-title fw-bold mb-0" id="modal-title">Tambah Fabric</h5>
+                        <p class="text-muted fs-10 mb-0" id="modal-subtitle">Buat data fabric baru</p>
                     </div>
                 </div>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
@@ -414,65 +397,38 @@
                 <div class="card border mb-0" style="border-radius:.75rem">
                     <div class="card-body p-3">
                         <p class="fs-10 fw-bold text-uppercase text-primary mb-3" style="letter-spacing:.08em">
-                            <span class="fas fa-clipboard-list me-1"></span>Informasi Mesin
+                            <span class="fas fa-clipboard-list me-1"></span>Informasi Fabric
                         </p>
                         <div class="row g-3">
                             <div class="col-md-7">
                                 <label class="form-label fs-9 fw-semibold text-uppercase text-muted" for="f-name">
-                                    Nama Mesin <span class="text-danger">*</span>
+                                    Nama <span class="text-danger">*</span>
                                 </label>
                                 <input type="text" class="form-control form-control-sm" id="f-name"
-                                    placeholder="cth: Jet Dyeing 01" maxlength="100" autocomplete="off">
-                                <div class="invalid-feedback" id="err-machine_name"></div>
+                                    placeholder="Nama desain" maxlength="150" autocomplete="off">
+                                <div class="invalid-feedback" id="err-fabric_name"></div>
                             </div>
                             <div class="col-md-5">
                                 <label class="form-label fs-9 fw-semibold text-uppercase text-muted" for="f-code">
-                                    Kode Mesin <span class="text-danger">*</span>
+                                    Kode <span class="text-danger">*</span>
                                 </label>
                                 <input type="text" class="form-control form-control-sm font-monospace fw-bold"
-                                    id="f-code" placeholder="cth: JET-01" maxlength="50" autocomplete="off"
+                                    id="f-code" placeholder="Kode desain" maxlength="30" autocomplete="off"
                                     style="text-transform:uppercase;letter-spacing:.06em">
-                                <div class="invalid-feedback" id="err-machine_code"></div>
+                                <div class="form-text fs-10">Maks. 30 karakter</div>
+                                <div class="invalid-feedback" id="err-fabric_code"></div>
                             </div>
-
                             <div class="col-md-5">
-                                <label class="form-label fs-9 fw-semibold text-uppercase text-muted" for="f-department">
-                                    Departemen
-                                </label>
-                                <select class="form-select form-select-sm" id="f-department" style="width:100%">
-                                    <option value="">— Pilih Departemen —</option>
-                                </select>
-                                <div class="invalid-feedback" id="err-department_id"></div>
-                            </div>
-                            <div class="col-md-4">
-                                <label class="form-label fs-9 fw-semibold text-uppercase text-muted" for="f-capacity">
-                                    Kapasitas
-                                </label>
-                                <input type="number" step="0.01" class="form-control form-control-sm" id="f-capacity"
-                                    placeholder="cth: 500">
-                                <div class="invalid-feedback" id="err-capacity"></div>
-                            </div>
-                            <div class="col-md-3">
-                                <label class="form-label fs-9 fw-semibold text-uppercase text-muted" for="f-capacity-unit">
-                                    Satuan
-                                </label>
-                                <input type="text" class="form-control form-control-sm" id="f-capacity-unit"
-                                    placeholder="kg" maxlength="20">
-                            </div>
-
-                            <div class="col-md-4">
                                 <label class="form-label fs-9 fw-semibold text-uppercase text-muted" for="f-status">
                                     Status <span class="text-danger">*</span>
                                 </label>
                                 <select class="form-select form-select-sm" id="f-status">
                                     <option value="Active">Active</option>
                                     <option value="Draft" selected>Draft</option>
-                                    <option value="Maintenance">Maintenance</option>
                                     <option value="Archived">Archived</option>
                                 </select>
                                 <div class="invalid-feedback" id="err-status"></div>
                             </div>
-
                             <div class="col-12">
                                 <label class="form-label fs-9 fw-semibold text-uppercase text-muted" for="f-desc">
                                     Deskripsi
@@ -506,26 +462,23 @@
 
 <?= $this->section('scripts') ?>
 <script>
-    const CAN_EDIT_MACHINE = <?= json_encode(canDo('production.machines.edit')) ?>;
-    const CAN_DELETE_MACHINE = <?= json_encode(canDo('production.machines.delete')) ?>;
+    const CAN_EDIT_FABRIC = <?= json_encode(canDo('production.fabrics.edit')) ?>;
+    const CAN_DELETE_FABRIC = <?= json_encode(canDo('production.fabrics.delete')) ?>;
 
-    const Machine = {
+    const Fabric = {
         BASE: '<?= base_url() ?>',
         dt: null,
         editId: null,
         filters: {
             name: '',
-            department: '',
             status: ''
         },
 
         init() {
-            this.initSelect2();
             this.initDatatable();
             this.initEvents();
             this.initFieldEvents();
             this.loadStats();
-            this.loadDepartmentFilterOptions();
             document.getElementById('print-date').textContent = new Date().toLocaleDateString('id-ID', {
                 day: '2-digit',
                 month: 'long',
@@ -568,49 +521,12 @@
             return r.json();
         },
 
-        initSelect2() {
-            $('#f-department').select2({
-                dropdownParent: $('#machineModal'),
-                placeholder: '— Pilih Departemen —',
-                allowClear: true,
-                width: '100%',
-                ajax: {
-                    url: this.BASE + 'hrm/departments/select2',
-                    dataType: 'json',
-                    delay: 250,
-                    data: params => ({
-                        search: params.term
-                    }),
-                    processResults: data => ({
-                        results: (data.data ?? []).map(d => ({
-                            id: d.id,
-                            text: d.department ?? d.name
-                        }))
-                    }),
-                },
-            });
-        },
-
-        async loadDepartmentFilterOptions() {
-            try {
-                const d = await this.get(this.BASE + 'hrm/departments/select2');
-                const sel = document.getElementById('filter-department');
-                (d.data ?? []).forEach(dept => {
-                    const opt = document.createElement('option');
-                    opt.value = dept.id;
-                    opt.textContent = dept.department ?? dept.name;
-                    sel.appendChild(opt);
-                });
-            } catch {}
-        },
-
         async loadStats() {
             try {
-                const d = await this.get(this.BASE + 'production/master/machines/stats');
+                const d = await this.get(this.BASE + 'production/master/fabrics/stats');
                 if (d.status !== 'success') return;
                 document.getElementById('stat-total').textContent = d.data.total ?? 0;
                 document.getElementById('stat-active').textContent = d.data.active ?? 0;
-                document.getElementById('stat-maintenance').textContent = d.data.maintenance ?? 0;
                 document.getElementById('stat-draft').textContent = d.data.draft ?? 0;
                 document.getElementById('stat-archived').textContent = d.data.archived ?? 0;
                 const badge = document.getElementById('trash-badge');
@@ -623,7 +539,8 @@
 
         initDatatable() {
             const self = this;
-            this.dt = $('#machine-table').DataTable({
+            this.dt = $('#fabric-table').DataTable({
+                responsive: true,
                 scrollX: true,
                 processing: true,
                 serverSide: true,
@@ -638,8 +555,8 @@
                 dom: '<"top"f>rt<"bottom"lpi>',
                 language: {
                     search: '',
-                    searchPlaceholder: 'Cari mesin...',
-                    lengthMenu: 'Tampil _MENU_ / halaman',
+                    searchPlaceholder: 'Cari fabric...',
+                    lengthMenu: '_MENU_ / hal',
                     info: 'Tampil _START_–_END_ dari _TOTAL_',
                     infoEmpty: 'Tidak ada data',
                     zeroRecords: 'Data tidak ditemukan',
@@ -650,55 +567,50 @@
                     processing: '<span class="spinner-border spinner-border-sm text-primary"></span>',
                 },
                 ajax: {
-                    url: this.BASE + 'production/master/machines/datatables',
+                    url: this.BASE + 'production/master/fabrics/datatables',
                     type: 'GET',
                     data: d => {
                         d.filter_name = self.filters.name;
-                        d.filter_department = self.filters.department;
                         d.filter_status = self.filters.status;
                     },
                     error: () => self.toast('error', 'Gagal memuat data'),
                 },
                 columnDefs: [{
                         targets: 0,
-                        width: '40px'
+                        width: '50px'
                     },
                     {
                         targets: 1,
-                        width: '200px'
+                        width: '220px'
                     },
                     {
                         targets: 2,
-                        width: '140px'
+                        width: '250px'
                     },
                     {
                         targets: 3,
-                        width: '110px'
+                        width: '100px'
                     },
                     {
                         targets: 4,
-                        width: '110px'
+                        width: '120px'
                     },
                     {
                         targets: 5,
-                        width: '110px'
+                        width: '130px'
                     },
                     {
                         targets: 6,
-                        width: '110px'
+                        width: '120px'
                     },
                     {
                         targets: 7,
-                        width: '110px'
+                        width: '130px'
                     },
                     {
                         targets: 8,
-                        width: '110px'
-                    },
-                    {
-                        targets: 9,
-                        width: '70px'
-                    },
+                        width: '80px'
+                    }
                 ],
                 columns: [{
                         data: 'no',
@@ -708,18 +620,13 @@
                     {
                         data: null,
                         render: (d, t, r) =>
-                            `<div class="fw-semibold">${self.e(r.machine_name)}</div>
-                             <div class="text-muted small font-monospace">${self.e(r.machine_code)}</div>`
+                            `<a href="${self.BASE}production/master/fabrics/${r.id}" class="fw-semibold text-decoration-none">${self.e(r.fabric_name)}</a>
+                             <div class="text-muted small font-monospace">${self.e(r.fabric_code)}</div>`
                     },
                     {
-                        data: 'department_name',
+                        data: 'description',
                         render: d => d ?
-                            `<span class="text-body">${self.e(d)}</span>` : '<span class="text-muted fst-italic">—</span>'
-                    },
-                    {
-                        data: null,
-                        render: (d, t, r) => (r.capacity !== null && r.capacity !== undefined && r.capacity !== '') ?
-                            `<span class="fw-semibold">${self.e(r.capacity)}</span> <span class="text-muted">${self.e(r.capacity_unit ?? '')}</span>` : '<span class="text-muted fst-italic">—</span>'
+                            `<span class="text-muted">${self.e(d.substring(0, 60))}${d.length > 60 ? '…' : ''}</span>` : '<span class="text-muted fst-italic">—</span>'
                     },
                     {
                         data: 'status',
@@ -747,16 +654,16 @@
                         searchable: false,
                         className: 'text-end no-print',
                         render: (d, t, r) => {
-                            const edit = CAN_EDIT_MACHINE ?
-                                `<button class="btn btn-subtle-primary btn-sm btn-edit" data-id="${r.id}">
-                                       <span class="fas fa-pencil-alt"></span>
-                                   </button>` : '';
-                            const del = CAN_DELETE_MACHINE ?
-                                `<button class="btn btn-subtle-danger btn-sm btn-delete"
-                                       data-id="${r.id}" data-name="${self.e(r.machine_name)}">
-                                       <span class="fas fa-trash"></span>
-                                   </button>` : '';
-                            return `<div class="btn-group btn-group-sm">${edit}${del}</div>`;
+                            const view = `<a href="${self.BASE}production/master/fabrics/${r.id}" class="btn btn-subtle-info btn-sm" title="Detail">
+                                <span class="fas fa-eye"></span>
+                            </a>`;
+                            const edit = CAN_EDIT_FABRIC ?
+                                `<button class="btn btn-subtle-primary btn-sm btn-edit" data-id="${r.id}"><span class="fas fa-pencil-alt"></span></button>` :
+                                '';
+                            const del = CAN_DELETE_FABRIC ?
+                                `<button class="btn btn-subtle-danger btn-sm btn-delete" data-id="${r.id}" data-name="${self.e(r.fabric_name)}"><span class="fas fa-trash"></span></button>` :
+                                '';
+                            return `<div class="btn-group btn-group-sm">${view}${edit}${del}</div>`;
                         }
                     },
                 ],
@@ -766,44 +673,35 @@
         openCreate() {
             this.editId = null;
             this.resetModal();
-            document.getElementById('modal-title').textContent = 'Tambah Mesin';
-            document.getElementById('modal-subtitle').textContent = 'Buat data mesin baru';
+            document.getElementById('modal-title').textContent = 'Tambah Fabric';
+            document.getElementById('modal-subtitle').textContent = 'Buat data fabric baru';
             document.getElementById('save-text').textContent = 'Simpan';
-            new bootstrap.Modal(document.getElementById('machineModal')).show();
+            new bootstrap.Modal(document.getElementById('fabricModal')).show();
         },
 
         async openEdit(id) {
             this.editId = id;
             this.resetModal();
-            document.getElementById('modal-title').textContent = 'Edit Mesin';
-            document.getElementById('modal-subtitle').textContent = 'Perbarui data mesin';
+            document.getElementById('modal-title').textContent = 'Edit Fabric';
+            document.getElementById('modal-subtitle').textContent = 'Perbarui data fabric';
             document.getElementById('save-text').textContent = 'Update';
             this.setLoading(true);
-            new bootstrap.Modal(document.getElementById('machineModal')).show();
+            new bootstrap.Modal(document.getElementById('fabricModal')).show();
             try {
-                const d = await this.get(this.BASE + `production/master/machines/get/${id}`);
+                const d = await this.get(this.BASE + `production/master/fabrics/get/${id}`);
                 if (d.status === 'success' && d.data) {
-                    document.getElementById('f-name').value = d.data.machine_name ?? '';
-                    document.getElementById('f-code').value = d.data.machine_code ?? '';
-                    document.getElementById('f-capacity').value = d.data.capacity ?? '';
-                    document.getElementById('f-capacity-unit').value = d.data.capacity_unit ?? '';
+                    document.getElementById('f-name').value = d.data.fabric_name ?? '';
+                    document.getElementById('f-code').value = d.data.fabric_code ?? '';
                     document.getElementById('f-desc').value = d.data.description ?? '';
                     document.getElementById('f-status').value = d.data.status ?? 'Draft';
                     document.getElementById('char-count').textContent = (d.data.description ?? '').length;
 
-                    if (d.data.machine_name) this.markValid('f-name');
-                    if (d.data.machine_code) this.markValid('f-code');
+                    if (d.data.fabric_name) this.markValid('f-name');
+                    if (d.data.fabric_code) this.markValid('f-code');
                     if (d.data.status) this.markValid('f-status');
-
-                    if (d.data.department_id) {
-                        const opt = new Option(d.data.department_name ?? 'Departemen', d.data.department_id, true, true);
-                        $('#f-department').append(opt).trigger('change');
-                    } else {
-                        $('#f-department').val(null).trigger('change');
-                    }
                 } else {
                     this.toast('error', d.message ?? 'Gagal memuat data');
-                    bootstrap.Modal.getInstance(document.getElementById('machineModal'))?.hide();
+                    bootstrap.Modal.getInstance(document.getElementById('fabricModal'))?.hide();
                 }
             } catch {
                 this.toast('error', 'Gagal memuat data');
@@ -815,20 +713,17 @@
         async save() {
             this.clearErrors();
             const fd = new FormData();
-            fd.set('machine_name', document.getElementById('f-name').value.trim());
-            fd.set('machine_code', document.getElementById('f-code').value.trim().toUpperCase());
-            fd.set('department_id', $('#f-department').val() ?? '');
-            fd.set('capacity', document.getElementById('f-capacity').value);
-            fd.set('capacity_unit', document.getElementById('f-capacity-unit').value.trim());
+            fd.set('fabric_name', document.getElementById('f-name').value.trim());
+            fd.set('fabric_code', document.getElementById('f-code').value.trim().toUpperCase());
             fd.set('description', document.getElementById('f-desc').value.trim());
             fd.set('status', document.getElementById('f-status').value);
             if (this.editId) fd.set('id', this.editId);
 
             this.setLoading(true);
             try {
-                const res = await this.post(this.BASE + 'production/master/machines/store', fd);
+                const res = await this.post(this.BASE + 'production/master/fabrics/store', fd);
                 if (res.status === 'success') {
-                    bootstrap.Modal.getInstance(document.getElementById('machineModal'))?.hide();
+                    bootstrap.Modal.getInstance(document.getElementById('fabricModal'))?.hide();
                     this.dt.ajax.reload(null, false);
                     this.loadStats();
                     this.toast('success', res.message);
@@ -846,7 +741,7 @@
         },
 
         resetModal() {
-            ['f-name', 'f-code', 'f-capacity', 'f-capacity-unit', 'f-desc'].forEach(id => {
+            ['f-name', 'f-code', 'f-desc'].forEach(id => {
                 const el = document.getElementById(id);
                 if (el) {
                     el.value = '';
@@ -856,22 +751,21 @@
             document.getElementById('f-status').value = 'Draft';
             document.getElementById('char-count').textContent = '0';
             document.getElementById('modal-alert').classList.add('d-none');
-            $('#f-department').empty().val(null).trigger('change');
             this.clearErrors();
         },
 
         clearErrors() {
-            document.querySelectorAll('#machineModal .is-invalid, #machineModal .is-valid').forEach(el => {
+            document.querySelectorAll('#fabricModal .is-invalid, #fabricModal .is-valid').forEach(el => {
                 el.classList.remove('is-invalid', 'is-valid');
             });
-            document.querySelectorAll('#machineModal .invalid-feedback').forEach(el => {
+            document.querySelectorAll('#fabricModal .invalid-feedback').forEach(el => {
                 el.textContent = '';
                 el.style.visibility = '';
             });
+            document.getElementById('modal-alert').classList.add('d-none');
         },
 
         initFieldEvents() {
-            // Machine modal — is-valid saat user mengisi, is-invalid saat dikosongkan (untuk field wajib)
             [{
                     input: 'f-name',
                     required: true
@@ -883,14 +777,6 @@
                 {
                     input: 'f-status',
                     required: true
-                },
-                {
-                    input: 'f-capacity',
-                    required: false
-                },
-                {
-                    input: 'f-capacity-unit',
-                    required: false
                 },
                 {
                     input: 'f-desc',
@@ -919,12 +805,6 @@
                 el.addEventListener('input', revalidate);
                 el.addEventListener('change', revalidate);
             });
-
-            // Select2 department — pakai event khusus select2:select / select2:clear
-            $('#f-department').on('select2:select select2:clear', () => {
-                const el = document.getElementById('f-department');
-                el.classList.remove('is-invalid', 'is-valid');
-            });
         },
 
         markValid(id) {
@@ -949,10 +829,8 @@
 
         showErrors(errors) {
             const map = {
-                machine_name: ['f-name', 'err-machine_name'],
-                machine_code: ['f-code', 'err-machine_code'],
-                department_id: ['f-department', 'err-department_id'],
-                capacity: ['f-capacity', 'err-capacity'],
+                fabric_name: ['f-name', 'err-fabric_name'],
+                fabric_code: ['f-code', 'err-fabric_code'],
                 description: ['f-desc', 'err-description'],
                 status: ['f-status', 'err-status'],
             };
@@ -971,9 +849,8 @@
 
         async deleteItem(id, name) {
             const result = await Swal.fire({
-                title: 'Hapus Mesin?',
-                html: `<strong>${name}</strong> akan dipindahkan ke sampah.<br>
-                       <small class="text-muted">Dapat dipulihkan dari menu Sampah.</small>`,
+                title: 'Hapus Fabric?',
+                html: `<strong>${name}</strong> akan dipindahkan ke sampah.<br><small class="text-muted">Dapat dipulihkan dari menu Sampah.</small>`,
                 icon: 'warning',
                 showCancelButton: true,
                 reverseButtons: true,
@@ -984,12 +861,14 @@
             });
             if (!result.isConfirmed) return;
             try {
-                const res = await this.post(this.BASE + `production/master/machines/delete/${id}`, new FormData());
+                const res = await this.post(this.BASE + `production/master/fabrics/delete/${id}`, new FormData());
                 if (res.status === 'success') {
                     this.dt.ajax.reload(null, false);
                     this.loadStats();
                     this.toast('success', res.message);
-                } else this.toast('error', res.message);
+                } else {
+                    this.toast('error', res.message);
+                }
             } catch (e) {
                 this.toast('error', e.message);
             }
@@ -997,7 +876,6 @@
 
         applyFilter() {
             this.filters.name = document.getElementById('filter-name').value.trim();
-            this.filters.department = document.getElementById('filter-department').value;
             this.filters.status = document.getElementById('filter-status').value;
             this.dt.ajax.reload();
             this.updateFilterUI();
@@ -1007,11 +885,9 @@
         resetFilter() {
             this.filters = {
                 name: '',
-                department: '',
                 status: ''
             };
             document.getElementById('filter-name').value = '';
-            document.getElementById('filter-department').value = '';
             document.getElementById('filter-status').value = '';
             this.dt.ajax.reload();
             this.updateFilterUI();
@@ -1020,11 +896,6 @@
         updateFilterUI() {
             const labels = [];
             if (this.filters.name) labels.push(`Nama: "${this.filters.name}"`);
-            if (this.filters.department) {
-                const sel = document.getElementById('filter-department');
-                const txt = sel.options[sel.selectedIndex]?.text;
-                if (txt) labels.push(`Dept: ${txt}`);
-            }
             if (this.filters.status) labels.push(`Status: ${this.filters.status}`);
             document.getElementById('filter-toggle').classList.toggle('has-filter', labels.length > 0);
             document.getElementById('filter-summary-text').textContent = labels.join(' · ');
@@ -1047,6 +918,13 @@
                 e.target.value = e.target.value.toUpperCase().replace(/[^A-Z0-9_\-]/g, '');
             });
 
+            document.getElementById('fabricModal')
+                ?.addEventListener('hide.bs.modal', () => {
+                    if (document.activeElement instanceof HTMLElement) {
+                        document.activeElement.blur();
+                    }
+                });
+
             $(document).on('click', '.btn-edit', e => this.openEdit($(e.currentTarget).data('id')));
             $(document).on('click', '.btn-delete', e => {
                 const btn = $(e.currentTarget);
@@ -1055,17 +933,30 @@
         },
 
         e(s) {
-            if (s === null || s === undefined) return '';
+            if (!s) return '';
             return String(s)
-                .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-                .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        },
+
+        _e(s) {
+            if (s == null) return '';
+            return String(s)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
         },
 
         fmtDate(d) {
             if (!d) return '<span class="text-muted">—</span>';
             const dt = new Date(d);
-            return `<span class="d-block">${dt.toLocaleDateString('id-ID',{day:'2-digit',month:'short',year:'numeric'})}</span>
-                    <small class="text-muted">${dt.toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'})}</small>`;
+            return `<span class="d-block">${dt.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
+                    <small class="text-muted">${dt.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}</small>`;
         },
 
         fmtStatus(status) {
@@ -1078,10 +969,6 @@
                 case 'active':
                     statusClass = 'active';
                     statusIcon = 'fa-check-circle';
-                    break;
-                case 'maintenance':
-                    statusClass = 'maintenance';
-                    statusIcon = 'fa-tools';
                     break;
                 case 'draft':
                     statusClass = 'draft';
@@ -1097,15 +984,14 @@
             }
 
             return `<span class="badge-status ${statusClass}">
-                        <span class="fas ${statusIcon}"></span>
-                        ${this.e(status)}
-                    </span>`;
+                <span class="fas ${statusIcon}"></span>
+                ${this.e(status)}
+            </span>`;
         },
 
         _fmtUser(name, employeeName = null) {
             if (!name && !employeeName) return '<span class="text-muted fst-italic">—</span>';
 
-            // Jika tidak ada employeeName, tampilkan username saja
             if (!employeeName) {
                 return `<span class="badge badge-phoenix badge-phoenix-info fs-10 p-1 px-2" 
                      title="Username: ${this._e(name)}">
@@ -1113,23 +999,12 @@
                 </span>`;
             }
 
-            // Tampilkan employee name sebagai badge utama, username sebagai badge kecil
             return `<span class="badge badge-phoenix badge-phoenix-primary fs-10 p-1 px-3" 
                  title="Karyawan: ${this._e(employeeName)}&#013;Username: ${this._e(name)}"
                  style="cursor:help;border-radius:50px;display:inline-flex;align-items:center;gap:0.3rem;">
                 <span class="fas fa-user me-1"></span>
                 ${this._e(employeeName)}
             </span>`;
-        },
-
-        _e(s) {
-            if (s == null) return '';
-            return String(s)
-                .replace(/&/g, '&amp;')
-                .replace(/</g, '&lt;')
-                .replace(/>/g, '&gt;')
-                .replace(/"/g, '&quot;')
-                .replace(/'/g, '&#39;');
         },
 
         toast(type, msg) {
@@ -1140,11 +1015,11 @@
                 title: msg,
                 showConfirmButton: false,
                 timer: type === 'success' ? 2000 : 3500,
-                timerProgressBar: true,
+                timerProgressBar: true
             });
         },
     };
 
-    $(document).ready(() => Machine.init());
+    $(document).ready(() => Fabric.init());
 </script>
 <?= $this->endSection() ?>

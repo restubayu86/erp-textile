@@ -4,6 +4,7 @@
 <meta name="csrf-token" content="<?= csrf_hash() ?>">
 <meta name="csrf-name" content="<?= csrf_token() ?>">
 <style>
+    /* ── Prevent horizontal page scrollbar ───────────────────────── */
     body {
         overflow-x: hidden;
     }
@@ -13,7 +14,7 @@
         font-size: .7rem;
     }
 
-    /* ── Status badge (sama seperti pattern Department) ───────────── */
+    /* ── Status badge ───────────────────────────────────────────── */
     .badge-status {
         display: inline-flex;
         align-items: center;
@@ -29,12 +30,6 @@
         background-color: rgba(var(--phoenix-success-rgb), .12);
         color: var(--phoenix-success);
         border: 1px solid rgba(var(--phoenix-success-rgb), .25);
-    }
-
-    .badge-status.maintenance {
-        background-color: rgba(var(--phoenix-info-rgb), .12);
-        color: var(--phoenix-info);
-        border: 1px solid rgba(var(--phoenix-info-rgb), .25);
     }
 
     .badge-status.draft {
@@ -77,21 +72,18 @@
         gap: 1rem;
     }
 
-    /* Length Menu di KIRI */
     #trash-table_wrapper .bottom .dataTables_length {
         flex: 1;
         text-align: left;
         order: 1;
     }
 
-    /* Pagination di TENGAH */
     #trash-table_wrapper .bottom .dataTables_paginate {
         flex: 1;
         text-align: center;
         order: 2;
     }
 
-    /* Info di KANAN */
     #trash-table_wrapper .bottom .dataTables_info {
         flex: 1;
         text-align: right;
@@ -162,14 +154,14 @@
     <div class="alert alert-subtle-warning d-flex align-items-start gap-2 py-2 mb-3">
         <span class="fas fa-circle-info mt-1"></span>
         <span class="small">
-            Mesin di sampah <strong>tidak aktif</strong>.
+            Fabric di sampah <strong>tidak aktif</strong>.
             Pulihkan untuk menggunakannya kembali atau hapus permanen untuk membersihkan data.
         </span>
     </div>
 
     <!-- Toolbar -->
     <div class="d-flex justify-content-between align-items-center mb-3 gap-2 flex-wrap">
-        <a href="<?= site_url('production/master/machines') ?>" class="btn btn-subtle-secondary btn-sm">
+        <a href="<?= site_url('production/master/fabrics') ?>" class="btn btn-subtle-secondary btn-sm">
             <span class="fas fa-arrow-left me-1"></span>Kembali
         </a>
         <div class="d-flex gap-2">
@@ -188,8 +180,8 @@
             <thead>
                 <tr>
                     <th>No</th>
-                    <th>Mesin</th>
-                    <th>Departemen</th>
+                    <th>Fabric</th>
+                    <th>Deskripsi</th>
                     <th>Status</th>
                     <th>Dihapus</th>
                     <th>Dihapus Oleh</th>
@@ -204,7 +196,7 @@
 
 <?= $this->section('scripts') ?>
 <script>
-    const MachineTrash = {
+    const FabricTrash = {
         BASE: '<?= base_url() ?>',
         dt: null,
 
@@ -254,7 +246,7 @@
                 dom: '<"top"f>rt<"bottom"lpi>',
                 language: {
                     search: '',
-                    searchPlaceholder: 'Cari mesin...',
+                    searchPlaceholder: 'Cari fabric...',
                     lengthMenu: '_MENU_ / hal',
                     info: 'Tampil _START_–_END_ dari _TOTAL_',
                     infoEmpty: 'Tidak ada data',
@@ -266,7 +258,7 @@
                     processing: '<span class="spinner-border spinner-border-sm text-primary"></span>',
                 },
                 ajax: {
-                    url: this.BASE + 'production/master/machines/trash-datatables',
+                    url: this.BASE + 'production/master/fabrics/trash-datatables',
                     type: 'GET',
                     error: () => self.toast('error', 'Gagal memuat data'),
                 },
@@ -280,11 +272,11 @@
                     },
                     {
                         targets: 2,
-                        width: '160px'
+                        width: '250px'
                     },
                     {
                         targets: 3,
-                        width: '110px'
+                        width: '100px'
                     },
                     {
                         targets: 4,
@@ -307,13 +299,13 @@
                     {
                         data: null,
                         render: (d, t, r) =>
-                            `<div class="fw-semibold">${self.e(r.machine_name)}</div>
-                             <div class="text-muted small font-monospace">${self.e(r.machine_code)}</div>`
+                            `<div class="fw-semibold">${self.e(r.fabric_name)}</div>
+                             <div class="text-muted small font-monospace">${self.e(r.fabric_code)}</div>`
                     },
                     {
-                        data: 'department_name',
-                        render: d => d ?
-                            `<span class="text-body">${self.e(d)}</span>` : '<span class="text-muted fst-italic">—</span>'
+                        data: 'description',
+                        render: d =>
+                            d ? `<span class="text-muted">${self.e(d.substring(0,60))}${d.length>60?'…':''}</span>` : '<span class="text-muted fst-italic">—</span>'
                     },
                     {
                         data: 'status',
@@ -339,10 +331,10 @@
                         className: 'text-end',
                         render: (d, t, r) => `
                             <div class="btn-group btn-group-sm">
-                                <button class="btn btn-subtle-success btn-restore" data-id="${r.id}" data-name="${self.e(r.machine_name)}" title="Pulihkan">
+                                <button class="btn btn-subtle-success btn-restore" data-id="${r.id}" data-name="${self.e(r.fabric_name)}" title="Pulihkan">
                                     <span class="fas fa-rotate-left"></span>
                                 </button>
-                                <button class="btn btn-subtle-danger btn-force-delete" data-id="${r.id}" data-name="${self.e(r.machine_name)}" title="Hapus Permanen">
+                                <button class="btn btn-subtle-danger btn-force-delete" data-id="${r.id}" data-name="${self.e(r.fabric_name)}" title="Hapus Permanen">
                                     <span class="fas fa-trash-alt"></span>
                                 </button>
                             </div>`
@@ -351,7 +343,6 @@
             });
         },
 
-        // fmtStatus — sama pattern seperti Department, plus variant maintenance
         fmtStatus(status) {
             if (!status) return '<span class="text-muted fst-italic">—</span>';
 
@@ -362,10 +353,6 @@
                 case 'active':
                     statusClass = 'active';
                     statusIcon = 'fa-check-circle';
-                    break;
-                case 'maintenance':
-                    statusClass = 'maintenance';
-                    statusIcon = 'fa-tools';
                     break;
                 case 'draft':
                     statusClass = 'draft';
@@ -386,11 +373,9 @@
                     </span>`;
         },
 
-        // fmtUser untuk deleted_by — identik pattern Department
         _fmtUser(name, employeeName = null) {
             if (!name && !employeeName) return '<span class="text-muted fst-italic">—</span>';
 
-            // Jika tidak ada employeeName, tampilkan username saja
             if (!employeeName) {
                 return `<span class="badge badge-phoenix badge-phoenix-info fs-10 p-1 px-2" 
                      title="Username: ${this._e(name)}">
@@ -398,7 +383,6 @@
                 </span>`;
             }
 
-            // Tampilkan employee name sebagai badge utama, username sebagai badge kecil
             return `<span class="badge badge-phoenix badge-phoenix-primary fs-10 p-1 px-3" 
                  title="Karyawan: ${this._e(employeeName)}&#013;Username: ${this._e(name)}"
                  style="cursor:help;border-radius:50px;display:inline-flex;align-items:center;gap:0.3rem;">
@@ -409,7 +393,7 @@
 
         async restore(id, name) {
             const r = await Swal.fire({
-                title: 'Pulihkan Mesin?',
+                title: 'Pulihkan Fabric?',
                 html: `<strong>"${name}"</strong> akan dipulihkan dengan status <strong>Draft</strong>.`,
                 icon: 'question',
                 showCancelButton: true,
@@ -421,7 +405,7 @@
             });
             if (!r.isConfirmed) return;
             try {
-                const res = await this.post(this.BASE + `production/master/machines/restore/${id}`, new FormData());
+                const res = await this.post(this.BASE + `production/master/fabrics/restore/${id}`, new FormData());
                 if (res.status === 'success') {
                     this.dt.ajax.reload(null, false);
                     this.toast('success', res.message);
@@ -455,7 +439,7 @@
             });
             if (!r.isConfirmed) return;
             try {
-                const res = await this.post(this.BASE + `production/master/machines/force-delete/${id}`, new FormData());
+                const res = await this.post(this.BASE + `production/master/fabrics/force-delete/${id}`, new FormData());
                 if (res.status === 'success') {
                     this.dt.ajax.reload(null, false);
                     this.toast('success', res.message);
@@ -473,7 +457,7 @@
             }
             const r = await Swal.fire({
                 title: 'Kosongkan Semua Sampah?',
-                html: `${count} mesin akan dihapus <strong>permanen</strong>.<br><span class="text-danger small">Tidak bisa dibatalkan.</span>`,
+                html: `${count} fabric akan dihapus <strong>permanen</strong>.<br><span class="text-danger small">Tidak bisa dibatalkan.</span>`,
                 icon: 'error',
                 showCancelButton: true,
                 reverseButtons: true,
@@ -494,7 +478,7 @@
             });
             if (!r.isConfirmed) return;
             try {
-                const res = await this.post(this.BASE + 'production/master/machines/empty-trash', new FormData());
+                const res = await this.post(this.BASE + 'production/master/fabrics/empty-trash', new FormData());
                 if (res.status === 'success') {
                     this.dt.ajax.reload(null, false);
                     this.toast('success', res.message);
@@ -545,6 +529,6 @@
         },
     };
 
-    $(document).ready(() => MachineTrash.init());
+    $(document).ready(() => FabricTrash.init());
 </script>
 <?= $this->endSection() ?>

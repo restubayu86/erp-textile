@@ -25,31 +25,58 @@ $routes->group('production', [
     $routes->get('reports',                       'ReportController::index');
 
     // =============================================
-    // FIXED: Machine Routes
+    // Master Data
     // =============================================
-    // Main endpoints (without "master/" prefix to match JS)
-    $routes->get('machines',                      'MachineController::index');
-    $routes->get('machines/datatables',           'MachineController::datatables');
-    $routes->get('machines/stats',                'MachineController::stats');  // NEW
-    $routes->get('machines/get/(:num)',           'MachineController::getById/$1');
-    $routes->post('machines/store',               'MachineController::store');
-    $routes->post('machines/delete/(:num)',      'MachineController::delete/$1');
-
-    // Trash route
-    $routes->get('machines/trash',                'MachineController::trash');
-
-    // Keep master routes for backward compatibility if needed
     $routes->group('master', function ($routes) {
-        $routes->get('machines',                  'MachineController::index');
-        $routes->get('machines/datatables',       'MachineController::datatables');
-        $routes->get('machines/(:num)',           'MachineController::getById/$1');
-        $routes->post('machines/store',           'MachineController::store');
-        $routes->post('machines/(:num)/delete',   'MachineController::delete/$1');
 
-        $routes->get('machine-types',             'MachineTypeController::index');
-        $routes->get('machine-types/datatables',  'MachineTypeController::datatables');
-        $routes->get('machine-types/(:num)',      'MachineTypeController::getById/$1');
-        $routes->post('machine-types/store',      'MachineTypeController::store');
-        $routes->post('machine-types/(:num)/delete', 'MachineTypeController::delete/$1');
+        // ── Machines ────────────────────────────────────────────
+        $routes->get('machines',                      'MachineController::index');
+        $routes->get('machines/trash',                 'MachineController::trash');
+
+        $routes->get('machines/datatables',            'MachineController::datatables');
+        $routes->get('machines/trash-datatables',      'MachineController::trashDatatables');
+
+        $routes->get('machines/stats',                 'MachineController::stats');
+        $routes->get('machines/select2',               'MachineController::select2');
+        $routes->post('machines/check-unique',         'MachineController::checkUnique');
+
+        $routes->get('machines/get/(:num)',            'MachineController::get/$1');
+        $routes->post('machines/store',                'MachineController::store');
+        $routes->post('machines/delete/(:num)',        'MachineController::delete/$1');
+        $routes->post('machines/restore/(:num)',       'MachineController::restore/$1');
+        $routes->post('machines/force-delete/(:num)',  'MachineController::forceDelete/$1');
+        $routes->post('machines/empty-trash',          'MachineController::emptyTrash');
+
+        // ── Fabrics ─────────────────────────────────────────────
+        $routes->get('fabrics',                        'FabricController::index');
+        $routes->get('fabrics/trash',                   'FabricController::trash');
+
+        $routes->get('fabrics/datatables',              'FabricController::datatables');
+        $routes->get('fabrics/trash-datatables',        'FabricController::trashDatatables');
+
+        $routes->get('fabrics/stats',                   'FabricController::stats');
+        $routes->get('fabrics/select2',                 'FabricController::select2');
+        $routes->post('fabrics/check-unique',           'FabricController::checkUnique');
+
+        $routes->get('fabrics/get/(:num)',              'FabricController::get/$1');
+        $routes->post('fabrics/store',                  'FabricController::store');
+        $routes->post('fabrics/delete/(:num)',          'FabricController::delete/$1');
+        $routes->post('fabrics/restore/(:num)',         'FabricController::restore/$1');
+        $routes->post('fabrics/force-delete/(:num)',    'FabricController::forceDelete/$1');
+        $routes->post('fabrics/empty-trash',            'FabricController::emptyTrash');
+
+        // Halaman detail — taruh PALING BAWAH supaya tidak menabrak
+        // path statis di atas (trash, datatables, stats, dst)
+        $routes->get('fabrics/(:num)',                  'FabricController::show/$1');
+
+        // ── Flow Processes ───────────────────────────────────────
+        // Tidak ada halaman index/trash sendiri — diakses dari
+        // halaman detail Fabric (production/master/fabrics/{id})
+        $routes->get('flow-processes/datatables',       'FlowProcessController::datatables');
+        $routes->get('flow-processes/process-names',    'FlowProcessController::processNames');
+
+        $routes->get('flow-processes/get/(:num)',       'FlowProcessController::get/$1');
+        $routes->post('flow-processes/store',           'FlowProcessController::store');
+        $routes->post('flow-processes/delete/(:num)',   'FlowProcessController::delete/$1');
     });
 });
