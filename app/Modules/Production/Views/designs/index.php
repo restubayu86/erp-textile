@@ -126,24 +126,24 @@
     }
 
     /* ── DataTables Custom Layout ────────────────────────────────── */
-    #fabric-table_wrapper {
+    #design-table_wrapper {
         max-width: 100%;
     }
 
-    #fabric-table_wrapper .top {
+    #design-table_wrapper .top {
         display: flex;
         justify-content: center;
         margin-bottom: 1rem;
     }
 
-    #fabric-table_wrapper .top input {
+    #design-table_wrapper .top input {
         width: 300px;
         border-radius: 20px;
         padding: 0.375rem 1rem;
         text-align: center;
     }
 
-    #fabric-table_wrapper .bottom {
+    #design-table_wrapper .bottom {
         display: flex;
         justify-content: space-between;
         align-items: center;
@@ -152,49 +152,49 @@
         gap: 1rem;
     }
 
-    #fabric-table_wrapper .bottom .dataTables_length {
+    #design-table_wrapper .bottom .dataTables_length {
         flex: 1;
         text-align: left;
         order: 1;
     }
 
-    #fabric-table_wrapper .bottom .dataTables_paginate {
+    #design-table_wrapper .bottom .dataTables_paginate {
         flex: 1;
         text-align: center;
         order: 2;
     }
 
-    #fabric-table_wrapper .bottom .dataTables_info {
+    #design-table_wrapper .bottom .dataTables_info {
         flex: 1;
         text-align: right;
         order: 3;
     }
 
-    #fabric-table_wrapper .dataTables_filter label,
-    #fabric-table_wrapper .dataTables_length label {
+    #design-table_wrapper .dataTables_filter label,
+    #design-table_wrapper .dataTables_length label {
         margin-bottom: 0;
     }
 
-    #fabric-table_wrapper .dataTables_length select {
+    #design-table_wrapper .dataTables_length select {
         width: auto;
         display: inline-block;
         margin: 0 0.5rem;
         border-radius: 0.375rem;
     }
 
-    #fabric-table_wrapper .dataTables_paginate .paginate_button {
+    #design-table_wrapper .dataTables_paginate .paginate_button {
         padding: 0.375rem 0.75rem;
         margin: 0 0.25rem;
         border-radius: 0.375rem;
     }
 
-    #fabric-table_wrapper .dataTables_paginate .paginate_button.current {
+    #design-table_wrapper .dataTables_paginate .paginate_button.current {
         background: var(--phoenix-primary);
         border-color: var(--phoenix-primary);
         color: white !important;
     }
 
-    #fabric-table {
+    #design-table {
         width: 100% !important;
     }
 
@@ -277,8 +277,8 @@
     <!-- Toolbar -->
     <div class="d-flex justify-content-between align-items-center mb-3 gap-2 flex-wrap no-print">
         <div class="d-flex gap-2">
-            <?php if (canDo('production.fabrics.delete')): ?>
-                <a href="<?= site_url('production/master/fabrics/trash') ?>" class="btn btn-subtle-danger btn-sm">
+            <?php if (canDo('production.designs.delete')): ?>
+                <a href="<?= site_url('production/master/designs/trash') ?>" class="btn btn-subtle-danger btn-sm">
                     <span class="fas fa-trash-alt me-1"></span>Sampah
                     <span class="badge bg-danger ms-1 d-none" id="trash-badge">0</span>
                 </a>
@@ -288,9 +288,9 @@
             <button class="btn btn-subtle-secondary btn-sm" id="btn-refresh" type="button">
                 <span class="fas fa-sync-alt me-1"></span>Refresh
             </button>
-            <?php if (canDo('production.fabrics.create')): ?>
+            <?php if (canDo('production.designs.create')): ?>
                 <button class="btn btn-primary btn-sm" id="btn-create" type="button">
-                    <span class="fas fa-plus me-1"></span>Tambah Fabric
+                    <span class="fas fa-plus me-1"></span>Tambah Design
                 </button>
             <?php endif; ?>
         </div>
@@ -298,18 +298,18 @@
 
     <!-- Print header -->
     <div class="print-header mb-3">
-        <h5 class="fw-bold mb-1">Daftar Fabric</h5>
+        <h5 class="fw-bold mb-1">Daftar Design</h5>
         <div class="text-muted small">Dicetak: <span id="print-date"></span></div>
         <hr class="my-2">
     </div>
 
     <!-- Table -->
     <div class="mx-n4 px-4 mx-lg-n6 px-lg-6 bg-body-emphasis py-5 border-y">
-        <table class="table table-hover fs-9 nowrap align-middle" id="fabric-table">
+        <table class="table table-hover fs-9 nowrap align-middle" id="design-table">
             <thead>
                 <tr>
                     <th>No</th>
-                    <th>Fabric</th>
+                    <th>Design</th>
                     <th>Deskripsi</th>
                     <th>Status</th>
                     <th>Dibuat</th>
@@ -372,7 +372,7 @@
 </div>
 
 <!-- Modal Tambah / Edit -->
-<div class="modal fade" id="fabricModal" tabindex="-1" aria-hidden="true">
+<div class="modal fade" id="designModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg rounded-3 overflow-hidden">
             <div class="modal-header border-bottom py-3 px-4" id="modal-header">
@@ -381,8 +381,8 @@
                         <span class="fas fa-layer-group"></span>
                     </div>
                     <div>
-                        <h5 class="modal-title fw-bold mb-0" id="modal-title">Tambah Fabric</h5>
-                        <p class="text-muted fs-10 mb-0" id="modal-subtitle">Buat data fabric baru</p>
+                        <h5 class="modal-title fw-bold mb-0" id="modal-title">Tambah Design</h5>
+                        <p class="text-muted fs-10 mb-0" id="modal-subtitle">Buat data design baru</p>
                     </div>
                 </div>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
@@ -397,7 +397,7 @@
                 <div class="card border mb-0" style="border-radius:.75rem">
                     <div class="card-body p-3">
                         <p class="fs-10 fw-bold text-uppercase text-primary mb-3" style="letter-spacing:.08em">
-                            <span class="fas fa-clipboard-list me-1"></span>Informasi Fabric
+                            <span class="fas fa-clipboard-list me-1"></span>Informasi Design
                         </p>
                         <div class="row g-3">
                             <div class="col-md-7">
@@ -406,7 +406,7 @@
                                 </label>
                                 <input type="text" class="form-control form-control-sm" id="f-name"
                                     placeholder="Nama desain" maxlength="150" autocomplete="off">
-                                <div class="invalid-feedback" id="err-fabric_name"></div>
+                                <div class="invalid-feedback" id="err-design_name"></div>
                             </div>
                             <div class="col-md-5">
                                 <label class="form-label fs-9 fw-semibold text-uppercase text-muted" for="f-code">
@@ -416,7 +416,7 @@
                                     id="f-code" placeholder="Kode desain" maxlength="30" autocomplete="off"
                                     style="text-transform:uppercase;letter-spacing:.06em">
                                 <div class="form-text fs-10">Maks. 30 karakter</div>
-                                <div class="invalid-feedback" id="err-fabric_code"></div>
+                                <div class="invalid-feedback" id="err-design_code"></div>
                             </div>
                             <div class="col-md-5">
                                 <label class="form-label fs-9 fw-semibold text-uppercase text-muted" for="f-status">
@@ -462,10 +462,10 @@
 
 <?= $this->section('scripts') ?>
 <script>
-    const CAN_EDIT_FABRIC = <?= json_encode(canDo('production.fabrics.edit')) ?>;
-    const CAN_DELETE_FABRIC = <?= json_encode(canDo('production.fabrics.delete')) ?>;
+    const CAN_EDIT_DESIGN = <?= json_encode(canDo('production.designs.edit')) ?>;
+    const CAN_DELETE_DESIGN = <?= json_encode(canDo('production.designs.delete')) ?>;
 
-    const Fabric = {
+    const Design = {
         BASE: '<?= base_url() ?>',
         dt: null,
         editId: null,
@@ -523,7 +523,7 @@
 
         async loadStats() {
             try {
-                const d = await this.get(this.BASE + 'production/master/fabrics/stats');
+                const d = await this.get(this.BASE + 'production/master/designs/stats');
                 if (d.status !== 'success') return;
                 document.getElementById('stat-total').textContent = d.data.total ?? 0;
                 document.getElementById('stat-active').textContent = d.data.active ?? 0;
@@ -539,7 +539,7 @@
 
         initDatatable() {
             const self = this;
-            this.dt = $('#fabric-table').DataTable({
+            this.dt = $('#design-table').DataTable({
                 responsive: true,
                 scrollX: true,
                 processing: true,
@@ -555,7 +555,7 @@
                 dom: '<"top"f>rt<"bottom"lpi>',
                 language: {
                     search: '',
-                    searchPlaceholder: 'Cari fabric...',
+                    searchPlaceholder: 'Cari design...',
                     lengthMenu: '_MENU_ / hal',
                     info: 'Tampil _START_–_END_ dari _TOTAL_',
                     infoEmpty: 'Tidak ada data',
@@ -567,7 +567,7 @@
                     processing: '<span class="spinner-border spinner-border-sm text-primary"></span>',
                 },
                 ajax: {
-                    url: this.BASE + 'production/master/fabrics/datatables',
+                    url: this.BASE + 'production/master/designs/datatables',
                     type: 'GET',
                     data: d => {
                         d.filter_name = self.filters.name;
@@ -577,15 +577,15 @@
                 },
                 columnDefs: [{
                         targets: 0,
-                        width: '50px'
+                        width: '30px'
                     },
                     {
                         targets: 1,
-                        width: '220px'
+                        width: '180px'
                     },
                     {
                         targets: 2,
-                        width: '250px'
+                        width: '220px'
                     },
                     {
                         targets: 3,
@@ -620,8 +620,8 @@
                     {
                         data: null,
                         render: (d, t, r) =>
-                            `<a href="${self.BASE}production/master/fabrics/${r.id}" class="fw-semibold text-decoration-none">${self.e(r.fabric_name)}</a>
-                             <div class="text-muted small font-monospace">${self.e(r.fabric_code)}</div>`
+                            `<a href="${self.BASE}production/master/designs/${r.id}" class="fw-semibold text-decoration-none">${self.e(r.design_name)}</a>
+                             <div class="text-muted small font-monospace">${self.e(r.design_code)}</div>`
                     },
                     {
                         data: 'description',
@@ -654,14 +654,14 @@
                         searchable: false,
                         className: 'text-end no-print',
                         render: (d, t, r) => {
-                            const view = `<a href="${self.BASE}production/master/fabrics/${r.id}" class="btn btn-subtle-info btn-sm" title="Detail">
+                            const view = `<a href="${self.BASE}production/master/designs/${r.id}" class="btn btn-subtle-info btn-sm" title="Detail">
                                 <span class="fas fa-eye"></span>
                             </a>`;
-                            const edit = CAN_EDIT_FABRIC ?
+                            const edit = CAN_EDIT_DESIGN ?
                                 `<button class="btn btn-subtle-primary btn-sm btn-edit" data-id="${r.id}"><span class="fas fa-pencil-alt"></span></button>` :
                                 '';
-                            const del = CAN_DELETE_FABRIC ?
-                                `<button class="btn btn-subtle-danger btn-sm btn-delete" data-id="${r.id}" data-name="${self.e(r.fabric_name)}"><span class="fas fa-trash"></span></button>` :
+                            const del = CAN_DELETE_DESIGN ?
+                                `<button class="btn btn-subtle-danger btn-sm btn-delete" data-id="${r.id}" data-name="${self.e(r.design_name)}"><span class="fas fa-trash"></span></button>` :
                                 '';
                             return `<div class="btn-group btn-group-sm">${view}${edit}${del}</div>`;
                         }
@@ -673,35 +673,35 @@
         openCreate() {
             this.editId = null;
             this.resetModal();
-            document.getElementById('modal-title').textContent = 'Tambah Fabric';
-            document.getElementById('modal-subtitle').textContent = 'Buat data fabric baru';
+            document.getElementById('modal-title').textContent = 'Tambah Design';
+            document.getElementById('modal-subtitle').textContent = 'Buat data design baru';
             document.getElementById('save-text').textContent = 'Simpan';
-            new bootstrap.Modal(document.getElementById('fabricModal')).show();
+            new bootstrap.Modal(document.getElementById('designModal')).show();
         },
 
         async openEdit(id) {
             this.editId = id;
             this.resetModal();
-            document.getElementById('modal-title').textContent = 'Edit Fabric';
-            document.getElementById('modal-subtitle').textContent = 'Perbarui data fabric';
+            document.getElementById('modal-title').textContent = 'Edit Design';
+            document.getElementById('modal-subtitle').textContent = 'Perbarui data design';
             document.getElementById('save-text').textContent = 'Update';
             this.setLoading(true);
-            new bootstrap.Modal(document.getElementById('fabricModal')).show();
+            new bootstrap.Modal(document.getElementById('designModal')).show();
             try {
-                const d = await this.get(this.BASE + `production/master/fabrics/get/${id}`);
+                const d = await this.get(this.BASE + `production/master/designs/get/${id}`);
                 if (d.status === 'success' && d.data) {
-                    document.getElementById('f-name').value = d.data.fabric_name ?? '';
-                    document.getElementById('f-code').value = d.data.fabric_code ?? '';
+                    document.getElementById('f-name').value = d.data.design_name ?? '';
+                    document.getElementById('f-code').value = d.data.design_code ?? '';
                     document.getElementById('f-desc').value = d.data.description ?? '';
                     document.getElementById('f-status').value = d.data.status ?? 'Draft';
                     document.getElementById('char-count').textContent = (d.data.description ?? '').length;
 
-                    if (d.data.fabric_name) this.markValid('f-name');
-                    if (d.data.fabric_code) this.markValid('f-code');
+                    if (d.data.design_name) this.markValid('f-name');
+                    if (d.data.design_code) this.markValid('f-code');
                     if (d.data.status) this.markValid('f-status');
                 } else {
                     this.toast('error', d.message ?? 'Gagal memuat data');
-                    bootstrap.Modal.getInstance(document.getElementById('fabricModal'))?.hide();
+                    bootstrap.Modal.getInstance(document.getElementById('designModal'))?.hide();
                 }
             } catch {
                 this.toast('error', 'Gagal memuat data');
@@ -713,17 +713,17 @@
         async save() {
             this.clearErrors();
             const fd = new FormData();
-            fd.set('fabric_name', document.getElementById('f-name').value.trim());
-            fd.set('fabric_code', document.getElementById('f-code').value.trim().toUpperCase());
+            fd.set('design_name', document.getElementById('f-name').value.trim());
+            fd.set('design_code', document.getElementById('f-code').value.trim().toUpperCase());
             fd.set('description', document.getElementById('f-desc').value.trim());
             fd.set('status', document.getElementById('f-status').value);
             if (this.editId) fd.set('id', this.editId);
 
             this.setLoading(true);
             try {
-                const res = await this.post(this.BASE + 'production/master/fabrics/store', fd);
+                const res = await this.post(this.BASE + 'production/master/designs/store', fd);
                 if (res.status === 'success') {
-                    bootstrap.Modal.getInstance(document.getElementById('fabricModal'))?.hide();
+                    bootstrap.Modal.getInstance(document.getElementById('designModal'))?.hide();
                     this.dt.ajax.reload(null, false);
                     this.loadStats();
                     this.toast('success', res.message);
@@ -755,10 +755,10 @@
         },
 
         clearErrors() {
-            document.querySelectorAll('#fabricModal .is-invalid, #fabricModal .is-valid').forEach(el => {
+            document.querySelectorAll('#designModal .is-invalid, #designModal .is-valid').forEach(el => {
                 el.classList.remove('is-invalid', 'is-valid');
             });
-            document.querySelectorAll('#fabricModal .invalid-feedback').forEach(el => {
+            document.querySelectorAll('#designModal .invalid-feedback').forEach(el => {
                 el.textContent = '';
                 el.style.visibility = '';
             });
@@ -829,8 +829,8 @@
 
         showErrors(errors) {
             const map = {
-                fabric_name: ['f-name', 'err-fabric_name'],
-                fabric_code: ['f-code', 'err-fabric_code'],
+                design_name: ['f-name', 'err-design_name'],
+                design_code: ['f-code', 'err-design_code'],
                 description: ['f-desc', 'err-description'],
                 status: ['f-status', 'err-status'],
             };
@@ -849,7 +849,7 @@
 
         async deleteItem(id, name) {
             const result = await Swal.fire({
-                title: 'Hapus Fabric?',
+                title: 'Hapus Design?',
                 html: `<strong>${name}</strong> akan dipindahkan ke sampah.<br><small class="text-muted">Dapat dipulihkan dari menu Sampah.</small>`,
                 icon: 'warning',
                 showCancelButton: true,
@@ -861,7 +861,7 @@
             });
             if (!result.isConfirmed) return;
             try {
-                const res = await this.post(this.BASE + `production/master/fabrics/delete/${id}`, new FormData());
+                const res = await this.post(this.BASE + `production/master/designs/delete/${id}`, new FormData());
                 if (res.status === 'success') {
                     this.dt.ajax.reload(null, false);
                     this.loadStats();
@@ -918,7 +918,7 @@
                 e.target.value = e.target.value.toUpperCase().replace(/[^A-Z0-9_\-]/g, '');
             });
 
-            document.getElementById('fabricModal')
+            document.getElementById('designModal')
                 ?.addEventListener('hide.bs.modal', () => {
                     if (document.activeElement instanceof HTMLElement) {
                         document.activeElement.blur();
@@ -1020,6 +1020,6 @@
         },
     };
 
-    $(document).ready(() => Fabric.init());
+    $(document).ready(() => Design.init());
 </script>
 <?= $this->endSection() ?>

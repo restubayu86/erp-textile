@@ -47,33 +47,34 @@ $routes->group('production', [
         $routes->post('machines/force-delete/(:num)',  'MachineController::forceDelete/$1');
         $routes->post('machines/empty-trash',          'MachineController::emptyTrash');
 
-        // ── Fabrics ─────────────────────────────────────────────
-        $routes->get('fabrics',                        'FabricController::index');
-        $routes->get('fabrics/trash',                   'FabricController::trash');
+        // ── Designs ─────────────────────────────────────────────
+        $routes->get('designs',                        'DesignController::index');
+        $routes->get('designs/trash',                   'DesignController::trash');
 
-        $routes->get('fabrics/datatables',              'FabricController::datatables');
-        $routes->get('fabrics/trash-datatables',        'FabricController::trashDatatables');
+        $routes->get('designs/datatables',              'DesignController::datatables');
+        $routes->get('designs/trash-datatables',        'DesignController::trashDatatables');
 
-        $routes->get('fabrics/stats',                   'FabricController::stats');
-        $routes->get('fabrics/select2',                 'FabricController::select2');
-        $routes->post('fabrics/check-unique',           'FabricController::checkUnique');
+        $routes->get('designs/stats',                   'DesignController::stats');
+        $routes->get('designs/select2',                 'DesignController::select2');
+        $routes->post('designs/check-unique',           'DesignController::checkUnique');
 
-        $routes->get('fabrics/get/(:num)',              'FabricController::get/$1');
-        $routes->post('fabrics/store',                  'FabricController::store');
-        $routes->post('fabrics/delete/(:num)',          'FabricController::delete/$1');
-        $routes->post('fabrics/restore/(:num)',         'FabricController::restore/$1');
-        $routes->post('fabrics/force-delete/(:num)',    'FabricController::forceDelete/$1');
-        $routes->post('fabrics/empty-trash',            'FabricController::emptyTrash');
+        $routes->get('designs/get/(:num)',              'DesignController::get/$1');
+        $routes->post('designs/store',                  'DesignController::store');
+        $routes->post('designs/delete/(:num)',          'DesignController::delete/$1');
+        $routes->post('designs/restore/(:num)',         'DesignController::restore/$1');
+        $routes->post('designs/force-delete/(:num)',    'DesignController::forceDelete/$1');
+        $routes->post('designs/empty-trash',            'DesignController::emptyTrash');
 
         // Halaman detail — taruh PALING BAWAH supaya tidak menabrak
         // path statis di atas (trash, datatables, stats, dst)
-        $routes->get('fabrics/(:num)',                  'FabricController::show/$1');
+        $routes->get('designs/(:num)',                  'DesignController::show/$1');
 
         // ── Flow Processes ───────────────────────────────────────
         // Tidak ada halaman index/trash sendiri — diakses dari
-        // halaman detail Fabric (production/master/fabrics/{id})
+        // halaman detail Design (production/master/designs/{id})
         $routes->get('flow-processes/datatables',       'FlowProcessController::datatables');
         $routes->get('flow-processes/process-names',    'FlowProcessController::processNames');
+        $routes->get('flow-processes/chemical-codes',   'FlowProcessController::chemicalCodes');
 
         $routes->get('flow-processes/get/(:num)',       'FlowProcessController::get/$1');
         $routes->post('flow-processes/store',           'FlowProcessController::store');

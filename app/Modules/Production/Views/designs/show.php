@@ -162,6 +162,20 @@
     #steps-container.is-empty+#steps-empty {
         display: block;
     }
+
+    /* ── Step row v2 ─────────────────────────────────────────────── */
+    .step-row {
+        transition: box-shadow .15s ease;
+    }
+
+    .step-row:hover {
+        box-shadow: 0 0 0 2px rgba(var(--phoenix-primary-rgb), .15);
+    }
+
+    .step-field-chemical .form-select,
+    .step-field-process .form-select {
+        font-size: .85rem;
+    }
 </style>
 <?= $this->endSection() ?>
 
@@ -181,30 +195,30 @@
                     <?php endforeach; ?>
                 </ol>
             </nav>
-            <h1 class="h3 mb-1 fw-bold"><?= esc((string)$fabric['fabric_name']) ?></h1>
-            <p class="text-body-tertiary mb-0 font-monospace"><?= esc((string)$fabric['fabric_code']) ?></p>
+            <h1 class="h3 mb-1 fw-bold"><?= esc((string)$design['design_name']) ?></h1>
+            <p class="text-body-tertiary mb-0 font-monospace"><?= esc((string)$design['design_code']) ?></p>
         </div>
-        <a href="<?= site_url('production/master/fabrics') ?>" class="btn btn-subtle-secondary btn-sm">
+        <a href="<?= site_url('production/master/designs') ?>" class="btn btn-subtle-secondary btn-sm">
             <span class="fas fa-arrow-left me-1"></span>Kembali
         </a>
     </div>
 
-    <!-- Fabric Info Card -->
+    <!-- Design Info Card -->
     <div class="card mb-4">
         <div class="card-body">
             <div class="row g-3">
                 <div class="col-md-3 col-6">
                     <div class="info-label">Kode</div>
-                    <div class="info-value font-monospace"><?= esc((string)$fabric['fabric_code']) ?></div>
+                    <div class="info-value font-monospace"><?= esc((string)$design['design_code']) ?></div>
                 </div>
                 <div class="col-md-3 col-6">
                     <div class="info-label">Status</div>
-                    <div class="info-value" id="fabric-status-badge">—</div>
+                    <div class="info-value" id="design-status-badge">—</div>
                 </div>
                 <div class="col-md-6">
                     <div class="info-label">Deskripsi</div>
                     <div class="info-value fw-normal">
-                        <?= $fabric['description'] ? esc((string)$fabric['description']) : '<span class="text-muted fst-italic">Tidak ada deskripsi</span>' ?>
+                        <?= $design['description'] ? esc((string)$design['description']) : '<span class="text-muted fst-italic">Tidak ada deskripsi</span>' ?>
                     </div>
                 </div>
             </div>
@@ -233,6 +247,7 @@
                 <tr>
                     <th>No</th>
                     <th>Flow Process</th>
+                    <th>Segment</th>
                     <th>Jumlah Step</th>
                     <th>Status</th>
                     <th>Dibuat</th>
@@ -274,7 +289,7 @@
                             <span class="fas fa-clipboard-list me-1"></span>Informasi Flow Process
                         </p>
                         <div class="row g-3">
-                            <div class="col-md-7">
+                            <div class="col-md-6">
                                 <label class="form-label fs-9 fw-semibold text-uppercase text-muted" for="f-flow-name">
                                     Nama Flow <span class="text-danger">*</span>
                                 </label>
@@ -282,16 +297,18 @@
                                     placeholder="Nama template proses" maxlength="150" autocomplete="off">
                                 <div class="invalid-feedback" id="err-flow_name"></div>
                             </div>
-                            <div class="col-md-5">
-                                <label class="form-label fs-9 fw-semibold text-uppercase text-muted" for="f-flow-code">
-                                    Kode Flow <span class="text-danger">*</span>
+                            <div class="col-md-3">
+                                <label class="form-label fs-9 fw-semibold text-uppercase text-muted" for="f-flow-segment">
+                                    Segment <span class="text-danger">*</span>
                                 </label>
-                                <input type="text" class="form-control form-control-sm font-monospace fw-bold"
-                                    id="f-flow-code" placeholder="Kode flow" maxlength="30" autocomplete="off"
-                                    style="text-transform:uppercase;letter-spacing:.06em">
-                                <div class="invalid-feedback" id="err-flow_code"></div>
+                                <select class="form-select form-select-sm" id="f-flow-segment">
+                                    <option value="Interior">Interior</option>
+                                    <option value="Otomotif">Otomotif</option>
+                                    <option value="Lain-Lain">Lain-Lain</option>
+                                </select>
+                                <div class="invalid-feedback" id="err-segment"></div>
                             </div>
-                            <div class="col-md-4">
+                            <div class="col-md-3">
                                 <label class="form-label fs-9 fw-semibold text-uppercase text-muted" for="f-flow-status">
                                     Status <span class="text-danger">*</span>
                                 </label>
@@ -349,12 +366,37 @@
 
 <!-- Template baris step (di-clone via JS) -->
 <template id="step-row-template">
-    <div class="step-row d-flex align-items-center gap-2">
-        <div class="step-no-badge"></div>
-        <select class="form-select form-select-sm step-process-name" style="flex:1"></select>
-        <button type="button" class="btn btn-subtle-danger btn-sm btn-remove-step" title="Hapus step">
-            <span class="fas fa-trash"></span>
-        </button>
+    <div class="step-row d-flex flex-column gap-2 p-2 border rounded-2 bg-body-secondary">
+        <!-- Baris atas: nomor + toggle + hapus -->
+        <div class="d-flex align-items-center gap-2">
+            <div class="step-no-badge"></div>
+
+            <!-- Radio toggle: Proses Biasa / Chemical Code -->
+            <div class="btn-group btn-group-sm step-type-toggle" role="group">
+                <input type="radio" class="btn-check step-radio-process" name="" autocomplete="off" value="process" checked>
+                <label class="btn btn-outline-secondary step-label-process" style="font-size:.7rem;padding:.25rem .6rem">
+                    <span class="fas fa-cogs me-1"></span>Proses Biasa
+                </label>
+                <input type="radio" class="btn-check step-radio-chemical" name="" autocomplete="off" value="chemical">
+                <label class="btn btn-outline-warning step-label-chemical" style="font-size:.7rem;padding:.25rem .6rem">
+                    <span class="fas fa-flask me-1"></span>Chemical Code
+                </label>
+            </div>
+
+            <button type="button" class="btn btn-subtle-danger btn-sm btn-remove-step ms-auto" title="Hapus step">
+                <span class="fas fa-trash"></span>
+            </button>
+        </div>
+
+        <!-- Field: Process Name (tampil jika tipe = process) -->
+        <div class="step-field-process">
+            <select class="form-select form-select-sm step-process-name"></select>
+        </div>
+
+        <!-- Field: Chemical Code (tampil jika tipe = chemical) -->
+        <div class="step-field-chemical d-none">
+            <select class="form-select form-select-sm step-chemical-code"></select>
+        </div>
     </div>
 </template>
 
@@ -364,26 +406,46 @@
 <script>
     const CAN_EDIT_FLOW = <?= json_encode(canDo('production.flow-processes.edit')) ?>;
     const CAN_DELETE_FLOW = <?= json_encode(canDo('production.flow-processes.delete')) ?>;
-    const FABRIC_ID = <?= (int)$fabric['id'] ?>;
-    const FABRIC_STATUS = <?= json_encode($fabric['status']) ?>;
+    const DESIGN_ID = <?= (int)$design['id'] ?>;
+    const DESIGN_STATUS = <?= json_encode($design['status']) ?>;
 
-    const FabricDetail = {
+    const SEGMENT_BADGE = {
+        'Interior': {
+            bg: 'rgba(var(--phoenix-primary-rgb),.1)',
+            color: 'var(--phoenix-primary)',
+            label: 'Interior'
+        },
+        'Otomotif': {
+            bg: 'rgba(var(--phoenix-success-rgb),.1)',
+            color: 'var(--phoenix-success)',
+            label: 'Otomotif'
+        },
+        'Lain-Lain': {
+            bg: 'rgba(var(--phoenix-secondary-rgb),.1)',
+            color: 'var(--phoenix-secondary)',
+            label: 'Lain-Lain'
+        },
+    };
+
+    const DesignDetail = {
         BASE: '<?= base_url() ?>',
         dt: null,
         editId: null,
         stepCounter: 0,
         processNameOptions: [],
+        chemicalCodeOptions: [],
 
         init() {
-            this.renderFabricStatus();
+            this.renderDesignStatus();
             this.initDatatable();
             this.initEvents();
             this.initFieldEvents();
             this.loadProcessNameOptions();
+            this.loadChemicalCodeOptions();
         },
 
-        renderFabricStatus() {
-            document.getElementById('fabric-status-badge').innerHTML = this.fmtStatus(FABRIC_STATUS);
+        renderDesignStatus() {
+            document.getElementById('design-status-badge').innerHTML = this.fmtStatus(DESIGN_STATUS);
         },
 
         csrfName: () => document.querySelector('meta[name="csrf-name"]')?.content ?? '',
@@ -401,8 +463,8 @@
                 body: fd,
                 headers: {
                     'X-Requested-With': 'XMLHttpRequest',
-                    'X-CSRF-TOKEN': this.csrfToken()
-                }
+                    'X-CSRF-TOKEN': this.csrfToken(),
+                },
             });
             if (r.status === 403) throw new Error('Sesi habis, muat ulang halaman');
             const d = await r.json();
@@ -427,6 +489,19 @@
                 this.processNameOptions = [];
             }
         },
+
+        async loadChemicalCodeOptions() {
+            try {
+                const d = await this.get(this.BASE + 'production/master/flow-processes/chemical-codes');
+                this.chemicalCodeOptions = d.data ?? [];
+            } catch {
+                this.chemicalCodeOptions = [];
+            }
+        },
+
+        // ============================================================
+        // DATATABLE
+        // ============================================================
 
         initDatatable() {
             const self = this;
@@ -461,7 +536,7 @@
                     url: this.BASE + 'production/master/flow-processes/datatables',
                     type: 'GET',
                     data: d => {
-                        d.fabric_id = FABRIC_ID;
+                        d.design_id = DESIGN_ID;
                     },
                     error: () => self.toast('error', 'Gagal memuat data'),
                 },
@@ -471,24 +546,28 @@
                     },
                     {
                         targets: 1,
-                        width: '250px'
+                        width: '220px'
                     },
                     {
                         targets: 2,
-                        width: '120px'
-                    },
+                        width: '110px'
+                    }, // segment
                     {
                         targets: 3,
-                        width: '100px'
+                        width: '110px'
                     },
                     {
                         targets: 4,
-                        width: '130px'
+                        width: '100px'
                     },
                     {
                         targets: 5,
-                        width: '100px'
-                    }
+                        width: '130px'
+                    },
+                    {
+                        targets: 6,
+                        width: '110px'
+                    },
                 ],
                 columns: [{
                         data: 'no',
@@ -496,10 +575,12 @@
                         searchable: false
                     },
                     {
-                        data: null,
-                        render: (d, t, r) =>
-                            `<div class="fw-semibold">${self.e(r.flow_name)}</div>
-                             <div class="text-muted small font-monospace">${self.e(r.flow_code)}</div>`
+                        data: 'flow_name',
+                        render: d => `<div class="fw-semibold">${self.e(d)}</div>`
+                    },
+                    {
+                        data: 'segment',
+                        render: d => self.fmtSegment(d)
                     },
                     {
                         data: 'step_count',
@@ -519,36 +600,57 @@
                         searchable: false,
                         className: 'text-end',
                         render: (d, t, r) => {
-                            const edit = CAN_EDIT_FLOW ?
-                                `<button class="btn btn-subtle-primary btn-sm btn-edit" data-id="${r.id}"><span class="fas fa-pencil-alt"></span></button>` :
-                                '';
-                            const del = CAN_DELETE_FLOW ?
-                                `<button class="btn btn-subtle-danger btn-sm btn-delete" data-id="${r.id}" data-name="${self.e(r.flow_name)}"><span class="fas fa-trash"></span></button>` :
-                                '';
-                            return `<div class="btn-group btn-group-sm">${edit}${del}</div>`;
-                        }
+                            const ik = `<button class="btn btn-subtle-info btn-sm btn-instruksi-kerja" data-id="${r.id}" data-name="${self.e(r.flow_name)}" title="Buat Instruksi Kerja"><span class="fas fa-file-alt"></span></button>`;
+                            const edit = CAN_EDIT_FLOW ? `<button class="btn btn-subtle-primary btn-sm btn-edit" data-id="${r.id}"><span class="fas fa-pencil-alt"></span></button>` : '';
+                            const del = CAN_DELETE_FLOW ? `<button class="btn btn-subtle-danger btn-sm btn-delete" data-id="${r.id}" data-name="${self.e(r.flow_name)}"><span class="fas fa-trash"></span></button>` : '';
+                            return `<div class="btn-group btn-group-sm">${ik}${edit}${del}</div>`;
+                        },
                     },
                 ],
             });
         },
 
-        // ── Steps (dynamic rows) ────────────────────────────────────
-        addStepRow(processName = '') {
-            this.stepCounter++;
-            const tpl = document.getElementById('step-row-template');
-            const clone = tpl.content.cloneNode(true);
-            const row = clone.querySelector('.step-row');
-            row.dataset.rowId = this.stepCounter;
+        // ============================================================
+        // STEPS — dynamic rows
+        // ============================================================
 
-            const select = row.querySelector('.step-process-name');
-            select.id = `step-process-${this.stepCounter}`;
+        addStepRow(stepType = 'process', processName = '', chemicalCode = '') {
+            this.stepCounter++;
+            const n = this.stepCounter;
+            const tpl = document.getElementById('step-row-template');
+            const row = tpl.content.cloneNode(true).querySelector('.step-row');
+            row.dataset.rowId = n;
+
+            const radioName = `step-type-${n}`;
+            const rProcess = row.querySelector('.step-radio-process');
+            const rChemical = row.querySelector('.step-radio-chemical');
+            const lProcess = row.querySelector('.step-label-process');
+            const lChemical = row.querySelector('.step-label-chemical');
+
+            rProcess.name = radioName;
+            rProcess.id = `step-radio-process-${n}`;
+            rChemical.name = radioName;
+            rChemical.id = `step-radio-chemical-${n}`;
+            lProcess.htmlFor = `step-radio-process-${n}`;
+            lChemical.htmlFor = `step-radio-chemical-${n}`;
+
+            const isChemical = stepType === 'chemical';
+            rProcess.checked = !isChemical;
+            rChemical.checked = isChemical;
+            row.querySelector('.step-field-process').classList.toggle('d-none', isChemical);
+            row.querySelector('.step-field-chemical').classList.toggle('d-none', !isChemical);
 
             const container = document.getElementById('steps-container');
             container.appendChild(row);
             container.classList.remove('is-empty');
 
-            // Init select2 tags untuk row ini
-            $(select).select2({
+            const liveRow = container.querySelector(`.step-row[data-row-id="${n}"]`);
+            const selectProcess = liveRow.querySelector('.step-process-name');
+            const selectChemical = liveRow.querySelector('.step-chemical-code');
+            selectProcess.id = `step-process-${n}`;
+            selectChemical.id = `step-chemical-${n}`;
+
+            $(selectProcess).select2({
                 dropdownParent: $('#flowModal'),
                 placeholder: 'Pilih atau ketik nama proses...',
                 tags: true,
@@ -558,20 +660,43 @@
                     text: p
                 })),
             });
-
             if (processName) {
-                if (!$(select).find(`option[value="${CSS.escape(processName)}"]`).length) {
-                    $(select).append(new Option(processName, processName, true, true));
-                }
-                $(select).val(processName).trigger('change');
+                if (!$(selectProcess).find(`option[value="${processName}"]`).length)
+                    $(selectProcess).append(new Option(processName, processName, true, true));
+                $(selectProcess).val(processName).trigger('change');
             }
+
+            $(selectChemical).select2({
+                dropdownParent: $('#flowModal'),
+                placeholder: 'Pilih atau ketik chemical code...',
+                tags: true,
+                width: '100%',
+                data: this.chemicalCodeOptions.map(c => ({
+                    id: c,
+                    text: c
+                })),
+            });
+            if (chemicalCode) {
+                if (!$(selectChemical).find(`option[value="${chemicalCode}"]`).length)
+                    $(selectChemical).append(new Option(chemicalCode, chemicalCode, true, true));
+                $(selectChemical).val(chemicalCode).trigger('change');
+            }
+
+            liveRow.querySelector('.step-radio-process').addEventListener('change', () => {
+                liveRow.querySelector('.step-field-process').classList.remove('d-none');
+                liveRow.querySelector('.step-field-chemical').classList.add('d-none');
+            });
+            liveRow.querySelector('.step-radio-chemical').addEventListener('change', () => {
+                liveRow.querySelector('.step-field-process').classList.add('d-none');
+                liveRow.querySelector('.step-field-chemical').classList.remove('d-none');
+            });
 
             this.renumberSteps();
         },
 
         removeStepRow(row) {
-            const select = row.querySelector('.step-process-name');
-            $(select).select2('destroy');
+            $(row.querySelector('.step-process-name')).select2('destroy');
+            $(row.querySelector('.step-chemical-code')).select2('destroy');
             row.remove();
             this.renumberSteps();
         },
@@ -585,23 +710,44 @@
         },
 
         collectSteps() {
-            const rows = document.querySelectorAll('#steps-container .step-row');
-            return Array.from(rows).map((row, idx) => ({
-                step_no: idx + 1,
-                process_name: $(row.querySelector('.step-process-name')).val() || '',
-            })).filter(s => s.process_name.trim() !== '');
+            const steps = [];
+            document.querySelectorAll('#steps-container .step-row').forEach((row, idx) => {
+                const isChemical = row.querySelector('.step-radio-chemical')?.checked;
+                if (isChemical) {
+                    const code = ($(row.querySelector('.step-chemical-code')).val() || '').trim();
+                    if (!code) return;
+                    steps.push({
+                        step_no: idx + 1,
+                        step_type: 'chemical',
+                        chemical_code: code
+                    });
+                } else {
+                    const name = ($(row.querySelector('.step-process-name')).val() || '').trim();
+                    if (!name) return;
+                    steps.push({
+                        step_no: idx + 1,
+                        step_type: 'process',
+                        process_name: name
+                    });
+                }
+            });
+            return steps;
         },
 
         clearSteps() {
-            document.querySelectorAll('#steps-container .step-row .step-process-name').forEach(el => {
-                $(el).select2('destroy');
+            document.querySelectorAll('#steps-container .step-row').forEach(row => {
+                $(row.querySelector('.step-process-name')).select2('destroy');
+                $(row.querySelector('.step-chemical-code')).select2('destroy');
             });
             document.getElementById('steps-container').innerHTML = '';
             document.getElementById('steps-container').classList.add('is-empty');
             this.stepCounter = 0;
         },
 
-        // ── Modal open/close ─────────────────────────────────────────
+        // ============================================================
+        // MODAL
+        // ============================================================
+
         openCreate() {
             this.editId = null;
             this.resetModal();
@@ -624,17 +770,21 @@
                 const d = await this.get(this.BASE + `production/master/flow-processes/get/${id}`);
                 if (d.status === 'success' && d.data) {
                     document.getElementById('f-flow-name').value = d.data.flow_name ?? '';
-                    document.getElementById('f-flow-code').value = d.data.flow_code ?? '';
+                    document.getElementById('f-flow-segment').value = d.data.segment ?? 'Interior';
                     document.getElementById('f-flow-desc').value = d.data.description ?? '';
                     document.getElementById('f-flow-status').value = d.data.status ?? 'Draft';
 
                     if (d.data.flow_name) this.markValid('f-flow-name');
-                    if (d.data.flow_code) this.markValid('f-flow-code');
+                    if (d.data.segment) this.markValid('f-flow-segment');
                     if (d.data.status) this.markValid('f-flow-status');
 
                     const steps = d.data.steps ?? [];
                     if (steps.length) {
-                        steps.forEach(s => this.addStepRow(s.process_name));
+                        steps.forEach(s => this.addStepRow(
+                            s.step_type ?? 'process',
+                            s.process_name ?? '',
+                            s.chemical_code ?? ''
+                        ));
                     } else {
                         this.addStepRow();
                     }
@@ -661,9 +811,9 @@
             }
 
             const fd = new FormData();
-            fd.set('fabric_id', FABRIC_ID);
+            fd.set('design_id', DESIGN_ID);
             fd.set('flow_name', document.getElementById('f-flow-name').value.trim());
-            fd.set('flow_code', document.getElementById('f-flow-code').value.trim().toUpperCase());
+            fd.set('segment', document.getElementById('f-flow-segment').value); // ← tambahan
             fd.set('description', document.getElementById('f-flow-desc').value.trim());
             fd.set('status', document.getElementById('f-flow-status').value);
             fd.set('steps', JSON.stringify(steps));
@@ -690,14 +840,19 @@
         },
 
         resetModal() {
-            ['f-flow-name', 'f-flow-code', 'f-flow-desc'].forEach(id => {
+            ['f-flow-name', 'f-flow-desc'].forEach(id => {
                 const el = document.getElementById(id);
                 if (el) {
                     el.value = '';
                     el.classList.remove('is-invalid', 'is-valid');
                 }
             });
+            document.getElementById('f-flow-segment').value = 'Interior';
             document.getElementById('f-flow-status').value = 'Draft';
+            // hapus state valid/invalid dari kedua select juga
+            ['f-flow-segment', 'f-flow-status'].forEach(id => {
+                document.getElementById(id)?.classList.remove('is-invalid', 'is-valid');
+            });
             document.getElementById('modal-alert').classList.add('d-none');
             this.clearSteps();
             this.clearErrors();
@@ -715,13 +870,17 @@
             document.getElementById('modal-alert').classList.add('d-none');
         },
 
+        // ============================================================
+        // FIELD VALIDATION
+        // ============================================================
+
         initFieldEvents() {
             [{
                     input: 'f-flow-name',
                     required: true
                 },
                 {
-                    input: 'f-flow-code',
+                    input: 'f-flow-segment',
                     required: true
                 },
                 {
@@ -738,7 +897,6 @@
             }) => {
                 const el = document.getElementById(input);
                 if (!el) return;
-
                 const revalidate = () => {
                     const val = el.value.trim();
                     if (val) {
@@ -751,7 +909,6 @@
                         el.classList.remove('is-valid', 'is-invalid');
                     }
                 };
-
                 el.addEventListener('input', revalidate);
                 el.addEventListener('change', revalidate);
             });
@@ -780,7 +937,7 @@
         showErrors(errors) {
             const map = {
                 flow_name: ['f-flow-name', 'err-flow_name'],
-                flow_code: ['f-flow-code', 'err-flow_code'],
+                segment: ['f-flow-segment', 'err-segment'], // ← tambahan
                 status: ['f-flow-status', 'err-status'],
                 steps: [null, 'err-steps'],
             };
@@ -805,6 +962,10 @@
             btn.disabled = on;
             ico.className = on ? 'spinner-border spinner-border-sm me-1' : 'fas fa-save me-1';
         },
+
+        // ============================================================
+        // DELETE
+        // ============================================================
 
         async deleteItem(id, name) {
             const result = await Swal.fire({
@@ -832,44 +993,45 @@
             }
         },
 
+        // ============================================================
+        // EVENTS
+        // ============================================================
+
         initEvents() {
-            document.getElementById('btn-refresh')?.addEventListener('click', () => {
-                this.dt.ajax.reload(null, false);
-            });
+            document.getElementById('btn-refresh')?.addEventListener('click', () => this.dt.ajax.reload(null, false));
             document.getElementById('btn-create')?.addEventListener('click', () => this.openCreate());
             document.getElementById('btn-save')?.addEventListener('click', () => this.save());
             document.getElementById('btn-add-step')?.addEventListener('click', () => this.addStepRow());
 
-            document.getElementById('f-flow-code')?.addEventListener('input', e => {
-                e.target.value = e.target.value.toUpperCase().replace(/[^A-Z0-9_\-]/g, '');
+            document.getElementById('flowModal')?.addEventListener('hide.bs.modal', () => {
+                if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
             });
 
-            document.getElementById('flowModal')
-                ?.addEventListener('hide.bs.modal', () => {
-                    if (document.activeElement instanceof HTMLElement) {
-                        document.activeElement.blur();
-                    }
-                });
-
-            $(document).on('click', '.btn-remove-step', e => {
-                this.removeStepRow($(e.currentTarget).closest('.step-row')[0]);
-            });
-
+            $(document).on('click', '.btn-remove-step', e => this.removeStepRow($(e.currentTarget).closest('.step-row')[0]));
             $(document).on('click', '.btn-edit', e => this.openEdit($(e.currentTarget).data('id')));
             $(document).on('click', '.btn-delete', e => {
-                const btn = $(e.currentTarget);
-                this.deleteItem(btn.data('id'), btn.data('name'));
+                const b = $(e.currentTarget);
+                this.deleteItem(b.data('id'), b.data('name'));
+            });
+            $(document).on('click', '.btn-instruksi-kerja', e => {
+                const b = $(e.currentTarget);
+                this.openInstruksiKerja(b.data('id'), b.data('name'));
             });
         },
+
+        openInstruksiKerja(id, name) {
+            this.toast('info', `Instruksi Kerja untuk "${name}" belum tersedia`);
+        },
+
+        // ============================================================
+        // HELPERS
+        // ============================================================
 
         e(s) {
             if (!s) return '';
             return String(s)
-                .replace(/&/g, '&amp;')
-                .replace(/</g, '&lt;')
-                .replace(/>/g, '&gt;')
-                .replace(/"/g, '&quot;')
-                .replace(/'/g, '&#39;');
+                .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
         },
 
         fmtDate(d) {
@@ -879,34 +1041,37 @@
                     <small class="text-muted">${dt.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}</small>`;
         },
 
+        fmtSegment(segment) {
+            if (!segment) return '<span class="text-muted fst-italic">—</span>';
+            const s = SEGMENT_BADGE[segment] ?? {
+                bg: 'rgba(var(--phoenix-secondary-rgb),.1)',
+                color: 'var(--phoenix-secondary)',
+                label: segment
+            };
+            return `<span style="display:inline-flex;align-items:center;padding:.2rem .55rem;border-radius:20px;font-size:.72rem;font-weight:600;background:${s.bg};color:${s.color}">${this.e(s.label)}</span>`;
+        },
+
         fmtStatus(status) {
             if (!status) return '<span class="text-muted fst-italic">—</span>';
-
-            let statusClass = '';
-            let statusIcon = '';
-
-            switch (status.toLowerCase()) {
-                case 'active':
-                    statusClass = 'active';
-                    statusIcon = 'fa-check-circle';
-                    break;
-                case 'draft':
-                    statusClass = 'draft';
-                    statusIcon = 'fa-pencil-alt';
-                    break;
-                case 'archived':
-                    statusClass = 'archived';
-                    statusIcon = 'fa-archive';
-                    break;
-                default:
-                    statusClass = 'draft';
-                    statusIcon = 'fa-pencil-alt';
-            }
-
-            return `<span class="badge-status ${statusClass}">
-                <span class="fas ${statusIcon}"></span>
-                ${this.e(status)}
-            </span>`;
+            const map = {
+                active: {
+                    cls: 'active',
+                    icon: 'fa-check-circle'
+                },
+                draft: {
+                    cls: 'draft',
+                    icon: 'fa-pencil-alt'
+                },
+                archived: {
+                    cls: 'archived',
+                    icon: 'fa-archive'
+                },
+            };
+            const {
+                cls,
+                icon
+            } = map[status.toLowerCase()] ?? map.draft;
+            return `<span class="badge-status ${cls}"><span class="fas ${icon}"></span>${this.e(status)}</span>`;
         },
 
         toast(type, msg) {
@@ -917,11 +1082,11 @@
                 title: msg,
                 showConfirmButton: false,
                 timer: type === 'success' ? 2000 : 3500,
-                timerProgressBar: true
+                timerProgressBar: true,
             });
         },
     };
 
-    $(document).ready(() => FabricDetail.init());
+    $(document).ready(() => DesignDetail.init());
 </script>
 <?= $this->endSection() ?>

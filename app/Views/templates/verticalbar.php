@@ -253,9 +253,9 @@ function navActive(string $seg1, string $seg2 = ''): string
                                             </a>
                                         </li>
                                         <li class="nav-item">
-                                            <a class="nav-link" href="<?= base_url('production/master/fabrics') ?>">
+                                            <a class="nav-link" href="<?= base_url('production/master/designs') ?>">
                                                 <div class="d-flex align-items-center">
-                                                    <span class="nav-link-text">Kain / Desain</span>
+                                                    <span class="nav-link-text">Desain</span>
                                                 </div>
                                             </a>
                                         </li>

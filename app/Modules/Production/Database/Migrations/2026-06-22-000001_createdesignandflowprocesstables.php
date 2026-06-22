@@ -4,12 +4,12 @@ namespace App\Database\Migrations;
 
 use CodeIgniter\Database\Migration;
 
-class CreateFabricAndFlowProcessTables extends Migration
+class CreateDesignAndFlowProcessTables extends Migration
 {
     public function up()
     {
         // ============================================================
-        // FABRICS — kerangka dasar
+        // DESIGN_MASTER — kerangka dasar
         // ============================================================
         $this->forge->addField([
             'id' => [
@@ -18,11 +18,11 @@ class CreateFabricAndFlowProcessTables extends Migration
                 'unsigned'       => true,
                 'auto_increment' => true,
             ],
-            'fabric_code' => [
+            'design_code' => [
                 'type'       => 'VARCHAR',
                 'constraint' => 30,
             ],
-            'fabric_name' => [
+            'design_name' => [
                 'type'       => 'VARCHAR',
                 'constraint' => 150,
             ],
@@ -67,11 +67,11 @@ class CreateFabricAndFlowProcessTables extends Migration
             ],
         ]);
         $this->forge->addKey('id', true);
-        $this->forge->addUniqueKey('fabric_code');
-        $this->forge->createTable('fabrics');
+        $this->forge->addUniqueKey('design_code');
+        $this->forge->createTable('design_master');
 
         // ============================================================
-        // FLOW_PROCESSES — header template proses per fabric
+        // FLOW_PROCESSES — header template proses per design
         // ============================================================
         $this->forge->addField([
             'id' => [
@@ -80,19 +80,20 @@ class CreateFabricAndFlowProcessTables extends Migration
                 'unsigned'       => true,
                 'auto_increment' => true,
             ],
-            'fabric_id' => [
+            'design_id' => [
                 'type'       => 'INT',
                 'constraint' => 11,
                 'unsigned'   => true,
-            ],
-            'flow_code' => [
-                'type'       => 'VARCHAR',
-                'constraint' => 30,
             ],
             'flow_name' => [
                 'type'       => 'VARCHAR',
                 'constraint' => 150,
             ],
+            'segment' => [
+                'type'       => 'ENUM',
+                'constraint' => ['Interior', 'Otomotif', 'Lain-Lain'],
+                'null'       => false,
+            ],
             'description' => [
                 'type' => 'TEXT',
                 'null' => true,
@@ -134,13 +135,13 @@ class CreateFabricAndFlowProcessTables extends Migration
             ],
         ]);
         $this->forge->addKey('id', true);
-        $this->forge->addKey('fabric_id');
-        $this->forge->addUniqueKey(['fabric_id', 'flow_code']);
-        $this->forge->addForeignKey('fabric_id', 'fabrics', 'id', 'CASCADE', 'RESTRICT');
+        $this->forge->addKey('design_id');
+        $this->forge->addUniqueKey(['design_id', 'flow_name']);
+        $this->forge->addForeignKey('design_id', 'design_master', 'id', 'CASCADE', 'RESTRICT');
         $this->forge->createTable('flow_processes');
 
         // ============================================================
-        // FLOW_PROCESS_STEPS — detail step (step_no + process_name)
+        // FLOW_PROCESS_STEPS — detail step (step_no + process_name/chemical_code)
         // ============================================================
         $this->forge->addField([
             'id' => [
@@ -163,6 +164,16 @@ class CreateFabricAndFlowProcessTables extends Migration
                 'type'       => 'VARCHAR',
                 'constraint' => 100,
             ],
+            'step_type' => [
+                'type'       => 'ENUM',
+                'constraint' => ['process', 'chemical'],
+                'default'    => 'process',
+            ],
+            'chemical_code' => [
+                'type'       => 'VARCHAR',
+                'constraint' => 50,
+                'null'       => true,
+            ],
             'created_at' => [
                 'type' => 'DATETIME',
                 'null' => true,
@@ -183,6 +194,6 @@ class CreateFabricAndFlowProcessTables extends Migration
     {
         $this->forge->dropTable('flow_process_steps', true);
         $this->forge->dropTable('flow_processes', true);
-        $this->forge->dropTable('fabrics', true);
+        $this->forge->dropTable('design_master', true);
     }
 }

@@ -4,17 +4,17 @@ namespace App\Modules\Production\Models;
 
 use CodeIgniter\Model;
 
-class FabricModel extends Model
+class DesignModel extends Model
 {
-    protected $table            = 'fabrics';
+    protected $table            = 'design_master';
     protected $primaryKey       = 'id';
     protected $useAutoIncrement = true;
     protected $returnType       = 'array';
     protected $useSoftDeletes   = true;
 
     protected $allowedFields = [
-        'fabric_code',
-        'fabric_name',
+        'design_code',
+        'design_name',
         'description',
         'status',
         'created_by',
@@ -37,8 +37,8 @@ class FabricModel extends Model
 
     private function isDuplicateCode(string $code, ?int $excludeId = null): bool
     {
-        $q = $this->db->table('fabrics')
-            ->where('LOWER(fabric_code)', strtolower(trim($code)))
+        $q = $this->db->table('design_master')
+            ->where('LOWER(design_code)', strtolower(trim($code)))
             ->where('deleted_at', null);
 
         if ($excludeId) {
@@ -50,8 +50,8 @@ class FabricModel extends Model
 
     private function isDuplicateName(string $name, ?int $excludeId = null): bool
     {
-        $q = $this->db->table('fabrics')
-            ->where('LOWER(fabric_name)', strtolower(trim($name)))
+        $q = $this->db->table('design_master')
+            ->where('LOWER(design_name)', strtolower(trim($name)))
             ->where('deleted_at', null);
 
         if ($excludeId) {
@@ -67,19 +67,19 @@ class FabricModel extends Model
 
     public function createData(array $data): array
     {
-        if ($this->isDuplicateCode($data['fabric_code'] ?? '')) {
-            return ['status' => 'error', 'errors' => ['fabric_code' => 'Kode fabric sudah digunakan']];
+        if ($this->isDuplicateCode($data['design_code'] ?? '')) {
+            return ['status' => 'error', 'errors' => ['design_code' => 'Kode design sudah digunakan']];
         }
 
-        if ($this->isDuplicateName($data['fabric_name'] ?? '')) {
-            return ['status' => 'error', 'errors' => ['fabric_name' => 'Nama fabric sudah digunakan']];
+        if ($this->isDuplicateName($data['design_name'] ?? '')) {
+            return ['status' => 'error', 'errors' => ['design_name' => 'Nama design sudah digunakan']];
         }
 
         if (!$this->insert($data)) {
             return ['status' => 'error', 'message' => 'Gagal menyimpan data', 'errors' => $this->errors()];
         }
 
-        return ['status' => 'success', 'message' => 'Fabric berhasil ditambahkan', 'id' => $this->getInsertID()];
+        return ['status' => 'success', 'message' => 'Design berhasil ditambahkan', 'id' => $this->getInsertID()];
     }
 
     public function updateData(int $id, array $data): array
@@ -88,19 +88,19 @@ class FabricModel extends Model
             return ['status' => 'error', 'message' => 'Data tidak ditemukan'];
         }
 
-        if ($this->isDuplicateCode($data['fabric_code'] ?? '', $id)) {
-            return ['status' => 'error', 'errors' => ['fabric_code' => 'Kode fabric sudah digunakan']];
+        if ($this->isDuplicateCode($data['design_code'] ?? '', $id)) {
+            return ['status' => 'error', 'errors' => ['design_code' => 'Kode design sudah digunakan']];
         }
 
-        if ($this->isDuplicateName($data['fabric_name'] ?? '', $id)) {
-            return ['status' => 'error', 'errors' => ['fabric_name' => 'Nama fabric sudah digunakan']];
+        if ($this->isDuplicateName($data['design_name'] ?? '', $id)) {
+            return ['status' => 'error', 'errors' => ['design_name' => 'Nama design sudah digunakan']];
         }
 
         if (!$this->update($id, $data)) {
             return ['status' => 'error', 'message' => 'Gagal memperbarui data', 'errors' => $this->errors()];
         }
 
-        return ['status' => 'success', 'message' => 'Fabric berhasil diperbarui'];
+        return ['status' => 'success', 'message' => 'Design berhasil diperbarui'];
     }
 
     public function getData(int $id): array
@@ -127,7 +127,7 @@ class FabricModel extends Model
 
         $this->delete($id);
 
-        return ['status' => 'success', 'message' => 'Fabric dipindahkan ke sampah'];
+        return ['status' => 'success', 'message' => 'Design dipindahkan ke sampah'];
     }
 
     // ============================================================
@@ -148,7 +148,7 @@ class FabricModel extends Model
                 'status'     => 'Draft',
             ]);
 
-        return ['status' => 'success', 'message' => 'Fabric berhasil dipulihkan'];
+        return ['status' => 'success', 'message' => 'Design berhasil dipulihkan'];
     }
 
     public function forceDeleteData(int $id): array
@@ -161,7 +161,7 @@ class FabricModel extends Model
             return ['status' => 'error', 'message' => 'Gagal menghapus permanen'];
         }
 
-        return ['status' => 'success', 'message' => 'Fabric berhasil dihapus permanen'];
+        return ['status' => 'success', 'message' => 'Design berhasil dihapus permanen'];
     }
 
     // ============================================================
@@ -170,7 +170,7 @@ class FabricModel extends Model
 
     public function getStats(): array
     {
-        $rows = $this->db->table('fabrics')
+        $rows = $this->db->table('design_master')
             ->select('status, COUNT(*) as count')
             ->where('deleted_at', null)
             ->groupBy('status')
@@ -187,7 +187,7 @@ class FabricModel extends Model
             }
         }
 
-        $stats['trash'] = $this->db->table('fabrics')
+        $stats['trash'] = $this->db->table('design_master')
             ->where('deleted_at IS NOT NULL')
             ->countAllResults();
 
@@ -197,18 +197,18 @@ class FabricModel extends Model
     public function getAllActive(): array
     {
         return $this->where('status', 'Active')
-            ->orderBy('fabric_name', 'ASC')
+            ->orderBy('design_name', 'ASC')
             ->findAll();
     }
 
     /**
-     * Cek apakah fabric sedang dipakai di flow_processes
+     * Cek apakah design sedang dipakai di flow_processes
      * (untuk validasi sebelum delete)
      */
     public function isUsedByFlowProcesses(int $id): int
     {
         return $this->db->table('flow_processes')
-            ->where('fabric_id', $id)
+            ->where('design_id', $id)
             ->where('deleted_at', null)
             ->countAllResults();
     }

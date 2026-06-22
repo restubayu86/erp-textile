@@ -154,14 +154,14 @@
     <div class="alert alert-subtle-warning d-flex align-items-start gap-2 py-2 mb-3">
         <span class="fas fa-circle-info mt-1"></span>
         <span class="small">
-            Fabric di sampah <strong>tidak aktif</strong>.
+            Design di sampah <strong>tidak aktif</strong>.
             Pulihkan untuk menggunakannya kembali atau hapus permanen untuk membersihkan data.
         </span>
     </div>
 
     <!-- Toolbar -->
     <div class="d-flex justify-content-between align-items-center mb-3 gap-2 flex-wrap">
-        <a href="<?= site_url('production/master/fabrics') ?>" class="btn btn-subtle-secondary btn-sm">
+        <a href="<?= site_url('production/master/designs') ?>" class="btn btn-subtle-secondary btn-sm">
             <span class="fas fa-arrow-left me-1"></span>Kembali
         </a>
         <div class="d-flex gap-2">
@@ -180,7 +180,7 @@
             <thead>
                 <tr>
                     <th>No</th>
-                    <th>Fabric</th>
+                    <th>Design</th>
                     <th>Deskripsi</th>
                     <th>Status</th>
                     <th>Dihapus</th>
@@ -196,7 +196,7 @@
 
 <?= $this->section('scripts') ?>
 <script>
-    const FabricTrash = {
+    const DesignTrash = {
         BASE: '<?= base_url() ?>',
         dt: null,
 
@@ -246,7 +246,7 @@
                 dom: '<"top"f>rt<"bottom"lpi>',
                 language: {
                     search: '',
-                    searchPlaceholder: 'Cari fabric...',
+                    searchPlaceholder: 'Cari design...',
                     lengthMenu: '_MENU_ / hal',
                     info: 'Tampil _START_–_END_ dari _TOTAL_',
                     infoEmpty: 'Tidak ada data',
@@ -258,7 +258,7 @@
                     processing: '<span class="spinner-border spinner-border-sm text-primary"></span>',
                 },
                 ajax: {
-                    url: this.BASE + 'production/master/fabrics/trash-datatables',
+                    url: this.BASE + 'production/master/designs/trash-datatables',
                     type: 'GET',
                     error: () => self.toast('error', 'Gagal memuat data'),
                 },
@@ -299,8 +299,8 @@
                     {
                         data: null,
                         render: (d, t, r) =>
-                            `<div class="fw-semibold">${self.e(r.fabric_name)}</div>
-                             <div class="text-muted small font-monospace">${self.e(r.fabric_code)}</div>`
+                            `<div class="fw-semibold">${self.e(r.design_name)}</div>
+                             <div class="text-muted small font-monospace">${self.e(r.design_code)}</div>`
                     },
                     {
                         data: 'description',
@@ -331,10 +331,10 @@
                         className: 'text-end',
                         render: (d, t, r) => `
                             <div class="btn-group btn-group-sm">
-                                <button class="btn btn-subtle-success btn-restore" data-id="${r.id}" data-name="${self.e(r.fabric_name)}" title="Pulihkan">
+                                <button class="btn btn-subtle-success btn-restore" data-id="${r.id}" data-name="${self.e(r.design_name)}" title="Pulihkan">
                                     <span class="fas fa-rotate-left"></span>
                                 </button>
-                                <button class="btn btn-subtle-danger btn-force-delete" data-id="${r.id}" data-name="${self.e(r.fabric_name)}" title="Hapus Permanen">
+                                <button class="btn btn-subtle-danger btn-force-delete" data-id="${r.id}" data-name="${self.e(r.design_name)}" title="Hapus Permanen">
                                     <span class="fas fa-trash-alt"></span>
                                 </button>
                             </div>`
@@ -393,7 +393,7 @@
 
         async restore(id, name) {
             const r = await Swal.fire({
-                title: 'Pulihkan Fabric?',
+                title: 'Pulihkan Design?',
                 html: `<strong>"${name}"</strong> akan dipulihkan dengan status <strong>Draft</strong>.`,
                 icon: 'question',
                 showCancelButton: true,
@@ -405,7 +405,7 @@
             });
             if (!r.isConfirmed) return;
             try {
-                const res = await this.post(this.BASE + `production/master/fabrics/restore/${id}`, new FormData());
+                const res = await this.post(this.BASE + `production/master/designs/restore/${id}`, new FormData());
                 if (res.status === 'success') {
                     this.dt.ajax.reload(null, false);
                     this.toast('success', res.message);
@@ -439,7 +439,7 @@
             });
             if (!r.isConfirmed) return;
             try {
-                const res = await this.post(this.BASE + `production/master/fabrics/force-delete/${id}`, new FormData());
+                const res = await this.post(this.BASE + `production/master/designs/force-delete/${id}`, new FormData());
                 if (res.status === 'success') {
                     this.dt.ajax.reload(null, false);
                     this.toast('success', res.message);
@@ -457,7 +457,7 @@
             }
             const r = await Swal.fire({
                 title: 'Kosongkan Semua Sampah?',
-                html: `${count} fabric akan dihapus <strong>permanen</strong>.<br><span class="text-danger small">Tidak bisa dibatalkan.</span>`,
+                html: `${count} design akan dihapus <strong>permanen</strong>.<br><span class="text-danger small">Tidak bisa dibatalkan.</span>`,
                 icon: 'error',
                 showCancelButton: true,
                 reverseButtons: true,
@@ -478,7 +478,7 @@
             });
             if (!r.isConfirmed) return;
             try {
-                const res = await this.post(this.BASE + 'production/master/fabrics/empty-trash', new FormData());
+                const res = await this.post(this.BASE + 'production/master/designs/empty-trash', new FormData());
                 if (res.status === 'success') {
                     this.dt.ajax.reload(null, false);
                     this.toast('success', res.message);
@@ -529,6 +529,6 @@
         },
     };
 
-    $(document).ready(() => FabricTrash.init());
+    $(document).ready(() => DesignTrash.init());
 </script>
 <?= $this->endSection() ?>
