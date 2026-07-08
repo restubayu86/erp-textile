@@ -4,17 +4,19 @@ namespace App\Modules\Warehouse\Models;
 
 use CodeIgniter\Model;
 
-class ChemicalCategoryModel extends Model
+class WarehouseModel extends Model
 {
-    protected $table            = 'chemical_categories';
+    protected $table            = 'warehouses';
     protected $primaryKey       = 'id';
     protected $useAutoIncrement = true;
     protected $returnType       = 'array';
     protected $useSoftDeletes   = true;
 
     protected $allowedFields = [
-        'category_code',
-        'category_name',
+        'warehouse_code',
+        'warehouse_name',
+        'department_id',
+        'location',
         'description',
         'status',
         'created_by',
@@ -37,8 +39,8 @@ class ChemicalCategoryModel extends Model
 
     private function isDuplicateCode(string $code, ?int $excludeId = null): bool
     {
-        $q = $this->db->table('chemical_categories')
-            ->where('LOWER(category_code)', strtolower(trim($code)))
+        $q = $this->db->table('warehouses')
+            ->where('LOWER(warehouse_code)', strtolower(trim($code)))
             ->where('deleted_at', null);
         if ($excludeId) $q->where('id !=', $excludeId);
         return $q->countAllResults() > 0;
@@ -46,8 +48,8 @@ class ChemicalCategoryModel extends Model
 
     private function isDuplicateName(string $name, ?int $excludeId = null): bool
     {
-        $q = $this->db->table('chemical_categories')
-            ->where('LOWER(category_name)', strtolower(trim($name)))
+        $q = $this->db->table('warehouses')
+            ->where('LOWER(warehouse_name)', strtolower(trim($name)))
             ->where('deleted_at', null);
         if ($excludeId) $q->where('id !=', $excludeId);
         return $q->countAllResults() > 0;
@@ -59,36 +61,44 @@ class ChemicalCategoryModel extends Model
 
     public function createData(array $data): array
     {
-        if ($this->isDuplicateCode($data['category_code'] ?? '')) {
-            return ['status' => 'error', 'errors' => ['category_code' => 'Kode kategori sudah digunakan']];
+        if ($this->isDuplicateCode($data['warehouse_code'] ?? '')) {
+            return ['status' => 'error', 'errors' => ['warehouse_code' => 'Kode gudang sudah digunakan']];
         }
-        if ($this->isDuplicateName($data['category_name'] ?? '')) {
-            return ['status' => 'error', 'errors' => ['category_name' => 'Nama kategori sudah digunakan']];
+        if ($this->isDuplicateName($data['warehouse_name'] ?? '')) {
+            return ['status' => 'error', 'errors' => ['warehouse_name' => 'Nama gudang sudah digunakan']];
         }
         if (!$this->insert($data)) {
             return ['status' => 'error', 'message' => 'Gagal menyimpan data', 'errors' => $this->errors()];
         }
-        return ['status' => 'success', 'message' => 'Kategori berhasil ditambahkan', 'id' => $this->getInsertID()];
+        return ['status' => 'success', 'message' => 'Gudang berhasil ditambahkan', 'id' => $this->getInsertID()];
     }
 
     public function updateData(int $id, array $data): array
     {
-        if (!$this->find($id)) return ['status' => 'error', 'message' => 'Data tidak ditemukan'];
-        if ($this->isDuplicateCode($data['category_code'] ?? '', $id)) {
-            return ['status' => 'error', 'errors' => ['category_code' => 'Kode kategori sudah digunakan']];
+        if (!$this->find($id)) {
+            return ['status' => 'error', 'message' => 'Data tidak ditemukan'];
         }
-        if ($this->isDuplicateName($data['category_name'] ?? '', $id)) {
-            return ['status' => 'error', 'errors' => ['category_name' => 'Nama kategori sudah digunakan']];
+        if ($this->isDuplicateCode($data['warehouse_code'] ?? '', $id)) {
+            return ['status' => 'error', 'errors' => ['warehouse_code' => 'Kode gudang sudah digunakan']];
+        }
+        if ($this->isDuplicateName($data['warehouse_name'] ?? '', $id)) {
+            return ['status' => 'error', 'errors' => ['warehouse_name' => 'Nama gudang sudah digunakan']];
         }
         if (!$this->update($id, $data)) {
             return ['status' => 'error', 'message' => 'Gagal memperbarui data', 'errors' => $this->errors()];
         }
-        return ['status' => 'success', 'message' => 'Kategori berhasil diperbarui'];
+        return ['status' => 'success', 'message' => 'Gudang berhasil diperbarui'];
     }
 
     public function getData(int $id): array
     {
-        $data = $this->find($id);
+        $data = $this->db->table('warehouses w')
+            ->select('w.*, d.department')
+            ->join('departments d', 'd.id = w.department_id', 'left')
+            ->where('w.id', $id)
+            ->where('w.deleted_at', null)
+            ->get()->getRowArray();
+
         if (!$data) return ['status' => 'error', 'message' => 'Data tidak ditemukan'];
         return ['status' => 'success', 'data' => $data];
     }
@@ -96,46 +106,32 @@ class ChemicalCategoryModel extends Model
     public function deleteData(int $id, int $userId): array
     {
         if (!$this->find($id)) return ['status' => 'error', 'message' => 'Data tidak ditemukan'];
-
-        $chemCount = $this->isUsedByChemicals($id);
-        if ($chemCount > 0) {
-            return ['status' => 'error', 'message' => "Kategori tidak dapat dihapus karena digunakan oleh {$chemCount} bahan kimia"];
-        }
-
         $this->update($id, ['status' => 'Archived', 'deleted_by' => $userId]);
         $this->delete($id);
-        return ['status' => 'success', 'message' => 'Kategori dipindahkan ke sampah'];
+        return ['status' => 'success', 'message' => 'Gudang dipindahkan ke sampah'];
     }
 
     public function restoreData(int $id): array
     {
         if (!$this->onlyDeleted()->find($id)) return ['status' => 'error', 'message' => 'Data tidak ditemukan di sampah'];
         $this->db->table($this->table)->where('id', $id)->update(['deleted_at' => null, 'deleted_by' => null, 'status' => 'Draft']);
-        return ['status' => 'success', 'message' => 'Kategori berhasil dipulihkan'];
+        return ['status' => 'success', 'message' => 'Gudang berhasil dipulihkan'];
     }
 
     public function forceDeleteData(int $id): array
     {
         if (!$this->onlyDeleted()->find($id)) return ['status' => 'error', 'message' => 'Data tidak ditemukan di sampah'];
         if (!$this->delete($id, true)) return ['status' => 'error', 'message' => 'Gagal menghapus permanen'];
-        return ['status' => 'success', 'message' => 'Kategori berhasil dihapus permanen'];
+        return ['status' => 'success', 'message' => 'Gudang berhasil dihapus permanen'];
     }
 
     // ============================================================
     // HELPERS
     // ============================================================
 
-    public function isUsedByChemicals(int $id): int
-    {
-        return $this->db->table('chemicals')
-            ->where('category_id', $id)
-            ->where('deleted_at', null)
-            ->countAllResults();
-    }
-
     public function getStats(): array
     {
-        $rows = $this->db->table('chemical_categories')
+        $rows = $this->db->table('warehouses')
             ->select('status, COUNT(*) as count')
             ->where('deleted_at', null)
             ->groupBy('status')
@@ -147,7 +143,7 @@ class ChemicalCategoryModel extends Model
             $key = strtolower($row['status']);
             if (isset($stats[$key])) $stats[$key] = (int) $row['count'];
         }
-        $stats['trash'] = $this->db->table('chemical_categories')->where('deleted_at IS NOT NULL')->countAllResults();
+        $stats['trash'] = $this->db->table('warehouses')->where('deleted_at IS NOT NULL')->countAllResults();
         return $stats;
     }
 }
