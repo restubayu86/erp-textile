@@ -76,9 +76,10 @@ $routes->group('warehouse', [
     $routes->post('master/chemicals/(:num)/force-delete', 'ChemicalController::forceDelete/$1');
     $routes->post('master/chemicals/empty-trash',         'ChemicalController::emptyTrash');
 
-    // Varian bahan kimia
+    // Varian bahan kimia (CRUD lewat modal per baris)
     $routes->get('master/chemicals/(:num)/variants',                  'ChemicalController::getVariants/$1');
     $routes->post('master/chemicals/(:num)/variants/store',           'ChemicalController::storeVariant/$1');
+    $routes->post('master/chemicals/(:num)/variants/(:num)/update',   'ChemicalController::updateVariant/$1/$2');
     $routes->post('master/chemicals/variants/(:num)/delete',          'ChemicalController::deleteVariant/$1');
     $routes->post('master/chemicals/(:num)/variants/(:num)/default',  'ChemicalController::setDefaultVariant/$1/$2');
 });
