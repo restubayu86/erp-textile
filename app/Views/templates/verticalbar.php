@@ -495,9 +495,9 @@ function navActive(string $seg1, string $seg2 = ''): string
                                             </a>
                                         </li>
                                         <li class="nav-item">
-                                            <a class="nav-link" href="<?= base_url('warehouse/master/units') ?>">
+                                            <a class="nav-link" href="<?= base_url('warehouse/master/periods') ?>">
                                                 <div class="d-flex align-items-center">
-                                                    <span class="nav-link-text">Satuan</span>
+                                                    <span class="nav-link-text">Periode</span>
                                                 </div>
                                             </a>
                                         </li>

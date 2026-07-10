@@ -19,19 +19,13 @@
         white-space: nowrap;
     }
 
-    .badge-status.active {
+    .badge-status.open {
         background-color: rgba(var(--phoenix-success-rgb), .12);
         color: var(--phoenix-success);
         border: 1px solid rgba(var(--phoenix-success-rgb), .25);
     }
 
-    .badge-status.draft {
-        background-color: rgba(var(--phoenix-warning-rgb), .12);
-        color: var(--phoenix-warning);
-        border: 1px solid rgba(var(--phoenix-warning-rgb), .25);
-    }
-
-    .badge-status.archived {
+    .badge-status.closed {
         background-color: rgba(var(--phoenix-secondary-rgb), .12);
         color: var(--phoenix-secondary);
         border: 1px solid rgba(var(--phoenix-secondary-rgb), .25);
@@ -144,14 +138,14 @@
 
     <!-- Toolbar -->
     <div class="d-flex justify-content-between align-items-center mb-3 gap-2 flex-wrap">
-        <a href="<?= site_url('warehouse/master/chemical-categories') ?>" class="btn btn-subtle-secondary btn-sm">
+        <a href="<?= site_url('warehouse/master/periods') ?>" class="btn btn-subtle-secondary btn-sm">
             <span class="fas fa-arrow-left me-1"></span>Kembali ke Daftar
         </a>
         <div class="d-flex gap-2">
             <button class="btn btn-subtle-secondary btn-sm" id="btn-refresh" type="button">
                 <span class="fas fa-sync-alt me-1"></span>Refresh
             </button>
-            <?php if (canDo('warehouse.chemical_categories.delete')): ?>
+            <?php if (canDo('warehouse.periods.delete')): ?>
                 <button class="btn btn-danger btn-sm" id="btn-empty-trash" type="button">
                     <span class="fas fa-fire me-1"></span>Kosongkan Sampah
                 </button>
@@ -161,7 +155,7 @@
 
     <div class="alert alert-subtle-warning py-2 px-3 fs-9 mb-3">
         <span class="fas fa-info-circle me-1"></span>
-        Data di sini akan tetap tersimpan sampai dipulihkan atau dihapus permanen. Kategori yang masih dipakai bahan kimia tidak bisa dihapus permanen.
+        Data di sini akan tetap tersimpan sampai dipulihkan atau dihapus permanen.
     </div>
 
     <!-- Table -->
@@ -170,7 +164,7 @@
             <thead>
                 <tr>
                     <th>No</th>
-                    <th>Kategori</th>
+                    <th>Periode</th>
                     <th>Status</th>
                     <th>Dihapus pada</th>
                     <th>Oleh</th>
@@ -185,9 +179,9 @@
 
 <?= $this->section('scripts') ?>
 <script>
-    const CAN_DELETE_CATEGORY = <?= json_encode(canDo('warehouse.chemical_categories.delete')) ?>;
+    const CAN_DELETE_PERIOD = <?= json_encode(canDo('warehouse.periods.delete')) ?>;
 
-    const CategoryTrash = {
+    const PeriodTrash = {
         BASE: '<?= base_url() ?>',
         dt: null,
 
@@ -238,7 +232,7 @@
                 dom: '<"top"f>rt<"bottom"lpi>',
                 language: {
                     search: '',
-                    searchPlaceholder: 'Cari kategori...',
+                    searchPlaceholder: 'Cari periode...',
                     lengthMenu: '_MENU_ / hal',
                     info: 'Tampil _START_–_END_ dari _TOTAL_',
                     infoEmpty: 'Tidak ada data',
@@ -250,7 +244,7 @@
                     processing: '<span class="spinner-border spinner-border-sm text-primary"></span>',
                 },
                 ajax: {
-                    url: this.BASE + 'warehouse/master/chemical-categories/trash-datatables',
+                    url: this.BASE + 'warehouse/master/periods/trash-datatables',
                     type: 'GET',
                     error: () => self.toast('error', 'Gagal memuat data'),
                 },
@@ -260,7 +254,7 @@
                     },
                     {
                         targets: 1,
-                        width: '220px'
+                        width: '200px'
                     },
                     {
                         targets: 2,
@@ -287,8 +281,8 @@
                     {
                         data: null,
                         render: (d, t, r) =>
-                            `<span class="fw-semibold">${self.e(r.category_name)}</span>
-                             <div class="text-muted small font-monospace">${self.e(r.category_code)}</div>`
+                            `<span class="fw-semibold">${self.e(r.period_name)}</span>
+                             <div class="text-muted small font-monospace">${self.e(r.period_code)}</div>`
                     },
                     {
                         data: 'status',
@@ -308,12 +302,12 @@
                         searchable: false,
                         className: 'text-end',
                         render: (d, t, r) => {
-                            const restore = CAN_DELETE_CATEGORY ?
-                                `<button class="btn btn-subtle-success btn-sm btn-restore" data-id="${r.id}" data-name="${self.e(r.category_name)}" title="Pulihkan">
+                            const restore = CAN_DELETE_PERIOD ?
+                                `<button class="btn btn-subtle-success btn-sm btn-restore" data-id="${r.id}" data-name="${self.e(r.period_name)}" title="Pulihkan">
                                     <span class="fas fa-trash-restore"></span>
                                 </button>` : '';
-                            const forceDel = CAN_DELETE_CATEGORY ?
-                                `<button class="btn btn-subtle-danger btn-sm btn-force-delete" data-id="${r.id}" data-name="${self.e(r.category_name)}" title="Hapus Permanen">
+                            const forceDel = CAN_DELETE_PERIOD ?
+                                `<button class="btn btn-subtle-danger btn-sm btn-force-delete" data-id="${r.id}" data-name="${self.e(r.period_name)}" title="Hapus Permanen">
                                     <span class="fas fa-trash"></span>
                                 </button>` : '';
                             return `<div class="btn-group btn-group-sm">${restore}${forceDel}</div>`;
@@ -325,8 +319,8 @@
 
         async restoreItem(id, name) {
             const result = await Swal.fire({
-                title: 'Pulihkan Kategori?',
-                html: `<strong>${name}</strong> akan dikembalikan ke daftar aktif dengan status <em>Draft</em>.`,
+                title: 'Pulihkan Periode?',
+                html: `<strong>${name}</strong> akan dikembalikan ke daftar aktif.`,
                 icon: 'question',
                 showCancelButton: true,
                 reverseButtons: true,
@@ -337,7 +331,7 @@
             });
             if (!result.isConfirmed) return;
             try {
-                const res = await this.post(this.BASE + `warehouse/master/chemical-categories/${id}/restore`, new FormData());
+                const res = await this.post(this.BASE + `warehouse/master/periods/${id}/restore`, new FormData());
                 if (res.status === 'success') {
                     this.dt.ajax.reload(null, false);
                     this.toast('success', res.message);
@@ -352,7 +346,7 @@
         async forceDeleteItem(id, name) {
             const result = await Swal.fire({
                 title: 'Hapus Permanen?',
-                html: `<strong>${name}</strong> akan dihapus permanen dan <u>tidak bisa dipulihkan lagi</u>.<br><small class="text-muted">Pastikan tidak ada bahan kimia yang menggunakan kategori ini.</small>`,
+                html: `<strong>${name}</strong> akan dihapus permanen dan <u>tidak bisa dipulihkan lagi</u>.`,
                 icon: 'error',
                 showCancelButton: true,
                 reverseButtons: true,
@@ -362,9 +356,8 @@
                 cancelButtonText: 'Batal',
             });
             if (!result.isConfirmed) return;
-
             try {
-                const res = await this.post(this.BASE + `warehouse/master/chemical-categories/${id}/force-delete`, new FormData());
+                const res = await this.post(this.BASE + `warehouse/master/periods/${id}/force-delete`, new FormData());
                 if (res.status === 'success') {
                     this.dt.ajax.reload(null, false);
                     this.toast('success', res.message);
@@ -379,7 +372,7 @@
         async emptyTrash() {
             const result = await Swal.fire({
                 title: 'Kosongkan Sampah?',
-                html: `Semua kategori di sampah akan dihapus permanen dan <u>tidak bisa dipulihkan lagi</u>.<br><small class="text-muted">Kategori yang masih dipakai bahan kimia akan tetap tersisa di sampah.</small>`,
+                html: `Semua periode di sampah akan dihapus permanen dan <u>tidak bisa dipulihkan lagi</u>.`,
                 icon: 'error',
                 showCancelButton: true,
                 reverseButtons: true,
@@ -390,7 +383,7 @@
             });
             if (!result.isConfirmed) return;
             try {
-                const res = await this.post(this.BASE + 'warehouse/master/chemical-categories/empty-trash', new FormData());
+                const res = await this.post(this.BASE + 'warehouse/master/periods/empty-trash', new FormData());
                 if (res.status === 'success') {
                     this.dt.ajax.reload(null, false);
                     this.toast('success', res.message);
@@ -442,21 +435,17 @@
             let statusIcon = '';
 
             switch (status.toLowerCase()) {
-                case 'active':
-                    statusClass = 'active';
-                    statusIcon = 'fa-check-circle';
+                case 'open':
+                    statusClass = 'open';
+                    statusIcon = 'fa-lock-open';
                     break;
-                case 'draft':
-                    statusClass = 'draft';
-                    statusIcon = 'fa-pencil-alt';
-                    break;
-                case 'archived':
-                    statusClass = 'archived';
-                    statusIcon = 'fa-archive';
+                case 'closed':
+                    statusClass = 'closed';
+                    statusIcon = 'fa-lock';
                     break;
                 default:
-                    statusClass = 'draft';
-                    statusIcon = 'fa-pencil-alt';
+                    statusClass = 'open';
+                    statusIcon = 'fa-lock-open';
             }
 
             return `<span class="badge-status ${statusClass}">
@@ -495,6 +484,6 @@
         },
     };
 
-    $(document).ready(() => CategoryTrash.init());
+    $(document).ready(() => PeriodTrash.init());
 </script>
 <?= $this->endSection() ?>

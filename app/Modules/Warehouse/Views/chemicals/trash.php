@@ -296,9 +296,17 @@
                              <div class="text-muted small font-monospace">${self.e(r.chemical_code)}</div>`
                     },
                     {
-                        data: 'category_name',
-                        render: d => d ?
-                            `<span class="badge badge-phoenix badge-phoenix-secondary fs-10">${self.e(d)}</span>` : '<span class="text-muted fst-italic">—</span>'
+                        // FIX: field dari controller bernama 'category_names' (jamak, hasil
+                        // GROUP_CONCAT karena satu bahan kimia bisa punya banyak kategori),
+                        // sebelumnya kolom ini mengacu ke 'category_name' (tunggal) yang tidak
+                        // pernah ada di response sehingga selalu tampil kosong.
+                        data: 'category_names',
+                        render: d => {
+                            if (!d) return '<span class="text-muted fst-italic">—</span>';
+                            return d.split(', ').map(c =>
+                                `<span class="badge badge-phoenix badge-phoenix-secondary fs-10 me-1 mb-1">${self.e(c)}</span>`
+                            ).join('');
+                        }
                     },
                     {
                         data: 'status',

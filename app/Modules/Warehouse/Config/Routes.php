@@ -77,9 +77,27 @@ $routes->group('warehouse', [
     $routes->post('master/chemicals/empty-trash',         'ChemicalController::emptyTrash');
 
     // Varian bahan kimia (CRUD lewat modal per baris)
+    $routes->get('master/chemicals/variants/next-code',                'ChemicalController::nextCode');
     $routes->get('master/chemicals/(:num)/variants',                  'ChemicalController::getVariants/$1');
     $routes->post('master/chemicals/(:num)/variants/store',           'ChemicalController::storeVariant/$1');
     $routes->post('master/chemicals/(:num)/variants/(:num)/update',   'ChemicalController::updateVariant/$1/$2');
     $routes->post('master/chemicals/variants/(:num)/delete',          'ChemicalController::deleteVariant/$1');
     $routes->post('master/chemicals/(:num)/variants/(:num)/default',  'ChemicalController::setDefaultVariant/$1/$2');
+
+    $routes->get('master/periods',                    'PeriodController::index');
+    $routes->get('master/periods/trash',               'PeriodController::trash');
+    $routes->get('master/periods/datatables',          'PeriodController::datatables');
+    $routes->get('master/periods/trash-datatables',    'PeriodController::trashDatatables');
+    $routes->get('master/periods/select2',             'PeriodController::select2');
+    $routes->get('master/periods/stats',                'PeriodController::stats');
+    $routes->get('master/periods/(:num)',               'PeriodController::get/$1');
+    $routes->post('master/periods/store',               'PeriodController::store');
+    $routes->post('master/periods/(:num)/delete',       'PeriodController::delete/$1');
+    $routes->post('master/periods/(:num)/restore',      'PeriodController::restore/$1');
+    $routes->post('master/periods/(:num)/force-delete', 'PeriodController::forceDelete/$1');
+    $routes->post('master/periods/empty-trash',         'PeriodController::emptyTrash');
+
+    // Aksi bisnis khusus periode
+    $routes->post('master/periods/(:num)/set-current', 'PeriodController::setCurrent/$1');
+    $routes->post('master/periods/(:num)/close',        'PeriodController::closePeriod/$1');
 });

@@ -72,19 +72,21 @@ class ChemicalController extends BaseController
                 'c.created_at',
                 'c.updated_at',
                 'cu.username as created_by_name',
+                'cu_emp.nickname as created_by_employee',
                 'uu.username as updated_by_name',
-                // Gunakan subquery untuk menghitung variant
+                'uu_emp.nickname as updated_by_employee',
                 '(SELECT COUNT(*) FROM chemical_variants cv WHERE cv.chemical_id = c.id AND cv.status = "Active") as variant_count',
                 'GROUP_CONCAT(DISTINCT cc.category_name ORDER BY cc.category_name SEPARATOR ", ") as category_names',
             ])
             ->join('users cu', 'cu.id = c.created_by', 'left')
+            ->join('employees cu_emp', 'cu_emp.id = cu.employee_id', 'left')
             ->join('users uu', 'uu.id = c.updated_by', 'left')
+            ->join('employees uu_emp', 'uu_emp.id = uu.employee_id', 'left')
             ->join('chemical_category_map m', 'm.chemical_id = c.id', 'left')
             ->join('chemical_categories cc', 'cc.id = m.category_id', 'left')
             ->where('c.deleted_at', null)
             ->groupBy('c.id');
 
-        // Filter dengan prepared statement untuk keamanan
         if ($name = trim($this->request->getGet('filter_name') ?? '')) {
             $builder->groupStart()
                 ->like('c.chemical_name', $name)
@@ -92,7 +94,6 @@ class ChemicalController extends BaseController
                 ->groupEnd();
         }
 
-        // Cast ke integer untuk keamanan
         if ($category = $this->request->getGet('filter_category')) {
             $builder->where('m.category_id', (int) $category);
         }
@@ -122,9 +123,11 @@ class ChemicalController extends BaseController
                 'c.status',
                 'c.deleted_at',
                 'du.username as deleted_by_name',
+                'du_emp.nickname as deleted_by_employee',
                 'GROUP_CONCAT(DISTINCT cc.category_name ORDER BY cc.category_name SEPARATOR ", ") as category_names',
             ])
             ->join('users du', 'du.id = c.deleted_by', 'left')
+            ->join('employees du_emp', 'du_emp.id = du.employee_id', 'left')
             ->join('chemical_category_map m', 'm.chemical_id = c.id', 'left')
             ->join('chemical_categories cc', 'cc.id = m.category_id', 'left')
             ->where('c.deleted_at IS NOT NULL')
@@ -135,7 +138,6 @@ class ChemicalController extends BaseController
             ->setSearchableColumns(['c.chemical_name', 'c.chemical_code'])
             ->toJson(true);
     }
-
     // ============================================================
     // AJAX — CHEMICAL CRUD
     // ============================================================
@@ -171,47 +173,54 @@ class ChemicalController extends BaseController
             return $this->jsonError('Akses ditolak', 403);
         }
 
-        // Validasi
-        $rules = [
-            'chemical_name' => 'required|max_length[150]',
-            'status'        => 'required|in_list[Active,Draft,Archived]',
-            'description'   => 'permit_empty|max_length[500]',
-        ];
+        try {
+            // Validasi
+            $rules = [
+                'chemical_name' => 'required|max_length[150]',
+                'status'        => 'required|in_list[Active,Draft,Archived]',
+                'description'   => 'permit_empty|max_length[500]',
+            ];
 
-        if (!$this->validate($rules)) {
-            return $this->jsonResponse([
-                'status' => 'error',
-                'errors' => $this->validator->getErrors()
-            ], 422);
+            if (!$this->validate($rules)) {
+                return $this->jsonResponse([
+                    'status' => 'error',
+                    'errors' => $this->validator->getErrors()
+                ], 422);
+            }
+
+            $userId = auth()->id();
+            $data = [
+                'chemical_name' => trim($this->request->getPost('chemical_name')),
+                'description'   => trim($this->request->getPost('description') ?? '') ?: null,
+                'status'        => $this->request->getPost('status'),
+            ];
+
+            // Category IDs - sanitasi
+            $categoryIds = $this->request->getPost('category_ids') ?? [];
+            if (!is_array($categoryIds)) {
+                $categoryIds = [$categoryIds];
+            }
+            $categoryIds = array_filter(array_map('intval', $categoryIds));
+
+            if ($isUpdate) {
+                $data['updated_by'] = $userId;
+                $result = $this->model->updateData($id, $data, $categoryIds);
+            } else {
+                $data['created_by'] = $userId;
+                $result = $this->model->createData($data, $categoryIds);
+            }
+
+            if ($result['status'] !== 'success') {
+                return $this->jsonResponse($result, 422);
+            }
+
+            return $this->jsonResponse($result);
+        } catch (\Throwable $e) {
+            // Jaga-jaga: kalau ada error tak terduga (mis. dari proses generate kode),
+            // tetap balas JSON yang valid, bukan halaman error HTML mentah.
+            log_message('error', 'store: ' . $e->getMessage());
+            return $this->jsonError('Gagal menyimpan bahan kimia: ' . $e->getMessage(), 500);
         }
-
-        $userId = auth()->id();
-        $data = [
-            'chemical_name' => trim($this->request->getPost('chemical_name')),
-            'description'   => trim($this->request->getPost('description') ?? '') ?: null,
-            'status'        => $this->request->getPost('status'),
-        ];
-
-        // Category IDs - sanitasi
-        $categoryIds = $this->request->getPost('category_ids') ?? [];
-        if (!is_array($categoryIds)) {
-            $categoryIds = [$categoryIds];
-        }
-        $categoryIds = array_filter(array_map('intval', $categoryIds));
-
-        if ($isUpdate) {
-            $data['updated_by'] = $userId;
-            $result = $this->model->updateData($id, $data, $categoryIds);
-        } else {
-            $data['created_by'] = $userId;
-            $result = $this->model->createData($data, $categoryIds);
-        }
-
-        if ($result['status'] !== 'success') {
-            return $this->jsonResponse($result, 422);
-        }
-
-        return $this->jsonResponse($result);
     }
 
     public function delete(int $id)
@@ -446,7 +455,6 @@ class ChemicalController extends BaseController
         }
 
         try {
-            // Gunakan method yang sudah diperbaiki
             $result = $this->variantModel->deleteVariantById($variantId);
             return $this->jsonResponse($result, $result['status'] === 'success' ? 200 : 422);
         } catch (\Throwable $e) {
@@ -497,7 +505,13 @@ class ChemicalController extends BaseController
         }
 
         $search = trim($this->request->getGet('search') ?? '');
-        $builder = $this->model->db->table('chemicals c')
+
+        // FIX: sebelumnya memakai $this->model->db yang bersifat protected
+        // pada class Model CodeIgniter — ini selalu fatal error saat dipanggil
+        // dari controller. Gunakan koneksi database langsung, konsisten dengan
+        // method lain (datatables, trashDatatables) di controller ini.
+        $db      = \Config\Database::connect();
+        $builder = $db->table('chemicals c')
             ->select('c.id, c.chemical_code AS code, c.chemical_name AS name')
             ->where('c.status', 'Active')
             ->where('c.deleted_at', null)
@@ -513,6 +527,18 @@ class ChemicalController extends BaseController
         return $this->response->setJSON([
             'status' => 'success',
             'data' => $builder->limit(50)->get()->getResultArray()
+        ]);
+    }
+
+    public function nextCode()
+    {
+        if (!canDo('warehouse.chemicals.view')) {
+            return $this->jsonError('Akses ditolak', 403);
+        }
+
+        return $this->jsonResponse([
+            'status' => 'success',
+            'code'   => $this->model->peekNextCode(),
         ]);
     }
 
