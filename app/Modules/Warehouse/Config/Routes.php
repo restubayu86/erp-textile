@@ -100,4 +100,14 @@ $routes->group('warehouse', [
     // Aksi bisnis khusus periode
     $routes->post('master/periods/(:num)/set-current', 'PeriodController::setCurrent/$1');
     $routes->post('master/periods/(:num)/close',        'PeriodController::closePeriod/$1');
+
+    // ============================================================
+    // Stok Awal Bahan Kimia (per gudang & gabungan seluruh gudang)
+    // ============================================================
+    $routes->get('stocks/opening',               'ChemicalStockOpeningController::index');
+    $routes->get('stocks/opening/grid',          'ChemicalStockOpeningController::grid');
+    $routes->get('stocks/opening/combined',      'ChemicalStockOpeningController::combinedGrid');
+    $routes->get('stocks/opening/breakdown',     'ChemicalStockOpeningController::breakdown');
+    $routes->post('stocks/opening/store',        'ChemicalStockOpeningController::store');
+    $routes->get('stocks/opening/status',        'ChemicalStockOpeningController::status');
 });

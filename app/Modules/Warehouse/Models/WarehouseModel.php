@@ -93,7 +93,7 @@ class WarehouseModel extends Model
     public function getData(int $id): array
     {
         $data = $this->db->table('warehouses w')
-            ->select('w.*, d.department')
+            ->select('w.*, d.department_name')
             ->join('departments d', 'd.id = w.department_id', 'left')
             ->where('w.id', $id)
             ->where('w.deleted_at', null)
@@ -121,6 +121,12 @@ class WarehouseModel extends Model
     public function forceDeleteData(int $id): array
     {
         if (!$this->onlyDeleted()->find($id)) return ['status' => 'error', 'message' => 'Data tidak ditemukan di sampah'];
+
+        $used = $this->db->table('chemical_stock_openings')->where('warehouse_id', $id)->countAllResults();
+        if ($used > 0) {
+            return ['status' => 'error', 'message' => "Gudang tidak dapat dihapus permanen karena sudah memiliki {$used} data stok awal"];
+        }
+
         if (!$this->delete($id, true)) return ['status' => 'error', 'message' => 'Gagal menghapus permanen'];
         return ['status' => 'success', 'message' => 'Gudang berhasil dihapus permanen'];
     }

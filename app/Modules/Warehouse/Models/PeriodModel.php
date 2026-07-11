@@ -150,6 +150,12 @@ class PeriodModel extends Model
     public function forceDeleteData(int $id): array
     {
         if (!$this->onlyDeleted()->find($id)) return ['status' => 'error', 'message' => 'Data tidak ditemukan di sampah'];
+
+        $used = $this->db->table('chemical_stock_openings')->where('period_id', $id)->countAllResults();
+        if ($used > 0) {
+            return ['status' => 'error', 'message' => "Periode tidak dapat dihapus permanen karena sudah memiliki {$used} data stok awal"];
+        }
+
         if (!$this->delete($id, true)) return ['status' => 'error', 'message' => 'Gagal menghapus permanen'];
         return ['status' => 'success', 'message' => 'Periode berhasil dihapus permanen'];
     }
