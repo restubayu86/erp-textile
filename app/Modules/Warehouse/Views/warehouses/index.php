@@ -46,41 +46,6 @@
         line-height: 1;
     }
 
-    /* ── Status badge ───────────────────────────────────────────── */
-    .badge-status {
-        display: inline-flex;
-        align-items: center;
-        gap: .3rem;
-        padding: .25rem .55rem;
-        border-radius: 20px;
-        font-size: .72rem;
-        font-weight: 600;
-        white-space: nowrap;
-    }
-
-    .badge-status.active {
-        background-color: rgba(var(--phoenix-success-rgb), .12);
-        color: var(--phoenix-success);
-        border: 1px solid rgba(var(--phoenix-success-rgb), .25);
-    }
-
-    .badge-status.draft {
-        background-color: rgba(var(--phoenix-warning-rgb), .12);
-        color: var(--phoenix-warning);
-        border: 1px solid rgba(var(--phoenix-warning-rgb), .25);
-    }
-
-    .badge-status.archived {
-        background-color: rgba(var(--phoenix-secondary-rgb), .12);
-        color: var(--phoenix-secondary);
-        border: 1px solid rgba(var(--phoenix-secondary-rgb), .25);
-    }
-
-    .badge-status .fas {
-        font-size: .7rem;
-        flex-shrink: 0;
-    }
-
     /* ── Filter toggle ───────────────────────────────────────────── */
     .filter-toggle {
         position: fixed;
@@ -708,7 +673,7 @@
                     {
                         data: 'department_name',
                         render: d => d ?
-                            `<span class="badge badge-phoenix badge-phoenix-secondary fs-10">${self.e(d)}</span>` : '<span class="text-muted fst-italic">—</span>'
+                            `<span class="badge badge-phoenix badge-phoenix-secondary p-2 fs-10">${self.e(d)}</span>` : '<span class="text-muted fst-italic">—</span>'
                     },
                     {
                         data: 'location',
@@ -1054,30 +1019,34 @@
         fmtStatus(status) {
             if (!status) return '<span class="text-muted fst-italic">—</span>';
 
-            let statusClass = '';
-            let statusIcon = '';
-
-            switch (status.toLowerCase()) {
-                case 'active':
-                    statusClass = 'active';
-                    statusIcon = 'fa-check-circle';
-                    break;
-                case 'draft':
-                    statusClass = 'draft';
-                    statusIcon = 'fa-pencil-alt';
-                    break;
-                case 'archived':
-                    statusClass = 'archived';
-                    statusIcon = 'fa-archive';
-                    break;
-                default:
-                    statusClass = 'draft';
-                    statusIcon = 'fa-pencil-alt';
+            // Jika status Active, pakai badge sukses
+            if (status.toLowerCase() === 'active') {
+                return `<span class="badge badge-phoenix badge-phoenix-success rounded-pill fs-10 p-2 px-2" 
+                    title="Status: ${this.e(status)}">
+                    <span class="fas fa-check-circle me-1"></span>${this.e(status)}
+                </span>`;
             }
 
-            return `<span class="badge-status ${statusClass}">
-                <span class="fas ${statusIcon}"></span>
-                ${this.e(status)}
+            // Jika status Draft, pakai badge warning
+            if (status.toLowerCase() === 'draft') {
+                return `<span class="badge badge-phoenix badge-phoenix-warning rounded-pill fs-10 p-2 px-2" 
+                    title="Status: ${this.e(status)}">
+                    <span class="fas fa-pencil-alt me-1"></span>${this.e(status)}
+                </span>`;
+            }
+
+            // Jika status Archived, pakai badge secondary
+            if (status.toLowerCase() === 'archived') {
+                return `<span class="badge badge-phoenix badge-phoenix-secondary rounded-pill fs-10 p-2 px-2" 
+                    title="Status: ${this.e(status)}">
+                    <span class="fas fa-archive me-1"></span>${this.e(status)}
+                </span>`;
+            }
+
+            // Fallback untuk status tak dikenal
+            return `<span class="badge badge-phoenix badge-phoenix-secondary rounded-pill fs-10 p-2 px-2" 
+                title="Status: ${this.e(status)}">
+                <span class="fas fa-question-circle me-1"></span>${this.e(status)}
             </span>`;
         },
 
@@ -1086,14 +1055,14 @@
 
             // Jika tidak ada employeeName, tampilkan username saja
             if (!employeeName) {
-                return `<span class="badge badge-phoenix badge-phoenix-info rounded-pill fs-10 p-1 px-2 " 
+                return `<span class="badge badge-phoenix badge-phoenix-info rounded-pill fs-10 p-2 px-2 " 
                      title="Username: ${this.e(name)}">
                     <span class="fas fa-user-circle me-1"></span>${this.e(name)}
                 </span>`;
             }
 
             // Tampilkan employee name sebagai badge utama, username sebagai badge kecil
-            return `<span class="badge badge-phoenix badge-phoenix-primary rounded-pill fs-10 p-1 px-3" 
+            return `<span class="badge badge-phoenix badge-phoenix-primary rounded-pill fs-10 p-2 px-3" 
                  title="Karyawan: ${this.e(employeeName)}&#013;Username: ${this.e(name)}"
                  style="cursor:help;border-radius:50px;display:inline-flex;align-items:center;gap:0.3rem;">
                 <span class="fas fa-user me-1"></span>

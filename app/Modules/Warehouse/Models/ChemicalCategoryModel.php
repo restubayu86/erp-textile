@@ -39,6 +39,14 @@ class ChemicalCategoryModel extends Model
     const STATUS_DRAFT    = 'Draft';
     const STATUS_ARCHIVED = 'Archived';
 
+    // FIX: cache key TETAP (bukan berbasis jam berjalan) supaya bisa
+    // di-invalidate secara eksplisit lewat clearStatsCache(). Sebelumnya
+    // key-nya berubah tiap jam (`date('Y-m-d H')`), sehingga angka stat
+    // card selalu menampilkan data lama sampai maksimal 1 jam meskipun
+    // kategori baru saja ditambah/diedit/dihapus/dipulihkan — walaupun
+    // frontend sudah benar memanggil loadStats() persis setelah aksi itu.
+    private const STATS_CACHE_KEY = 'chemical_category_stats';
+
     // ============================================================
     // VALIDATION RULES
     // ============================================================
@@ -146,6 +154,7 @@ class ChemicalCategoryModel extends Model
             }
 
             $this->db->transComplete();
+            $this->clearStatsCache(); // FIX: total/active/draft/archived berubah
             return ['status' => 'success', 'message' => 'Kategori berhasil ditambahkan', 'id' => $this->getInsertID()];
         } catch (\Exception $e) {
             $this->db->transRollback();
@@ -184,6 +193,7 @@ class ChemicalCategoryModel extends Model
             }
 
             $this->db->transComplete();
+            $this->clearStatsCache(); // FIX: status bisa berubah (mis. Draft -> Active)
             return ['status' => 'success', 'message' => 'Kategori berhasil diperbarui'];
         } catch (\Exception $e) {
             $this->db->transRollback();
@@ -230,6 +240,7 @@ class ChemicalCategoryModel extends Model
             $this->delete($id);
 
             $this->db->transComplete();
+            $this->clearStatsCache(); // FIX: total & trash berubah
             return ['status' => 'success', 'message' => 'Kategori dipindahkan ke sampah'];
         } catch (\Exception $e) {
             $this->db->transRollback();
@@ -256,6 +267,7 @@ class ChemicalCategoryModel extends Model
                 ]);
 
             $this->db->transComplete();
+            $this->clearStatsCache(); // FIX: total & trash berubah
             return ['status' => 'success', 'message' => 'Kategori berhasil dipulihkan'];
         } catch (\Exception $e) {
             $this->db->transRollback();
@@ -292,6 +304,7 @@ class ChemicalCategoryModel extends Model
             }
 
             $this->db->transComplete();
+            $this->clearStatsCache(); // FIX: trash berubah (baris hilang dari sampah)
             return ['status' => 'success', 'message' => 'Kategori berhasil dihapus permanen'];
         } catch (\Exception $e) {
             $this->db->transRollback();
@@ -306,9 +319,7 @@ class ChemicalCategoryModel extends Model
 
     public function getStats(): array
     {
-        $cacheKey = 'category_stats_' . md5(date('Y-m-d H') . '00');
-
-        if ($cached = cache($cacheKey)) {
+        if ($cached = cache(self::STATS_CACHE_KEY)) {
             return $cached;
         }
 
@@ -338,9 +349,20 @@ class ChemicalCategoryModel extends Model
             ->where('deleted_at IS NOT NULL')
             ->countAllResults();
 
-        cache()->save($cacheKey, $stats, 3600);
+        cache()->save(self::STATS_CACHE_KEY, $stats, 3600);
 
         return $stats;
+    }
+
+    /**
+     * Hapus cache stats. Dipanggil setiap kali jumlah/status kategori
+     * berubah (create, update, delete, restore, force delete) supaya
+     * stat card di halaman selalu menampilkan angka terkini — bukan
+     * data basi sampai 1 jam seperti sebelumnya.
+     */
+    private function clearStatsCache(): void
+    {
+        cache()->delete(self::STATS_CACHE_KEY);
     }
 
     // ============================================================

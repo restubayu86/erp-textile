@@ -458,12 +458,12 @@
             if (!name && !employeeName) return '<span class="text-muted fst-italic">—</span>';
 
             if (!employeeName) {
-                return `<span class="badge badge-phoenix badge-phoenix-info rounded-pill fs-10 p-1 px-2" title="Username: ${this.e(name)}">
+                return `<span class="badge badge-phoenix badge-phoenix-info rounded-pill fs-10 p-2 px-2" title="Username: ${this.e(name)}">
                     <span class="fas fa-user-circle me-1"></span>${this.e(name)}
                 </span>`;
             }
 
-            return `<span class="badge badge-phoenix badge-phoenix-primary rounded-pill fs-10 p-1 px-3"
+            return `<span class="badge badge-phoenix badge-phoenix-primary rounded-pill fs-10 p-2 px-3"
                  title="Karyawan: ${this.e(employeeName)}&#013;Username: ${this.e(name)}"
                  style="cursor:help;border-radius:50px;display:inline-flex;align-items:center;gap:0.3rem;">
                 <span class="fas fa-user me-1"></span>

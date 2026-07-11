@@ -93,7 +93,7 @@ class WarehouseModel extends Model
     public function getData(int $id): array
     {
         $data = $this->db->table('warehouses w')
-            ->select('w.*, d.department_name')
+            ->select('w.*, d.department  as department_name')
             ->join('departments d', 'd.id = w.department_id', 'left')
             ->where('w.id', $id)
             ->where('w.deleted_at', null)

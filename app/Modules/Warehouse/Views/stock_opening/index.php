@@ -202,6 +202,7 @@
         initSelect2() {
             $('#f-period').select2({
                 width: '100%',
+                theme: 'bootstrap-5',
                 placeholder: '— Pilih Periode —',
                 ajax: {
                     url: this.BASE + 'warehouse/master/periods/select2',
@@ -221,6 +222,7 @@
 
             $('#f-warehouse').select2({
                 width: '100%',
+                theme: 'bootstrap-5',
                 placeholder: '— Pilih Gudang —',
                 ajax: {
                     url: this.BASE + 'warehouse/master/warehouses/select2',

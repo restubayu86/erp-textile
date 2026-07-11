@@ -44,17 +44,6 @@
         line-height: 1;
     }
 
-    .badge-status {
-        display: inline-flex;
-        align-items: center;
-        gap: .3rem;
-        padding: .25rem .55rem;
-        border-radius: 20px;
-        font-size: .72rem;
-        font-weight: 600;
-        white-space: nowrap;
-    }
-
     .badge-current {
         display: inline-flex;
         align-items: center;
@@ -313,14 +302,14 @@
                                 <label class="form-label fs-9 fw-semibold text-uppercase text-muted" for="f-start">
                                     Tanggal Mulai <span class="text-danger">*</span>
                                 </label>
-                                <input type="date" class="form-control form-control-sm" id="f-start">
+                                <input type="text" class="form-control form-control-sm" id="f-start" placeholder="Pilih tanggal" autocomplete="off">
                                 <div class="invalid-feedback" id="err-start_date"></div>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label fs-9 fw-semibold text-uppercase text-muted" for="f-end">
                                     Tanggal Akhir <span class="text-danger">*</span>
                                 </label>
-                                <input type="date" class="form-control form-control-sm" id="f-end">
+                                <input type="text" class="form-control form-control-sm" id="f-end" placeholder="Pilih tanggal" autocomplete="off">
                                 <div class="invalid-feedback" id="err-end_date"></div>
                             </div>
                             <div class="col-12">
@@ -377,6 +366,7 @@
             this.initDatatable();
             this.initEvents();
             this.initFieldEvents();
+            this.initDatepickers();
             this.loadStats();
             document.getElementById('print-date').textContent = new Date().toLocaleDateString('id-ID', {
                 day: '2-digit',
@@ -433,6 +423,31 @@
                     badge.classList.toggle('d-none', !d.data.trash);
                 }
             } catch {}
+        },
+
+        initDatepickers() {
+            flatpickr.localize(flatpickr.l10ns.id);
+
+            this.fpStart = flatpickr('#f-start', {
+                dateFormat: 'Y-m-d',
+                altInput: true,
+                altFormat: 'j F Y',
+                allowInput: true,
+                onChange: (selectedDates, dateStr) => {
+                    if (this.fpEnd) this.fpEnd.set('minDate', dateStr || null);
+                    document.getElementById('f-start').dispatchEvent(new Event('input'));
+                }
+            });
+
+            this.fpEnd = flatpickr('#f-end', {
+                dateFormat: 'Y-m-d',
+                altInput: true,
+                altFormat: 'j F Y',
+                allowInput: true,
+                onChange: () => {
+                    document.getElementById('f-end').dispatchEvent(new Event('input'));
+                }
+            });
         },
 
         initDatatable() {
@@ -598,8 +613,8 @@
                 if (d.status === 'success' && d.data) {
                     document.getElementById('f-name').value = d.data.period_name ?? '';
                     document.getElementById('f-code').value = d.data.period_code ?? '';
-                    document.getElementById('f-start').value = d.data.start_date ?? '';
-                    document.getElementById('f-end').value = d.data.end_date ?? '';
+                    if (d.data.start_date) this.fpStart.setDate(d.data.start_date, true);
+                    if (d.data.end_date) this.fpEnd.setDate(d.data.end_date, true);
                     document.getElementById('f-notes').value = d.data.notes ?? '';
                     document.getElementById('f-current').checked = Number(d.data.is_current) === 1;
 
@@ -651,13 +666,17 @@
         },
 
         resetModal() {
-            ['f-name', 'f-code', 'f-start', 'f-end', 'f-notes'].forEach(id => {
+            ['f-name', 'f-code', 'f-notes'].forEach(id => {
                 const el = document.getElementById(id);
                 if (el) {
                     el.value = '';
                     el.classList.remove('is-invalid', 'is-valid');
                 }
             });
+            this.fpStart?.clear();
+            this.fpEnd?.clear();
+            document.getElementById('f-start')?.classList.remove('is-invalid', 'is-valid');
+            document.getElementById('f-end')?.classList.remove('is-invalid', 'is-valid');
             document.getElementById('f-current').checked = false;
             document.getElementById('modal-alert').classList.add('d-none');
             this.clearErrors();
@@ -909,26 +928,20 @@
         fmtStatus(status) {
             if (!status) return '<span class="text-muted fst-italic">—</span>';
 
-            let statusClass = '';
-            let statusIcon = '';
-
-            switch (status.toLowerCase()) {
-                case 'open':
-                    statusClass = 'open badge badge-phoenix badge-phoenix-success rounded-pill fs-10 p-2 px-2';
-                    statusIcon = 'fa-lock-open';
-                    break;
-                case 'closed':
-                    statusClass = 'closed badge badge-phoenix badge-phoenix-danger rounded-pill fs-10 p-2 px-2';
-                    statusIcon = 'fa-lock';
-                    break;
-                default:
-                    statusClass = 'open badge badge-phoenix badge-phoenix-info rounded-pill fs-10 p-2 px-2';
-                    statusIcon = 'fa-lock-open';
+            if (status.toLowerCase() === 'open') {
+                return `<span class="badge badge-phoenix badge-phoenix-success rounded-pill fs-10 p-2 px-2" title="Status: ${this.e(status)}">
+                    <span class="fas fa-lock-open me-1"></span>${this.e(status)}
+                </span>`;
             }
 
-            return `<span class="badge-status ${statusClass}">
-                <span class="fas ${statusIcon}"></span>
-                ${this.e(status)}
+            if (status.toLowerCase() === 'closed') {
+                return `<span class="badge badge-phoenix badge-phoenix-secondary rounded-pill fs-10 p-2 px-2" title="Status: ${this.e(status)}">
+                    <span class="fas fa-lock me-1"></span>${this.e(status)}
+                </span>`;
+            }
+
+            return `<span class="badge badge-phoenix badge-phoenix-secondary rounded-pill fs-10 p-2 px-2" title="Status: ${this.e(status)}">
+                <span class="fas fa-question-circle me-1"></span>${this.e(status)}
             </span>`;
         },
 
@@ -936,12 +949,12 @@
             if (!name && !employeeName) return '<span class="text-muted fst-italic">—</span>';
 
             if (!employeeName) {
-                return `<span class="badge badge-phoenix badge-phoenix-info rounded-pill fs-10 p-1 px-2" title="Username: ${this.e(name)}">
+                return `<span class="badge badge-phoenix badge-phoenix-info rounded-pill fs-10 p-2 px-2" title="Username: ${this.e(name)}">
                     <span class="fas fa-user-circle me-1"></span>${this.e(name)}
                 </span>`;
             }
 
-            return `<span class="badge badge-phoenix badge-phoenix-primary rounded-pill fs-10 p-1 px-3"
+            return `<span class="badge badge-phoenix badge-phoenix-primary rounded-pill fs-10 p-2 px-3"
                  title="Karyawan: ${this.e(employeeName)}&#013;Username: ${this.e(name)}"
                  style="cursor:help;border-radius:50px;display:inline-flex;align-items:center;gap:0.3rem;">
                 <span class="fas fa-user me-1"></span>

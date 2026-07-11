@@ -217,45 +217,8 @@
         font-size: .7rem;
     }
 
-    .chemical-code-badge {
-        font-family: var(--bs-font-monospace, monospace);
-        font-weight: 700;
-        letter-spacing: .04em;
-        background-color: rgba(var(--phoenix-primary-rgb), .1);
-        color: var(--phoenix-primary);
-        padding: .2rem .5rem;
-        border-radius: .35rem;
-        font-size: .78rem;
-        display: inline-block;
-    }
-
-    /* Variant modal */
-    .variant-row {
-        border: 1px solid var(--phoenix-border-color);
-        border-radius: .6rem;
-        padding: .75rem .9rem;
-        margin-bottom: .6rem;
-        transition: all .15s;
-    }
-
-    .variant-row.is-default {
-        border-color: rgba(var(--phoenix-success-rgb), .4);
-        background-color: rgba(var(--phoenix-success-rgb), .04);
-    }
-
-    .variant-row .variant-name {
-        font-weight: 600;
-    }
-
-    .variant-empty {
-        text-align: center;
-        padding: 2rem 1rem;
-        color: var(--phoenix-secondary-color);
-    }
-
-    #variantFormCard {
-        border: 1px dashed var(--phoenix-border-color);
-        border-radius: .75rem;
+    .select2-container .select2-selection--single {
+        height: calc(1.5em + 1.1rem + 2px) !important;
     }
 </style>
 <?= $this->endSection() ?>
@@ -413,7 +376,7 @@
     </div>
 </div>
 
-<!-- Modal Tambah / Edit Bahan Kimia -->
+<!-- Modal Tambah / Edit -->
 <div class="modal fade" id="chemicalModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg rounded-3 overflow-hidden">
@@ -451,22 +414,23 @@
                                 <div class="invalid-feedback" id="err-chemical_name"></div>
                             </div>
                             <div class="col-md-5">
-                                <label class="form-label fs-9 fw-semibold text-uppercase text-muted">
-                                    Kode
+                                <label class="form-label fs-9 fw-semibold text-uppercase text-muted" for="f-code">
+                                    Kode <span class="text-danger">*</span>
                                 </label>
-                                <div>
-                                    <span class="chemical-code-badge" id="f-code-display">Otomatis</span>
-                                </div>
-                                <div class="form-text fs-10">Dibuat otomatis: CH-00001, CH-00002, dst.</div>
+                                <input type="text" class="form-control form-control-sm font-monospace fw-bold"
+                                    id="f-code" placeholder="Kode bahan kimia" maxlength="50" autocomplete="off"
+                                    style="text-transform:uppercase;letter-spacing:.06em">
+                                <div class="form-text fs-10">Maks. 50 karakter</div>
+                                <div class="invalid-feedback" id="err-chemical_code"></div>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label fs-9 fw-semibold text-uppercase text-muted" for="f-category">
                                     Kategori
                                 </label>
-                                <select class="form-select form-select-sm" id="f-category" multiple="multiple" style="width:100%">
+                                <select class="form-select form-select-sm" id="f-category" style="width:100%">
+                                    <option value=""></option>
                                 </select>
-                                <div class="form-text fs-10">Bisa pilih lebih dari satu kategori</div>
-                                <div class="invalid-feedback" id="err-category_ids"></div>
+                                <div class="invalid-feedback" id="err-category_id"></div>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label fs-9 fw-semibold text-uppercase text-muted" for="f-status">
@@ -493,7 +457,7 @@
                         </div>
                         <div class="alert alert-subtle-info py-2 px-3 fs-10 mt-3 mb-0" id="variant-note">
                             <span class="fas fa-info-circle me-1"></span>
-                            Pengaturan varian (kemasan, satuan, harga) dikelola lewat tombol <strong>Varian</strong> di tabel setelah data disimpan.
+                            Pengaturan varian (kemasan, satuan, harga) dikelola setelah data bahan kimia disimpan.
                         </div>
                     </div>
                 </div>
@@ -506,104 +470,6 @@
                 <button type="button" class="btn btn-primary btn-sm" id="btn-save">
                     <span class="fas fa-save me-1" id="save-icon"></span>
                     <span id="save-text">Simpan</span>
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Modal Varian (CRUD per bahan kimia) -->
-<div class="modal fade" id="variantModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered modal-lg">
-        <div class="modal-content border-0 shadow-lg rounded-3 overflow-hidden">
-            <div class="modal-header border-bottom py-3 px-4">
-                <div class="d-flex align-items-center gap-3">
-                    <div class="stat-icon bg-info bg-opacity-10 text-info">
-                        <span class="fas fa-boxes-stacked"></span>
-                    </div>
-                    <div>
-                        <h5 class="modal-title fw-bold mb-0">Varian Bahan Kimia</h5>
-                        <p class="text-muted fs-10 mb-0">
-                            <span class="chemical-code-badge" id="vm-code">—</span>
-                            <span id="vm-name" class="ms-1 fw-semibold"></span>
-                        </p>
-                    </div>
-                </div>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-
-            <div class="modal-body px-4 py-3">
-                <!-- List varian -->
-                <div id="variant-list-wrap">
-                    <div id="variant-list"></div>
-                    <div class="variant-empty d-none" id="variant-empty">
-                        <span class="fas fa-box-open fs-2 d-block mb-2 opacity-50"></span>
-                        Belum ada varian untuk bahan kimia ini
-                    </div>
-                    <div class="text-center py-3 d-none" id="variant-loading">
-                        <span class="spinner-border spinner-border-sm text-primary"></span>
-                    </div>
-                </div>
-
-                <!-- Form tambah/edit varian -->
-                <div id="variantFormCard" class="p-3 mt-3">
-                    <div class="d-flex justify-content-between align-items-center mb-2">
-                        <p class="fs-10 fw-bold text-uppercase text-info mb-0" style="letter-spacing:.08em" id="vf-title">
-                            <span class="fas fa-plus-circle me-1"></span>Tambah Varian
-                        </p>
-                        <button type="button" class="btn btn-subtle-secondary btn-sm d-none" id="btn-cancel-edit-variant">
-                            <span class="fas fa-times me-1"></span>Batal Edit
-                        </button>
-                    </div>
-                    <div class="alert alert-subtle-danger py-2 px-3 fs-10 d-none" id="vf-alert"></div>
-                    <div class="row g-2">
-                        <div class="col-md-6">
-                            <label class="form-label fs-9 fw-semibold text-uppercase text-muted">Nama Varian <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control form-control-sm" id="vf-name" maxlength="100" placeholder="Contoh: Botol 500ml">
-                            <div class="invalid-feedback" id="err-variant_name"></div>
-                        </div>
-                        <div class="col-md-3">
-                            <label class="form-label fs-9 fw-semibold text-uppercase text-muted">Kemasan</label>
-                            <input type="text" class="form-control form-control-sm" id="vf-packaging" maxlength="50" placeholder="Botol/Drum/dll">
-                        </div>
-                        <div class="col-md-3">
-                            <label class="form-label fs-9 fw-semibold text-uppercase text-muted">Ukuran</label>
-                            <input type="number" step="any" class="form-control form-control-sm" id="vf-size" placeholder="500">
-                        </div>
-                        <div class="col-md-3">
-                            <label class="form-label fs-9 fw-semibold text-uppercase text-muted">Satuan</label>
-                            <input type="text" class="form-control form-control-sm" id="vf-unit" maxlength="20" placeholder="ml/kg/L">
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label fs-9 fw-semibold text-uppercase text-muted">Harga</label>
-                            <input type="number" step="any" class="form-control form-control-sm" id="vf-price" placeholder="0">
-                        </div>
-                        <div class="col-md-3">
-                            <label class="form-label fs-9 fw-semibold text-uppercase text-muted">Status</label>
-                            <select class="form-select form-select-sm" id="vf-status">
-                                <option value="Active">Active</option>
-                                <option value="Archived">Archived</option>
-                            </select>
-                        </div>
-                        <div class="col-md-2 d-flex align-items-end">
-                            <div class="form-check mb-1">
-                                <input class="form-check-input" type="checkbox" id="vf-default">
-                                <label class="form-check-label fs-9" for="vf-default">Default</label>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="d-flex justify-content-end gap-2 mt-3">
-                        <button type="button" class="btn btn-info btn-sm text-white" id="btn-save-variant">
-                            <span class="fas fa-save me-1" id="vf-save-icon"></span>
-                            <span id="vf-save-text">Simpan Varian</span>
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            <div class="modal-footer border-top bg-body-tertiary px-4 py-3">
-                <button type="button" class="btn btn-subtle-secondary btn-sm" data-bs-dismiss="modal">
-                    <span class="fas fa-times me-1"></span>Tutup
                 </button>
             </div>
         </div>
@@ -627,21 +493,11 @@
             status: ''
         },
 
-        // State next-code
-        _nextCodeLoading: false,
-        _previewCode: null,
-
-        // State variant
-        variantChemicalId: null,
-        editVariantId: null,
-
-        // ── Init ─────────────────────────────────────────────────────
         init() {
             this.initSelect2();
             this.initDatatable();
             this.initEvents();
             this.initFieldEvents();
-            this.initVariantEvents();
             this.loadStats();
             document.getElementById('print-date').textContent = new Date().toLocaleDateString('id-ID', {
                 day: '2-digit',
@@ -652,9 +508,9 @@
             });
         },
 
-        // ── CSRF ─────────────────────────────────────────────────────
         csrfName: () => document.querySelector('meta[name="csrf-name"]')?.content ?? '',
         csrfToken: () => document.querySelector('meta[name="csrf-token"]')?.content ?? '',
+
         updateCsrf(h) {
             const m = document.querySelector('meta[name="csrf-token"]');
             if (m && h) m.content = h;
@@ -670,7 +526,7 @@
                     'X-CSRF-TOKEN': this.csrfToken()
                 }
             });
-            if (r.status === 403) throw new Error('Sesi habis, muat ulang halaman.');
+            if (r.status === 403) throw new Error('Sesi habis, muat ulang halaman');
             const d = await r.json();
             if (d?.csrfHash) this.updateCsrf(d.csrfHash);
             return d;
@@ -685,15 +541,14 @@
             return r.json();
         },
 
-        // ── Select2 ──────────────────────────────────────────────────
         initSelect2() {
-            const categoryAjax = {
+            const categorySource = {
                 ajax: {
                     url: this.BASE + 'warehouse/master/chemical-categories/select2',
                     dataType: 'json',
                     delay: 250,
                     data: params => ({
-                        search: params.term ?? ''
+                        search: params.term
                     }),
                     processResults: data => ({
                         results: (data.data ?? []).map(c => ({
@@ -704,29 +559,25 @@
                 },
             };
 
-            // Kategori di form modal (multi-select)
             $('#f-category').select2({
-                theme: 'bootstrap-5',
                 dropdownParent: $('#chemicalModal'),
+                theme: 'bootstrap-5',
                 placeholder: '— Pilih Kategori —',
                 allowClear: true,
                 width: '100%',
-                closeOnSelect: false,
-                ...categoryAjax,
+                ...categorySource,
             });
 
-            // Kategori di filter offcanvas (single-select)
             $('#filter-category').select2({
-                theme: 'bootstrap-5',
                 dropdownParent: $('#filter-offcanvas'),
+                theme: 'bootstrap-5',
                 placeholder: '— Semua Kategori —',
                 allowClear: true,
                 width: '100%',
-                ...categoryAjax,
+                ...categorySource,
             });
         },
 
-        // ── Stats ─────────────────────────────────────────────────────
         async loadStats() {
             try {
                 const d = await this.get(this.BASE + 'warehouse/master/chemicals/stats');
@@ -743,7 +594,6 @@
             } catch {}
         },
 
-        // ── DataTable ─────────────────────────────────────────────────
         initDatatable() {
             const self = this;
             this.dt = $('#chemical-table').DataTable({
@@ -789,15 +639,15 @@
                     },
                     {
                         targets: 1,
-                        width: '210px'
+                        width: '200px'
                     },
                     {
                         targets: 2,
-                        width: '160px'
+                        width: '150px'
                     },
                     {
                         targets: 3,
-                        width: '110px'
+                        width: '100px'
                     },
                     {
                         targets: 4,
@@ -821,8 +671,8 @@
                     },
                     {
                         targets: 9,
-                        width: '110px'
-                    },
+                        width: '80px'
+                    }
                 ],
                 columns: [{
                         data: 'no',
@@ -833,22 +683,17 @@
                         data: null,
                         render: (d, t, r) =>
                             `<span class="fw-semibold">${self.e(r.chemical_name)}</span>
-                         <div class="text-muted small font-monospace">${self.e(r.chemical_code)}</div>`
+                             <div class="text-muted small font-monospace">${self.e(r.chemical_code)}</div>`
                     },
                     {
-                        data: 'category_names',
-                        render: d => {
-                            if (!d) return '<span class="text-muted fst-italic">—</span>';
-                            return d.split(', ').map(c =>
-                                `<span class="badge badge-phoenix badge-phoenix-secondary fs-10 me-1 mb-1">${self.e(c)}</span>`
-                            ).join('');
-                        }
+                        data: 'category_name',
+                        render: d => d ?
+                            `<span class="badge badge-phoenix badge-phoenix-secondary fs-10">${self.e(d)}</span>` : '<span class="text-muted fst-italic">—</span>'
                     },
                     {
                         data: 'variant_count',
                         render: d => Number(d) > 0 ?
-                            `<span class="badge badge-phoenix badge-phoenix-success fs-10">${self.e(d)} varian</span>` :
-                            '<span class="text-muted fst-italic">—</span>'
+                            `<span class="badge badge-phoenix badge-phoenix-success fs-10">${self.e(d)} varian</span>` : '<span class="text-muted fst-italic">—</span>'
                     },
                     {
                         data: 'status',
@@ -860,7 +705,7 @@
                     },
                     {
                         data: 'created_by_name',
-                        render: (d, t, r) => self.fmtUser(d, r.created_by_employee ?? null)
+                        render: (d, t, r) => self.fmtUser(d, r.created_by_employee)
                     },
                     {
                         data: 'updated_at',
@@ -868,7 +713,7 @@
                     },
                     {
                         data: 'updated_by_name',
-                        render: (d, t, r) => self.fmtUser(d, r.updated_by_employee ?? null)
+                        render: (d, t, r) => self.fmtUser(d, r.updated_by_employee)
                     },
                     {
                         data: null,
@@ -876,105 +721,64 @@
                         searchable: false,
                         className: 'text-end no-print',
                         render: (d, t, r) => {
-                            const variant = `<button class="btn btn-subtle-info btn-sm btn-variant"
-                            data-id="${r.id}" data-code="${self.e(r.chemical_code)}"
-                            data-name="${self.e(r.chemical_name)}" title="Kelola Varian">
-                            <span class="fas fa-boxes-stacked"></span></button>`;
                             const edit = CAN_EDIT_CHEMICAL ?
-                                `<button class="btn btn-subtle-primary btn-sm btn-edit"
-                                data-id="${r.id}" title="Edit">
-                                <span class="fas fa-pencil-alt"></span></button>` :
+                                `<button class="btn btn-subtle-primary btn-sm btn-edit" data-id="${r.id}"><span class="fas fa-pencil-alt"></span></button>` :
                                 '';
                             const del = CAN_DELETE_CHEMICAL ?
-                                `<button class="btn btn-subtle-danger btn-sm btn-delete"
-                                data-id="${r.id}" data-name="${self.e(r.chemical_name)}" title="Hapus">
-                                <span class="fas fa-trash"></span></button>` :
+                                `<button class="btn btn-subtle-danger btn-sm btn-delete" data-id="${r.id}" data-name="${self.e(r.chemical_name)}"><span class="fas fa-trash"></span></button>` :
                                 '';
-                            return `<div class="btn-group btn-group-sm">${variant}${edit}${del}</div>`;
+                            return `<div class="btn-group btn-group-sm">${edit}${del}</div>`;
                         }
                     },
                 ],
             });
         },
 
-        // ── Modal Chemical — Create ───────────────────────────────────
-        async openCreate() {
-            if (this._nextCodeLoading) return;
-            this._nextCodeLoading = true;
-
+        openCreate() {
             this.editId = null;
             this.resetModal();
             document.getElementById('modal-title').textContent = 'Tambah Bahan Kimia';
             document.getElementById('modal-subtitle').textContent = 'Buat data bahan kimia baru';
             document.getElementById('save-text').textContent = 'Simpan';
-
-            // Loading state di badge kode
-            const codeDisplay = document.getElementById('f-code-display');
-            codeDisplay.innerHTML = '<span class="spinner-border spinner-border-sm" style="width:.7rem;height:.7rem;"></span>';
-            codeDisplay.classList.add('opacity-50');
-
-            // Buka modal langsung — fetch kode berjalan di background
+            document.getElementById('variant-note').classList.add('d-none');
             new bootstrap.Modal(document.getElementById('chemicalModal')).show();
-
-            try {
-                const d = await this.get(this.BASE + 'warehouse/master/chemicals/next-code');
-                if (d.status === 'success') {
-                    codeDisplay.textContent = d.code;
-                    this._previewCode = d.code;
-                } else {
-                    codeDisplay.textContent = 'Otomatis';
-                }
-            } catch {
-                codeDisplay.textContent = 'Otomatis';
-            } finally {
-                codeDisplay.classList.remove('opacity-50');
-                this._nextCodeLoading = false;
-            }
         },
 
-        // ── Modal Chemical — Edit ─────────────────────────────────────
         async openEdit(id) {
             this.editId = id;
             this.resetModal();
             document.getElementById('modal-title').textContent = 'Edit Bahan Kimia';
             document.getElementById('modal-subtitle').textContent = 'Perbarui data bahan kimia';
             document.getElementById('save-text').textContent = 'Update';
-
+            document.getElementById('variant-note').classList.remove('d-none');
             this.setLoading(true);
             new bootstrap.Modal(document.getElementById('chemicalModal')).show();
-
             try {
                 const d = await this.get(this.BASE + `warehouse/master/chemicals/${id}`);
-                if (d.status !== 'success') {
+                if (d.status === 'success' && d.data) {
+                    document.getElementById('f-name').value = d.data.chemical_name ?? '';
+                    document.getElementById('f-code').value = d.data.chemical_code ?? '';
+                    document.getElementById('f-desc').value = d.data.description ?? '';
+                    document.getElementById('f-status').value = d.data.status ?? 'Draft';
+                    document.getElementById('char-count').textContent = (d.data.description ?? '').length;
+
+                    if (d.data.chemical_name) this.markValid('f-name');
+                    if (d.data.chemical_code) this.markValid('f-code');
+                    if (d.data.status) this.markValid('f-status');
+
+                    if (d.data.category_id) {
+                        const opt = new Option(
+                            d.data.category_name ? `${d.data.category_name} (${d.data.category_code ?? ''})` : 'Kategori',
+                            d.data.category_id, true, true
+                        );
+                        $('#f-category').append(opt).trigger('change');
+                    } else {
+                        $('#f-category').val(null).trigger('change');
+                    }
+                } else {
                     this.toast('error', d.message ?? 'Gagal memuat data');
                     bootstrap.Modal.getInstance(document.getElementById('chemicalModal'))?.hide();
-                    return;
                 }
-
-                const row = d.data;
-                document.getElementById('f-name').value = row.chemical_name ?? '';
-                document.getElementById('f-code-display').textContent = row.chemical_code ?? '—';
-                document.getElementById('f-desc').value = row.description ?? '';
-                document.getElementById('f-status').value = row.status ?? 'Draft';
-                document.getElementById('char-count').textContent = (row.description ?? '').length;
-
-                // Set is-valid jika ada nilai
-                if (row.chemical_name) this.markValid('f-name');
-                if (row.status) this.markValid('f-status');
-
-                // Populate Select2 kategori
-                $('#f-category').empty().val(null).trigger('change');
-                if (Array.isArray(row.categories) && row.categories.length) {
-                    row.categories.forEach(c => {
-                        const opt = new Option(
-                            `${c.category_name} (${c.category_code ?? ''})`,
-                            c.id, true, true
-                        );
-                        $('#f-category').append(opt);
-                    });
-                    $('#f-category').trigger('change');
-                }
-
             } catch {
                 this.toast('error', 'Gagal memuat data');
             } finally {
@@ -982,62 +786,39 @@
             }
         },
 
-        // ── Modal Chemical — Save ─────────────────────────────────────
         async save() {
             this.clearErrors();
-
             const fd = new FormData();
             fd.set('chemical_name', document.getElementById('f-name').value.trim());
+            fd.set('chemical_code', document.getElementById('f-code').value.trim().toUpperCase());
+            fd.set('category_id', $('#f-category').val() ?? '');
             fd.set('description', document.getElementById('f-desc').value.trim());
             fd.set('status', document.getElementById('f-status').value);
             if (this.editId) fd.set('id', this.editId);
 
-            const categoryIds = $('#f-category').val() ?? [];
-            categoryIds.forEach(catId => fd.append('category_ids[]', catId));
-
             this.setLoading(true);
             try {
                 const res = await this.post(this.BASE + 'warehouse/master/chemicals/store', fd);
-
                 if (res.status === 'success') {
                     bootstrap.Modal.getInstance(document.getElementById('chemicalModal'))?.hide();
                     this.dt.ajax.reload(null, false);
                     this.loadStats();
-
-                    // Tampilkan kode hanya saat CREATE (editId kosong)
-                    const savedCode = !this.editId ? (res.code ?? this._previewCode ?? null) : null;
-                    const msgHtml = savedCode ?
-                        `${this.e(res.message)}<br><small class="text-muted">Kode: <strong>${this.e(savedCode)}</strong></small>` :
-                        this.e(res.message);
-
-                    // Satu toast saja — gunakan html supaya bisa multiline
-                    Swal.fire({
-                        toast: true,
-                        position: 'top-right',
-                        icon: 'success',
-                        html: msgHtml,
-                        showConfirmButton: false,
-                        timer: 3000,
-                        timerProgressBar: true,
-                    });
-
+                    this.toast('success', res.message);
                 } else if (res.errors) {
                     this.showErrors(res.errors);
                 } else {
                     document.getElementById('modal-alert').classList.remove('d-none');
-                    document.getElementById('modal-alert-text').textContent = res.message ?? 'Terjadi kesalahan.';
+                    document.getElementById('modal-alert-text').textContent = res.message ?? 'Terjadi kesalahan';
                 }
             } catch (e) {
                 this.toast('error', e.message);
             } finally {
                 this.setLoading(false);
-                this._previewCode = null;
             }
         },
 
-        // ── Modal helpers ─────────────────────────────────────────────
         resetModal() {
-            ['f-name', 'f-desc'].forEach(id => {
+            ['f-name', 'f-code', 'f-desc'].forEach(id => {
                 const el = document.getElementById(id);
                 if (el) {
                     el.value = '';
@@ -1045,7 +826,6 @@
                 }
             });
             document.getElementById('f-status').value = 'Draft';
-            document.getElementById('f-code-display').textContent = 'Otomatis';
             document.getElementById('char-count').textContent = '0';
             document.getElementById('modal-alert').classList.add('d-none');
             $('#f-category').empty().val(null).trigger('change');
@@ -1053,8 +833,9 @@
         },
 
         clearErrors() {
-            document.querySelectorAll('#chemicalModal .is-invalid, #chemicalModal .is-valid')
-                .forEach(el => el.classList.remove('is-invalid', 'is-valid'));
+            document.querySelectorAll('#chemicalModal .is-invalid, #chemicalModal .is-valid').forEach(el => {
+                el.classList.remove('is-invalid', 'is-valid');
+            });
             document.querySelectorAll('#chemicalModal .invalid-feedback').forEach(el => {
                 el.textContent = '';
                 el.style.visibility = '';
@@ -1062,51 +843,13 @@
             document.getElementById('modal-alert').classList.add('d-none');
         },
 
-        showErrors(errors) {
-            const map = {
-                chemical_name: ['f-name', 'err-chemical_name'],
-                category_ids: ['f-category', 'err-category_ids'],
-                description: ['f-desc', 'err-description'],
-                status: ['f-status', 'err-status'],
-            };
-            Object.entries(errors).forEach(([f, msg]) => {
-                const [inp, err] = map[f] ?? [];
-                if (inp) this.markInvalid(inp, err, Array.isArray(msg) ? msg[0] : msg);
-            });
-        },
-
-        markValid(id) {
-            const el = document.getElementById(id);
-            if (el) {
-                el.classList.remove('is-invalid');
-                el.classList.add('is-valid');
-            }
-        },
-
-        markInvalid(inputId, errId, msg) {
-            const el = document.getElementById(inputId);
-            if (el) {
-                el.classList.add('is-invalid');
-                el.classList.remove('is-valid');
-            }
-            const errEl = document.getElementById(errId);
-            if (errEl) {
-                errEl.textContent = msg;
-                errEl.style.visibility = 'visible';
-            }
-        },
-
-        setLoading(on) {
-            const btn = document.getElementById('btn-save');
-            const ico = document.getElementById('save-icon');
-            btn.disabled = on;
-            ico.className = on ? 'spinner-border spinner-border-sm me-1' : 'fas fa-save me-1';
-        },
-
-        // ── Live field validation ─────────────────────────────────────
         initFieldEvents() {
             [{
                     input: 'f-name',
+                    required: true
+                },
+                {
+                    input: 'f-code',
                     required: true
                 },
                 {
@@ -1123,7 +866,8 @@
             }) => {
                 const el = document.getElementById(input);
                 if (!el) return;
-                const check = () => {
+
+                const revalidate = () => {
                     const val = el.value.trim();
                     if (val) {
                         el.classList.remove('is-invalid');
@@ -1135,21 +879,61 @@
                         el.classList.remove('is-valid', 'is-invalid');
                     }
                 };
-                el.addEventListener('input', check);
-                el.addEventListener('change', check);
+
+                el.addEventListener('input', revalidate);
+                el.addEventListener('change', revalidate);
             });
 
-            document.getElementById('f-desc')?.addEventListener('input', e => {
-                document.getElementById('char-count').textContent = e.target.value.length;
+            $('#f-category').on('select2:select select2:clear', () => {
+                document.getElementById('f-category').classList.remove('is-invalid', 'is-valid');
             });
         },
 
-        // ── Delete Chemical ───────────────────────────────────────────
+        markValid(id) {
+            const el = document.getElementById(id);
+            if (!el) return;
+            el.classList.remove('is-invalid');
+            el.classList.add('is-valid');
+        },
+
+        markInvalid(id, errId, msg) {
+            const el = document.getElementById(id);
+            if (el) {
+                el.classList.add('is-invalid');
+                el.classList.remove('is-valid');
+            }
+            const errEl = document.getElementById(errId);
+            if (errEl) {
+                errEl.textContent = msg;
+                errEl.style.visibility = 'visible';
+            }
+        },
+
+        showErrors(errors) {
+            const map = {
+                chemical_name: ['f-name', 'err-chemical_name'],
+                chemical_code: ['f-code', 'err-chemical_code'],
+                category_id: ['f-category', 'err-category_id'],
+                description: ['f-desc', 'err-description'],
+                status: ['f-status', 'err-status'],
+            };
+            Object.entries(errors).forEach(([f, msg]) => {
+                const [inp, err] = map[f] ?? [];
+                if (inp && err) this.markInvalid(inp, err, Array.isArray(msg) ? msg[0] : msg);
+            });
+        },
+
+        setLoading(on) {
+            const btn = document.getElementById('btn-save');
+            const ico = document.getElementById('save-icon');
+            btn.disabled = on;
+            ico.className = on ? 'spinner-border spinner-border-sm me-1' : 'fas fa-save me-1';
+        },
+
         async deleteItem(id, name) {
             const result = await Swal.fire({
                 title: 'Hapus Bahan Kimia?',
-                html: `<strong>${this.e(name)}</strong> akan dipindahkan ke sampah.<br>
-                   <small class="text-muted">Dapat dipulihkan dari menu Sampah.</small>`,
+                html: `<strong>${name}</strong> akan dipindahkan ke sampah.<br><small class="text-muted">Dapat dipulihkan dari menu Sampah.</small>`,
                 icon: 'warning',
                 showCancelButton: true,
                 reverseButtons: true,
@@ -1159,12 +943,8 @@
                 cancelButtonText: 'Batal',
             });
             if (!result.isConfirmed) return;
-
             try {
-                const res = await this.post(
-                    this.BASE + `warehouse/master/chemicals/${id}/delete`,
-                    new FormData()
-                );
+                const res = await this.post(this.BASE + `warehouse/master/chemicals/${id}/delete`, new FormData());
                 if (res.status === 'success') {
                     this.dt.ajax.reload(null, false);
                     this.loadStats();
@@ -1177,7 +957,6 @@
             }
         },
 
-        // ── Filter ────────────────────────────────────────────────────
         applyFilter() {
             this.filters.name = document.getElementById('filter-name').value.trim();
             this.filters.category = $('#filter-category').val() ?? '';
@@ -1194,8 +973,8 @@
                 status: ''
             };
             document.getElementById('filter-name').value = '';
-            document.getElementById('filter-status').value = '';
             $('#filter-category').val(null).trigger('change');
+            document.getElementById('filter-status').value = '';
             this.dt.ajax.reload();
             this.updateFilterUI();
         },
@@ -1208,361 +987,103 @@
                 if (txt) labels.push(`Kategori: ${txt}`);
             }
             if (this.filters.status) labels.push(`Status: ${this.filters.status}`);
-            document.getElementById('filter-toggle').classList.toggle('has-filter', !!labels.length);
+            document.getElementById('filter-toggle').classList.toggle('has-filter', labels.length > 0);
             document.getElementById('filter-summary-text').textContent = labels.join(' · ');
-            document.getElementById('filter-summary').classList.toggle('d-none', !labels.length);
+            document.getElementById('filter-summary').classList.toggle('d-none', labels.length === 0);
         },
 
-        // ── Variant Modal ─────────────────────────────────────────────
-        async openVariantModal(chemicalId, code, name) {
-            this.variantChemicalId = chemicalId;
-            this.editVariantId = null;
-            document.getElementById('vm-code').textContent = code;
-            document.getElementById('vm-name').textContent = name;
-            this.resetVariantForm();
-            new bootstrap.Modal(document.getElementById('variantModal')).show();
-            await this.loadVariants();
-        },
-
-        async loadVariants() {
-            const listEl = document.getElementById('variant-list');
-            const emptyEl = document.getElementById('variant-empty');
-            const loadingEl = document.getElementById('variant-loading');
-
-            loadingEl.classList.remove('d-none');
-            listEl.innerHTML = '';
-            emptyEl.classList.add('d-none');
-
-            try {
-                const d = await this.get(
-                    this.BASE + `warehouse/master/chemicals/${this.variantChemicalId}/variants`
-                );
-                if (d.status !== 'success') {
-                    this.toast('error', d.message ?? 'Gagal memuat varian');
-                    return;
-                }
-                if (!d.data.length) {
-                    emptyEl.classList.remove('d-none');
-                    return;
-                }
-                listEl.innerHTML = d.data.map(v => this.renderVariantRow(v)).join('');
-            } catch {
-                this.toast('error', 'Gagal memuat varian');
-            } finally {
-                loadingEl.classList.add('d-none');
-            }
-        },
-
-        renderVariantRow(v) {
-            const isDefault = Number(v.is_default) === 1;
-            const price = v.price ?
-                'Rp ' + Number(v.price).toLocaleString('id-ID') :
-                '—';
-            const pack = [v.packaging, v.packaging_size, v.unit].filter(Boolean).join(' ');
-            const statusBadge = v.status === 'Active' ?
-                '<span class="badge badge-phoenix badge-phoenix-success fs-10">Active</span>' :
-                '<span class="badge badge-phoenix badge-phoenix-secondary fs-10">Archived</span>';
-            const defaultBadge = isDefault ?
-                '<span class="badge badge-phoenix badge-phoenix-success fs-10 ms-1"><span class="fas fa-star me-1"></span>Default</span>' :
-                '';
-            const defaultBtn = !isDefault ?
-                `<button class="btn btn-subtle-success btn-sm btn-variant-default" data-id="${v.id}" title="Jadikan Default">
-                   <span class="fas fa-star"></span>
-               </button>` :
-                '';
-
-            return `
-        <div class="variant-row ${isDefault ? 'is-default' : ''}" data-id="${v.id}">
-            <div class="d-flex justify-content-between align-items-start gap-2">
-                <div>
-                    <div class="variant-name">
-                        ${this.e(v.variant_name)}${defaultBadge}
-                    </div>
-                    <div class="text-muted fs-10 mt-1">
-                        ${pack ? `<span class="me-2"><span class="fas fa-box me-1"></span>${this.e(pack)}</span>` : ''}
-                        <span class="me-2"><span class="fas fa-tag me-1"></span>${this.e(price)}</span>
-                        ${statusBadge}
-                    </div>
-                </div>
-                <div class="btn-group btn-group-sm flex-shrink-0">
-                    ${defaultBtn}
-                    <button class="btn btn-subtle-primary btn-sm btn-variant-edit"
-                            data-id="${v.id}" title="Edit">
-                        <span class="fas fa-pencil-alt"></span>
-                    </button>
-                    <button class="btn btn-subtle-danger btn-sm btn-variant-delete"
-                            data-id="${v.id}" data-name="${this.e(v.variant_name)}" title="Hapus">
-                        <span class="fas fa-trash"></span>
-                    </button>
-                </div>
-            </div>
-        </div>`;
-        },
-
-        resetVariantForm() {
-            this.editVariantId = null;
-            ['vf-name', 'vf-packaging', 'vf-size', 'vf-unit', 'vf-price'].forEach(id => {
-                const el = document.getElementById(id);
-                if (el) {
-                    el.value = '';
-                    el.classList.remove('is-invalid');
-                }
-            });
-            document.getElementById('vf-status').value = 'Active';
-            document.getElementById('vf-default').checked = false;
-            document.getElementById('vf-title').innerHTML =
-                '<span class="fas fa-plus-circle me-1"></span>Tambah Varian';
-            document.getElementById('vf-save-text').textContent = 'Simpan Varian';
-            document.getElementById('btn-cancel-edit-variant').classList.add('d-none');
-            document.getElementById('vf-alert').classList.add('d-none');
-            document.getElementById('err-variant_name').textContent = '';
-        },
-
-        async editVariantRow(id) {
-            try {
-                const d = await this.get(
-                    this.BASE + `warehouse/master/chemicals/${this.variantChemicalId}/variants`
-                );
-                if (d.status !== 'success') return;
-
-                const v = (d.data ?? []).find(x => String(x.id) === String(id));
-                if (!v) return;
-
-                this.editVariantId = id;
-                document.getElementById('vf-name').value = v.variant_name ?? '';
-                document.getElementById('vf-packaging').value = v.packaging ?? '';
-                document.getElementById('vf-size').value = v.packaging_size ?? '';
-                document.getElementById('vf-unit').value = v.unit ?? '';
-                document.getElementById('vf-price').value = v.price ?? '';
-                document.getElementById('vf-status').value = v.status ?? 'Active';
-                document.getElementById('vf-default').checked = Number(v.is_default) === 1;
-
-                document.getElementById('vf-title').innerHTML =
-                    '<span class="fas fa-pencil-alt me-1"></span>Edit Varian';
-                document.getElementById('vf-save-text').textContent = 'Update Varian';
-                document.getElementById('btn-cancel-edit-variant').classList.remove('d-none');
-                document.getElementById('vf-alert').classList.add('d-none');
-                document.getElementById('vf-name').classList.remove('is-invalid');
-                document.getElementById('err-variant_name').textContent = '';
-
-                // Scroll ke form
-                document.getElementById('vf-name').scrollIntoView({
-                    behavior: 'smooth',
-                    block: 'nearest'
-                });
-            } catch {
-                this.toast('error', 'Gagal memuat data varian');
-            }
-        },
-
-        async saveVariant() {
-            const nameEl = document.getElementById('vf-name');
-            const name = nameEl.value.trim();
-
-            // Reset error
-            nameEl.classList.remove('is-invalid');
-            document.getElementById('err-variant_name').textContent = '';
-            document.getElementById('vf-alert').classList.add('d-none');
-
-            if (!name) {
-                nameEl.classList.add('is-invalid');
-                document.getElementById('err-variant_name').textContent = 'Nama varian wajib diisi.';
-                return;
-            }
-
-            const fd = new FormData();
-            fd.set('variant_name', name);
-            fd.set('packaging', document.getElementById('vf-packaging').value.trim());
-            fd.set('packaging_size', document.getElementById('vf-size').value);
-            fd.set('unit', document.getElementById('vf-unit').value.trim());
-            fd.set('price', document.getElementById('vf-price').value);
-            fd.set('status', document.getElementById('vf-status').value);
-            fd.set('is_default', document.getElementById('vf-default').checked ? '1' : '0');
-
-            const btn = document.getElementById('btn-save-variant');
-            const ico = document.getElementById('vf-save-icon');
-            btn.disabled = true;
-            ico.className = 'spinner-border spinner-border-sm me-1';
-
-            try {
-                const url = this.editVariantId ?
-                    this.BASE + `warehouse/master/chemicals/${this.variantChemicalId}/variants/${this.editVariantId}/update` :
-                    this.BASE + `warehouse/master/chemicals/${this.variantChemicalId}/variants/store`;
-
-                const res = await this.post(url, fd);
-
-                if (res.status === 'success') {
-                    this.toast('success', res.message);
-                    this.resetVariantForm();
-                    await this.loadVariants();
-                    this.dt.ajax.reload(null, false);
-                } else if (res.errors) {
-                    Object.entries(res.errors).forEach(([f, msg]) => {
-                        if (f === 'variant_name') {
-                            nameEl.classList.add('is-invalid');
-                            document.getElementById('err-variant_name').textContent =
-                                Array.isArray(msg) ? msg[0] : msg;
-                        }
-                    });
-                } else {
-                    document.getElementById('vf-alert').textContent = res.message ?? 'Terjadi kesalahan.';
-                    document.getElementById('vf-alert').classList.remove('d-none');
-                }
-            } catch (e) {
-                this.toast('error', e.message);
-            } finally {
-                btn.disabled = false;
-                ico.className = 'fas fa-save me-1';
-            }
-        },
-
-        async deleteVariant(id, name) {
-            const result = await Swal.fire({
-                title: 'Hapus Varian?',
-                html: `<strong>${this.e(name)}</strong> akan dihapus permanen.`,
-                icon: 'warning',
-                showCancelButton: true,
-                reverseButtons: true,
-                confirmButtonColor: '#e63757',
-                cancelButtonColor: '#748194',
-                confirmButtonText: '<span class="fas fa-trash me-1"></span>Hapus',
-                cancelButtonText: 'Batal',
-            });
-            if (!result.isConfirmed) return;
-
-            try {
-                const res = await this.post(
-                    this.BASE + `warehouse/master/chemicals/variants/${id}/delete`,
-                    new FormData()
-                );
-                if (res.status === 'success') {
-                    this.toast('success', res.message);
-                    if (String(this.editVariantId) === String(id)) this.resetVariantForm();
-                    await this.loadVariants();
-                    this.dt.ajax.reload(null, false);
-                } else {
-                    this.toast('error', res.message);
-                }
-            } catch (e) {
-                this.toast('error', e.message);
-            }
-        },
-
-        async setDefaultVariant(id) {
-            try {
-                const res = await this.post(
-                    this.BASE + `warehouse/master/chemicals/${this.variantChemicalId}/variants/${id}/default`,
-                    new FormData()
-                );
-                if (res.status === 'success') {
-                    this.toast('success', res.message);
-                    await this.loadVariants();
-                } else {
-                    this.toast('error', res.message);
-                }
-            } catch (e) {
-                this.toast('error', e.message);
-            }
-        },
-
-        // ── Variant Events ────────────────────────────────────────────
-        initVariantEvents() {
-            document.getElementById('btn-save-variant')
-                ?.addEventListener('click', () => this.saveVariant());
-            document.getElementById('btn-cancel-edit-variant')
-                ?.addEventListener('click', () => this.resetVariantForm());
-
-            document.getElementById('variantModal')
-                ?.addEventListener('hidden.bs.modal', () => {
-                    this.variantChemicalId = null;
-                    this.editVariantId = null;
-                    this.resetVariantForm();
-                });
-
-            $(document).on('click', '.btn-variant', e => {
-                const b = $(e.currentTarget);
-                this.openVariantModal(b.data('id'), b.data('code'), b.data('name'));
-            });
-            $(document).on('click', '.btn-variant-edit', e => this.editVariantRow($(e.currentTarget).data('id')));
-            $(document).on('click', '.btn-variant-delete', e => {
-                const b = $(e.currentTarget);
-                this.deleteVariant(b.data('id'), b.data('name'));
-            });
-            $(document).on('click', '.btn-variant-default', e => this.setDefaultVariant($(e.currentTarget).data('id')));
-        },
-
-        // ── Main Events ───────────────────────────────────────────────
         initEvents() {
-            document.getElementById('btn-refresh')
-                ?.addEventListener('click', () => this.dt.ajax.reload(() => this.loadStats(), false));
-            document.getElementById('btn-create')
-                ?.addEventListener('click', () => this.openCreate());
-            document.getElementById('btn-save')
-                ?.addEventListener('click', () => this.save());
-            document.getElementById('btn-apply-filter')
-                ?.addEventListener('click', () => this.applyFilter());
-            document.getElementById('btn-reset-filter')
-                ?.addEventListener('click', () => this.resetFilter());
+            document.getElementById('btn-refresh')?.addEventListener('click', () => {
+                this.dt.ajax.reload(() => this.loadStats(), false);
+            });
+            document.getElementById('btn-create')?.addEventListener('click', () => this.openCreate());
+            document.getElementById('btn-save')?.addEventListener('click', () => this.save());
+            document.getElementById('btn-apply-filter')?.addEventListener('click', () => this.applyFilter());
+            document.getElementById('btn-reset-filter')?.addEventListener('click', () => this.resetFilter());
 
-            // Blur supaya keyboard mobile dismiss saat modal ditutup
+            document.getElementById('f-desc')?.addEventListener('input', e => {
+                document.getElementById('char-count').textContent = e.target.value.length;
+            });
+            document.getElementById('f-code')?.addEventListener('input', e => {
+                e.target.value = e.target.value.toUpperCase().replace(/[^A-Z0-9_\-]/g, '');
+            });
+
             document.getElementById('chemicalModal')
                 ?.addEventListener('hide.bs.modal', () => {
-                    if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
+                    if (document.activeElement instanceof HTMLElement) {
+                        document.activeElement.blur();
+                    }
                 });
 
             $(document).on('click', '.btn-edit', e => this.openEdit($(e.currentTarget).data('id')));
             $(document).on('click', '.btn-delete', e => {
-                const b = $(e.currentTarget);
-                this.deleteItem(b.data('id'), b.data('name'));
+                const btn = $(e.currentTarget);
+                this.deleteItem(btn.data('id'), btn.data('name'));
             });
         },
 
-        // ── Formatters ────────────────────────────────────────────────
+        e(s) {
+            if (s === null || s === undefined) return '';
+            return String(s)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        },
+
         fmtDate(d) {
             if (!d) return '<span class="text-muted">—</span>';
             const dt = new Date(d);
             return `<span class="d-block">${dt.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
-                <small class="text-muted">${dt.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}</small>`;
+                    <small class="text-muted">${dt.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}</small>`;
         },
 
         fmtStatus(status) {
             if (!status) return '<span class="text-muted fst-italic">—</span>';
-            const map = {
-                active: ['active', 'fa-check-circle'],
-                draft: ['draft', 'fa-pencil-alt'],
-                archived: ['archived', 'fa-archive'],
-            };
-            const [cls, ico] = map[status.toLowerCase()] ?? ['draft', 'fa-pencil-alt'];
-            return `<span class="badge-status ${cls}">
-                    <span class="fas ${ico}"></span>${this.e(status)}
-                </span>`;
-        },
 
-        fmtUser(username, employeeName = null) {
-            if (!username && !employeeName) return '<span class="text-muted fst-italic">—</span>';
+            let statusClass = '';
+            let statusIcon = '';
 
-            // Jika tidak ada employee — tampilkan username saja
-            if (!employeeName) {
-                return `<span class="badge badge-phoenix badge-phoenix-info rounded-pill fs-10 p-1 px-2"
-                         title="Username: ${this.e(username)}">
-                        <span class="fas fa-user-circle me-1"></span>${this.e(username)}
-                    </span>`;
+            switch (status.toLowerCase()) {
+                case 'active':
+                    statusClass = 'active';
+                    statusIcon = 'fa-check-circle';
+                    break;
+                case 'draft':
+                    statusClass = 'draft';
+                    statusIcon = 'fa-pencil-alt';
+                    break;
+                case 'archived':
+                    statusClass = 'archived';
+                    statusIcon = 'fa-archive';
+                    break;
+                default:
+                    statusClass = 'draft';
+                    statusIcon = 'fa-pencil-alt';
             }
 
-            // Ada employee — tampilkan nama karyawan, username di tooltip
-            return `<span class="badge badge-phoenix badge-phoenix-primary rounded-pill fs-10 p-1 px-3"
-                     title="Karyawan: ${this.e(employeeName)}&#013;Username: ${this.e(username)}"
-                     style="cursor:help">
-                    <span class="fas fa-user me-1"></span>${this.e(employeeName)}
-                </span>`;
+            return `<span class="badge-status ${statusClass}">
+                <span class="fas ${statusIcon}"></span>
+                ${this.e(status)}
+            </span>`;
         },
 
-        // ── Utilities ─────────────────────────────────────────────────
-        e(s) {
-            if (s === null || s === undefined) return '';
-            return String(s)
-                .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-                .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+        fmtUser(name, employeeName = null) {
+            if (!name && !employeeName) return '<span class="text-muted fst-italic">—</span>';
+
+            if (!employeeName) {
+                return `<span class="badge badge-phoenix badge-phoenix-info rounded-pill fs-10 p-1 px-2" title="Username: ${this.e(name)}">
+                    <span class="fas fa-user-circle me-1"></span>${this.e(name)}
+                </span>`;
+            }
+
+            return `<span class="badge badge-phoenix badge-phoenix-primary rounded-pill fs-10 p-1 px-3"
+                 title="Karyawan: ${this.e(employeeName)}&#013;Username: ${this.e(name)}"
+                 style="cursor:help;border-radius:50px;display:inline-flex;align-items:center;gap:0.3rem;">
+                <span class="fas fa-user me-1"></span>
+                ${this.e(employeeName)}
+            </span>`;
         },
 
         toast(type, msg) {
@@ -1570,10 +1091,10 @@
                 toast: true,
                 position: 'top-right',
                 icon: type,
-                title: this.e(msg),
+                title: msg,
                 showConfirmButton: false,
                 timer: type === 'success' ? 2000 : 3500,
-                timerProgressBar: true,
+                timerProgressBar: true
             });
         },
     };
