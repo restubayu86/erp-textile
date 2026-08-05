@@ -17,7 +17,9 @@ $routes->group('warehouse', [
     $routes->get('stocks/adjustment',        'StockController::adjustment');
     $routes->post('stocks/adjustment/store', 'StockController::storeAdjustment');
 
-    // Formulations (endpoint, form kompleks)
+    // ============================================================
+    // FORMULATIONS
+    // ============================================================
     $routes->get('formulations',                 'FormulationController::index');
     $routes->get('formulations/datatables',      'FormulationController::datatables');
     $routes->get('formulations/create',          'FormulationController::create');
@@ -27,13 +29,22 @@ $routes->group('warehouse', [
     $routes->post('formulations/(:num)/update',  'FormulationController::update/$1');
     $routes->post('formulations/(:num)/delete',  'FormulationController::delete/$1');
     $routes->get('formulations/categories',      'FormulationController::categories');
-    $routes->get('formulations/trash',                 'FormulationController::trash');
-    $routes->get('formulations/trash-datatables',       'FormulationController::trashDatatables');
-    $routes->get('formulations/select2',                'FormulationController::select2');
-    $routes->get('formulations/stats',                  'FormulationController::stats');
-    $routes->post('formulations/(:num)/restore',        'FormulationController::restore/$1');
-    $routes->post('formulations/(:num)/force-delete',   'FormulationController::forceDelete/$1');
-    $routes->post('formulations/empty-trash',            'FormulationController::emptyTrash');
+    $routes->get('formulations/sub-process-types', 'FormulationController::subProcessTypes');
+    $routes->get('formulations/trash',           'FormulationController::trash');
+    $routes->get('formulations/trash-datatables', 'FormulationController::trashDatatables');
+    $routes->get('formulations/select2',         'FormulationController::select2');
+    $routes->get('formulations/groups/select2',  'FormulationController::groupsSelect2');
+    $routes->get('formulations/stats',           'FormulationController::stats');
+    $routes->post('formulations/(:num)/restore', 'FormulationController::restore/$1');
+    $routes->post('formulations/(:num)/force-delete', 'FormulationController::forceDelete/$1');
+    $routes->post('formulations/empty-trash',    'FormulationController::emptyTrash');
+
+    // ===== NEW ROUTE FOR CODE GENERATION =====
+    $routes->post('formulations/generate-code-suggestion', 'FormulationController::generateCodeSuggestion');
+
+    // Versioning formulasi
+    $routes->get('formulations/(:num)/versions',                       'FormulationController::versions/$1');
+    $routes->post('formulations/(:num)/versions/(:num)/activate',      'FormulationController::activateVersion/$1/$2');
 
     // ============================================================
     // Master: Chemical Categories (modal)

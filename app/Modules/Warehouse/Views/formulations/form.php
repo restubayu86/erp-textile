@@ -4,13 +4,411 @@
 <meta name="csrf-token" content="<?= csrf_hash() ?>">
 <meta name="csrf-name" content="<?= csrf_token() ?>">
 <style>
-    .item-row select, .item-row input { min-width: 0; }
-    .item-row .select2-container { width: 100% !important; }
+    /* ── Form styling ─────────────────────────────────────────────── */
+    .form-section {
+        border-radius: 0.75rem;
+        border: 1px solid var(--phoenix-border-color);
+        background: var(--phoenix-card-bg);
+        transition: box-shadow 0.2s;
+    }
+
+    .form-section:hover {
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+    }
+
+    .form-section-header {
+        padding: 0.9rem 1.25rem;
+        border-bottom: 1px solid var(--phoenix-border-color);
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .form-section-header .icon-wrapper {
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        background: rgba(var(--phoenix-primary-rgb), 0.08);
+        color: var(--phoenix-primary);
+    }
+
+    .form-section-header h6 {
+        font-weight: 600;
+        margin: 0;
+        font-size: 0.9rem;
+    }
+
+    .form-section-header .badge-required {
+        font-size: 0.6rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        padding: 0.2rem 0.6rem;
+        border-radius: 20px;
+        background: rgba(var(--phoenix-danger-rgb), 0.08);
+        color: var(--phoenix-danger);
+        border: 1px solid rgba(var(--phoenix-danger-rgb), 0.15);
+    }
+
+    .form-section-body {
+        padding: 1.25rem;
+    }
+
+    /* ── Form controls ────────────────────────────────────────────── */
+    .form-label {
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        color: var(--phoenix-secondary-color);
+        margin-bottom: 0.3rem;
+    }
+
+    .form-label .text-danger {
+        font-weight: 700;
+    }
+
+    .form-control-sm,
+    .form-select-sm {
+        font-size: 0.85rem;
+        padding: 0.4rem 0.75rem;
+        border-radius: 0.5rem;
+        transition: border-color 0.15s, box-shadow 0.15s;
+    }
+
+    .form-control-sm:focus,
+    .form-select-sm:focus {
+        border-color: var(--phoenix-primary);
+        box-shadow: 0 0 0 0.2rem rgba(var(--phoenix-primary-rgb), 0.15);
+    }
+
+    .code-input {
+        font-family: 'Courier New', monospace;
+        font-weight: 700;
+        font-size: 0.9rem;
+        letter-spacing: 0.06em;
+        background: rgba(var(--phoenix-primary-rgb), 0.04);
+        border-color: rgba(var(--phoenix-primary-rgb), 0.2);
+        cursor: default;
+        color: var(--phoenix-primary);
+    }
+
+    .code-input:focus {
+        border-color: var(--phoenix-primary);
+        box-shadow: 0 0 0 0.2rem rgba(var(--phoenix-primary-rgb), 0.15);
+    }
+
+    .input-group-sm .btn {
+        padding: 0.4rem 0.75rem;
+        font-size: 0.85rem;
+        border-radius: 0 0.5rem 0.5rem 0;
+    }
+
+    /* ── Select2 Custom ───────────────────────────────────────────── */
+    /* Chemical Select */
+    .chemical-select-result {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        width: 100%;
+    }
+
+    .chemical-select-result .chemical-name {
+        font-weight: 500;
+        font-size: 0.85rem;
+    }
+
+    .chemical-select-result .chemical-code {
+        font-size: 0.65rem;
+        color: var(--phoenix-secondary-color);
+        font-family: 'Courier New', monospace;
+        background: rgba(var(--phoenix-secondary-rgb), 0.08);
+        padding: 0.1rem 0.5rem;
+        border-radius: 3px;
+        flex-shrink: 0;
+        margin-left: 0.5rem;
+    }
+
+    .select2-results__option--highlighted .chemical-select-result .chemical-code {
+        color: rgba(255, 255, 255, 0.8);
+        background: rgba(255, 255, 255, 0.15);
+    }
+
+    .select2-container--bootstrap-5 .select2-selection--single .select2-selection__rendered {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding-right: 1.5rem;
+    }
+
+    .select2-container--bootstrap-5 .select2-selection--single .select2-selection__rendered .chemical-code {
+        font-size: 0.6rem;
+        color: var(--phoenix-secondary-color);
+        font-family: 'Courier New', monospace;
+        background: rgba(var(--phoenix-secondary-rgb), 0.08);
+        padding: 0.05rem 0.4rem;
+        border-radius: 3px;
+        margin-left: 0.5rem;
+        flex-shrink: 0;
+    }
+
+    /* Process & Sub Process Select2 with Tags - Single Select */
+    .process-select-container .select2-selection {
+        min-height: 38px !important;
+        border-radius: 0.5rem !important;
+    }
+
+    .process-select-container .select2-selection .select2-selection__rendered {
+        padding: 0.2rem 0.75rem;
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 0.25rem;
+    }
+
+    .process-select-container .select2-selection .select2-selection__choice {
+        background: rgba(var(--phoenix-primary-rgb), 0.08);
+        border: 1px solid rgba(var(--phoenix-primary-rgb), 0.2);
+        border-radius: 4px;
+        padding: 0.05rem 0.5rem;
+        font-size: 0.85rem;
+        display: flex;
+        align-items: center;
+        gap: 0.3rem;
+    }
+
+    .process-select-container .select2-selection .select2-selection__choice .select2-selection__choice__remove {
+        color: var(--phoenix-secondary-color);
+        font-weight: 700;
+        margin-right: 0.15rem;
+        border: none;
+        background: transparent;
+        padding: 0 0.2rem;
+        font-size: 0.8rem;
+    }
+
+    .process-select-container .select2-selection .select2-selection__choice .select2-selection__choice__remove:hover {
+        color: var(--phoenix-danger);
+        background: transparent;
+    }
+
+    .process-select-container .select2-selection .select2-search--inline .select2-search__field {
+        font-size: 0.85rem;
+        min-width: 100px;
+        padding: 0.15rem 0;
+        margin: 0;
+    }
+
+    .process-select-container .select2-selection .select2-selection__clear {
+        margin-right: 0.3rem;
+        font-size: 1rem;
+    }
+
+    /* ── Item rows ────────────────────────────────────────────────── */
+    .item-row {
+        transition: background-color 0.15s;
+        border-radius: 0.5rem;
+    }
+
+    .item-row:hover {
+        background-color: rgba(var(--phoenix-primary-rgb), 0.02);
+    }
+
+    .item-row .form-control-sm,
+    .item-row .form-select-sm {
+        border-radius: 0.4rem;
+    }
+
+    .item-row.type-softener_water .item-chemical-cell {
+        display: none;
+    }
+
+    .item-row.type-chemical .item-label-cell {
+        display: none;
+    }
+
+    .item-remove-btn {
+        opacity: 0.4;
+        transition: opacity 0.2s;
+    }
+
+    .item-row:hover .item-remove-btn {
+        opacity: 1;
+    }
+
+    .item-label[readonly] {
+        background-color: var(--phoenix-body-tertiary-bg);
+        cursor: not-allowed;
+    }
+
+    /* ── Composition Summary ──────────────────────────────────────── */
+    .composition-summary {
+        background: rgba(var(--phoenix-primary-rgb), 0.03);
+        border-radius: 0.5rem;
+        padding: 0.75rem 1rem;
+        border: 1px solid rgba(var(--phoenix-primary-rgb), 0.08);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+
+    .composition-summary .total-label {
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        color: var(--phoenix-secondary-color);
+    }
+
+    .composition-summary .total-value {
+        font-size: 1.1rem;
+        font-weight: 700;
+        font-variant-numeric: tabular-nums;
+        padding: 0.15rem 0.75rem;
+        border-radius: 20px;
+        background: rgba(var(--phoenix-primary-rgb), 0.08);
+        color: var(--phoenix-primary);
+    }
+
+    .composition-summary .total-value.total-ok {
+        background: rgba(var(--phoenix-success-rgb), 0.1);
+        color: var(--phoenix-success);
+    }
+
+    .composition-summary .total-value.total-warning {
+        background: rgba(var(--phoenix-warning-rgb), 0.1);
+        color: var(--phoenix-warning);
+    }
+
+    .composition-summary .total-value.total-danger {
+        background: rgba(var(--phoenix-danger-rgb), 0.1);
+        color: var(--phoenix-danger);
+    }
+
+    .composition-summary .count-badge {
+        font-size: 0.7rem;
+        color: var(--phoenix-secondary-color);
+        display: flex;
+        align-items: center;
+        gap: 0.3rem;
+    }
+
+    .composition-summary .count-badge .badge {
+        font-size: 0.65rem;
+        padding: 0.2rem 0.5rem;
+        border-radius: 20px;
+    }
+
+    /* ── Empty state ───────────────────────────────────────────────── */
+    .empty-state {
+        text-align: center;
+        padding: 2.5rem 1rem;
+        color: var(--phoenix-secondary-color);
+    }
+
+    .empty-state .fas {
+        font-size: 2.2rem;
+        opacity: 0.3;
+        margin-bottom: 0.75rem;
+        display: block;
+    }
+
+    .empty-state p {
+        font-size: 0.85rem;
+        margin: 0;
+    }
+
+    /* ── Sidebar ───────────────────────────────────────────────────── */
+    .sidebar-card {
+        border-radius: 0.75rem;
+        border: 1px solid var(--phoenix-border-color);
+        background: var(--phoenix-card-bg);
+        position: sticky;
+        top: 1.5rem;
+    }
+
+    .sidebar-card .card-body {
+        padding: 1.25rem;
+    }
+
+    .sidebar-divider {
+        border: 0;
+        border-top: 1px solid var(--phoenix-border-color);
+        margin: 1rem 0;
+    }
+
+    /* ── Version alert ────────────────────────────────────────────── */
+    .version-alert {
+        border-radius: 0.75rem;
+        border-left: 4px solid var(--phoenix-info);
+        background: rgba(var(--phoenix-info-rgb), 0.04);
+        padding: 0.75rem 1rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+
+    .version-alert .version-info {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        flex-wrap: wrap;
+        font-size: 0.85rem;
+    }
+
+    .version-alert .version-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        padding: 0.2rem 0.7rem;
+        border-radius: 20px;
+        font-size: 0.7rem;
+        font-weight: 600;
+        background: rgba(var(--phoenix-info-rgb), 0.1);
+        color: var(--phoenix-info);
+        border: 1px solid rgba(var(--phoenix-info-rgb), 0.2);
+    }
+
+    /* ── Responsive tweaks ────────────────────────────────────────── */
+    @media (max-width: 768px) {
+        .form-section-body {
+            padding: 1rem;
+        }
+
+        .sidebar-card {
+            position: static;
+        }
+
+        .version-alert {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .version-alert .version-info {
+            flex-direction: column;
+            align-items: stretch;
+            gap: 0.5rem;
+        }
+    }
+
+    /* Select2 error state */
+    .select2-container--bootstrap-5.is-invalid .select2-selection {
+        border-color: var(--phoenix-danger) !important;
+    }
 </style>
 <?= $this->endSection() ?>
 
 <?= $this->section('content') ?>
 <div class="w-100">
+    <!-- Breadcrumb & Header -->
     <nav aria-label="breadcrumb" class="mb-2">
         <ol class="breadcrumb mb-0">
             <?php foreach ($breadcrumbs as $crumb): ?>
@@ -22,99 +420,305 @@
             <?php endforeach; ?>
         </ol>
     </nav>
-    <h1 class="h3 mb-1 fw-bold"><?= esc((string)$page_title) ?></h1>
-    <p class="text-body-tertiary mb-4"><?= esc((string)$page_description) ?></p>
 
+    <div class="d-flex align-items-start justify-content-between mb-4">
+        <div>
+            <h1 class="h3 mb-1 fw-bold"><?= esc((string)$page_title) ?></h1>
+            <p class="text-body-tertiary mb-0"><?= esc((string)$page_description) ?></p>
+        </div>
+        <a href="<?= site_url('warehouse/formulations') ?>" class="btn btn-subtle-secondary btn-sm no-print">
+            <span class="fas fa-arrow-left me-1"></span>Kembali
+        </a>
+    </div>
+
+    <!-- Version Alert (Edit Mode) -->
+    <?php if (!empty($formulation['id'])): ?>
+        <div class="version-alert mb-4 no-print">
+            <div class="version-info">
+                <span class="version-badge">
+                    <span class="fas fa-code-branch"></span>
+                    v<?= esc((string)($formulation['version_no'] ?? '1')) ?>
+                </span>
+                <span>
+                    Status: <strong><?= esc((string)($formulation['status'] ?? 'Draft')) ?></strong>
+                </span>
+                <span class="text-muted">
+                    <span class="fas fa-clock me-1"></span>
+                    <?= date('d M Y H:i', strtotime($formulation['updated_at'] ?? 'now')) ?>
+                </span>
+            </div>
+            <button type="button" class="btn btn-subtle-info btn-sm" id="btn-show-history">
+                <span class="fas fa-clock-rotate-left me-1"></span>Riwayat Versi
+            </button>
+        </div>
+    <?php endif; ?>
+
+    <!-- Form -->
     <form id="formulation-form">
         <input type="hidden" id="f-id" value="<?= esc((string)($formulation['id'] ?? '')) ?>">
+
         <div class="row g-4">
+            <!-- Left Column -->
             <div class="col-lg-8">
-                <div class="card mb-4">
-                    <div class="card-header"><h5 class="mb-0">Informasi Formulasi</h5></div>
-                    <div class="card-body">
+                <!-- Section: Informasi Formulasi -->
+                <div class="form-section mb-4">
+                    <div class="form-section-header">
+                        <div class="icon-wrapper">
+                            <span class="fas fa-clipboard-list"></span>
+                        </div>
+                        <h6>Informasi Formulasi</h6>
+                        <span class="badge-required ms-auto">Wajib diisi</span>
+                    </div>
+                    <div class="form-section-body">
                         <div class="row g-3">
+                            <!-- Kode -->
                             <div class="col-md-4">
-                                <label class="form-label">Kode Formulasi <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control" id="f-code" maxlength="50"
-                                    value="<?= esc((string)($formulation['formulation_code'] ?? '')) ?>" required>
+                                <label class="form-label" for="f-code">
+                                    Kode Formulasi
+                                </label>
+                                <div class="input-group input-group-sm">
+                                    <input type="text" class="form-control code-input" id="f-code"
+                                        value="<?= esc((string)($formulation['formulation_code'] ?? $suggested_code ?? '')) ?>"
+                                        readonly placeholder="Otomatis" maxlength="50">
+                                    <button class="btn btn-outline-primary" type="button" id="btn-generate-code" title="Generate ulang kode">
+                                        <span class="fas fa-sync-alt"></span>
+                                    </button>
+                                </div>
+                                <div class="form-text mt-1" style="font-size:0.7rem;">
+                                    Format: <strong>F[MM][YY]XXXX</strong>
+                                    <span class="text-muted">· Contoh: F08260001</span>
+                                </div>
                                 <div class="invalid-feedback" id="err-formulation_code"></div>
                             </div>
+
+                            <!-- Nama -->
                             <div class="col-md-8">
-                                <label class="form-label">Nama Formulasi <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control" id="f-name" maxlength="150"
-                                    value="<?= esc((string)($formulation['formulation_name'] ?? '')) ?>" required>
+                                <label class="form-label" for="f-name">
+                                    Nama Formulasi <span class="text-danger">*</span>
+                                </label>
+                                <input type="text" class="form-control form-control-sm" id="f-name"
+                                    value="<?= esc((string)($formulation['formulation_name'] ?? '')) ?>"
+                                    placeholder="Masukkan nama formulasi..." maxlength="150" required>
                                 <div class="invalid-feedback" id="err-formulation_name"></div>
                             </div>
-                            <div class="col-md-4">
-                                <label class="form-label">Jenis Proses <span class="text-danger">*</span></label>
-                                <select class="form-select" id="f-process-type" required>
-                                    <?php $pt = $formulation['process_type'] ?? 'Dyeing'; ?>
-                                    <option value="Dyeing" <?= $pt === 'Dyeing' ? 'selected' : '' ?>>Dyeing</option>
-                                    <option value="Finishing" <?= $pt === 'Finishing' ? 'selected' : '' ?>>Finishing</option>
-                                    <option value="Other" <?= $pt === 'Other' ? 'selected' : '' ?>>Lainnya</option>
+
+                            <!-- Proses & Sub Proses - Menggunakan Select2 dengan Tags (Single Select) -->
+                            <div class="col-md-6">
+                                <label class="form-label" for="f-process-type">
+                                    Jenis Proses <span class="text-danger">*</span>
+                                </label>
+                                <div class="process-select-container">
+                                    <select class="form-select form-select-sm" id="f-process-type" style="width:100%">
+                                        <?php
+                                        $processOptions = ['Dyeing', 'Finishing', 'Other'];
+                                        $selectedProcess = $formulation['process_type'] ?? 'Dyeing';
+                                        ?>
+                                        <option value=""></option>
+                                        <?php foreach ($processOptions as $opt): ?>
+                                            <option value="<?= $opt ?>" <?= ($opt === $selectedProcess) ? 'selected' : '' ?>>
+                                                <?= $opt ?>
+                                            </option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                </div>
+                                <div class="form-text mt-1" style="font-size:0.7rem;">
+                                    <span class="fas fa-info-circle me-1"></span>
+                                    Pilih dari daftar atau ketik untuk menambah proses baru
+                                </div>
+                                <div class="invalid-feedback" id="err-process_type"></div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label" for="f-process-sub-type">
+                                    Sub Proses <span class="text-danger">*</span>
+                                </label>
+                                <div class="process-select-container">
+                                    <select class="form-select form-select-sm" id="f-process-sub-type" style="width:100%">
+                                        <?php
+                                        $subOptions = ['Dyeing', 'Dipping', 'Dipping 1', 'Dipping 2', 'Coating', 'Spray', 'Coating Foam', 'Finishing', 'Other'];
+                                        $selectedSub = $formulation['process_sub_type'] ?? 'Dyeing';
+                                        ?>
+                                        <option value=""></option>
+                                        <?php foreach ($subOptions as $opt): ?>
+                                            <option value="<?= $opt ?>" <?= ($opt === $selectedSub) ? 'selected' : '' ?>>
+                                                <?= $opt ?>
+                                            </option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                </div>
+                                <div class="form-text mt-1" style="font-size:0.7rem;">
+                                    <span class="fas fa-info-circle me-1"></span>
+                                    Pilih dari daftar atau ketik untuk menambah sub proses baru
+                                </div>
+                                <div class="invalid-feedback" id="err-process_sub_type"></div>
+                            </div>
+
+                            <!-- Group & Hasil -->
+                            <div class="col-md-6">
+                                <label class="form-label" for="f-group">
+                                    Group
+                                </label>
+                                <select class="form-select form-select-sm" id="f-group" style="width:100%">
+                                    <?php if (!empty($formulation['group_id'])): ?>
+                                        <option value="<?= esc((string)$formulation['group_id']) ?>" selected>
+                                            <?= esc((string)($formulation['group_name'] ?? '')) ?>
+                                        </option>
+                                    <?php endif; ?>
                                 </select>
+                                <div class="form-text mt-1" style="font-size:0.7rem;">
+                                    Ketik nama baru untuk membuat group
+                                </div>
                             </div>
-                            <div class="col-md-4">
-                                <label class="form-label">Hasil / Batch <span class="text-danger">*</span></label>
-                                <input type="number" step="0.001" class="form-control" id="f-output-qty"
-                                    value="<?= esc((string)($formulation['output_quantity'] ?? '1')) ?>" required>
-                                <div class="invalid-feedback" id="err-output_quantity"></div>
+
+                            <div class="col-md-6">
+                                <label class="form-label" for="f-output-percentage">
+                                    Hasil / Batch <span class="text-danger">*</span>
+                                </label>
+                                <div class="input-group input-group-sm">
+                                    <input type="number" step="0.001" min="0" class="form-control form-control-sm" id="f-output-percentage"
+                                        value="<?= esc((string)($formulation['output_percentage'] ?? '100')) ?>" required>
+                                    <span class="input-group-text">%</span>
+                                </div>
+                                <div class="form-text mt-1" style="font-size:0.7rem;">
+                                    Boleh lebih dari 100% (faktor loss)
+                                </div>
+                                <div class="invalid-feedback" id="err-output_percentage"></div>
                             </div>
-                            <div class="col-md-4">
-                                <label class="form-label">Satuan Hasil</label>
-                                <input type="text" class="form-control" id="f-output-unit" maxlength="20"
-                                    placeholder="kg, liter" value="<?= esc((string)($formulation['output_unit'] ?? '')) ?>">
-                            </div>
+
+                            <!-- Deskripsi -->
                             <div class="col-12">
-                                <label class="form-label">Deskripsi</label>
-                                <textarea class="form-control" id="f-description" rows="2" maxlength="500"><?= esc((string)($formulation['description'] ?? '')) ?></textarea>
+                                <label class="form-label" for="f-description">
+                                    Deskripsi
+                                </label>
+                                <textarea class="form-control form-control-sm" id="f-description" rows="2"
+                                    maxlength="500" placeholder="Deskripsi singkat formulasi..."><?= esc((string)($formulation['description'] ?? '')) ?></textarea>
+                                <div class="text-end mt-1">
+                                    <small class="text-muted" style="font-size:0.7rem;">
+                                        <span id="char-count">0</span>/500
+                                    </small>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <div class="card">
-                    <div class="card-header d-flex justify-content-between align-items-center">
-                        <h5 class="mb-0">Resep Bahan Kimia</h5>
-                        <button type="button" class="btn btn-subtle-primary btn-sm" id="btn-add-item">
+                <!-- Section: Komposisi Resep -->
+                <div class="form-section">
+                    <div class="form-section-header">
+                        <div class="icon-wrapper" style="background:rgba(var(--phoenix-success-rgb),0.08);color:var(--phoenix-success);">
+                            <span class="fas fa-flask"></span>
+                        </div>
+                        <h6>Komposisi Resep</h6>
+                        <button type="button" class="btn btn-sm btn-primary ms-auto" id="btn-add-item">
                             <span class="fas fa-plus me-1"></span>Tambah Baris
                         </button>
                     </div>
-                    <div class="card-body">
+                    <div class="form-section-body">
+                        <!-- Table -->
                         <div class="table-responsive">
-                            <table class="table table-sm align-middle mb-0">
+                            <table class="table table-sm align-middle mb-0" style="font-size:0.85rem;">
                                 <thead>
                                     <tr>
-                                        <th style="width:40%">Bahan Kimia</th>
-                                        <th style="width:20%">Takaran</th>
-                                        <th style="width:15%">Satuan</th>
-                                        <th style="width:20%">Catatan</th>
-                                        <th style="width:5%"></th>
+                                        <th style="width:14%">Jenis</th>
+                                        <th style="width:34%">Bahan / Label</th>
+                                        <th style="width:16%">Persentase</th>
+                                        <th style="width:30%">Catatan</th>
+                                        <th style="width:6%" class="text-end"></th>
                                     </tr>
                                 </thead>
                                 <tbody id="item-rows"></tbody>
                             </table>
                         </div>
-                        <div class="text-muted small mt-2" id="item-empty-msg">Belum ada bahan kimia, klik "Tambah Baris".</div>
+
+                        <!-- Empty State -->
+                        <div id="item-empty-msg" class="empty-state">
+                            <span class="fas fa-box-open"></span>
+                            <p>Belum ada komposisi</p>
+                            <small class="text-muted">Klik "Tambah Baris" untuk menambahkan bahan</small>
+                        </div>
+
+                        <!-- Composition Summary -->
+                        <div id="composition-summary" class="composition-summary mt-3" style="display:none;">
+                            <div>
+                                <span class="total-label">Total Komposisi</span>
+                                <span class="count-badge">
+                                    <span class="badge bg-primary bg-opacity-10 text-primary" id="item-count">0 item</span>
+                                </span>
+                            </div>
+                            <div>
+                                <span class="total-value" id="total-percentage">0.00%</span>
+                            </div>
+                        </div>
+
+                        <!-- Info -->
+                        <div class="mt-3 p-2 bg-body-tertiary rounded-3" style="font-size:0.75rem;">
+                            <div class="d-flex flex-wrap gap-3">
+                                <span>
+                                    <span class="badge bg-primary bg-opacity-10 text-primary me-1">
+                                        <span class="fas fa-flask"></span>
+                                    </span>
+                                    <strong>Chemical</strong> — mempengaruhi stok
+                                </span>
+                                <span>
+                                    <span class="badge bg-info bg-opacity-10 text-info me-1">
+                                        <span class="fas fa-water"></span>
+                                    </span>
+                                    <strong>Softener Water</strong> — tidak mempengaruhi stok
+                                </span>
+                                <span class="text-muted">
+                                    <span class="fas fa-info-circle me-1"></span>
+                                    Total persentase boleh lebih dari 100%
+                                </span>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
 
+            <!-- Right Column - Sidebar -->
             <div class="col-lg-4">
-                <div class="card">
-                    <div class="card-header"><h5 class="mb-0">Status & Simpan</h5></div>
+                <div class="sidebar-card">
                     <div class="card-body">
-                        <label class="form-label">Status</label>
-                        <select class="form-select mb-3" id="f-status">
-                            <?php $st = $formulation['status'] ?? 'Draft'; ?>
-                            <option value="Draft" <?= $st === 'Draft' ? 'selected' : '' ?>>Draft</option>
-                            <option value="Active" <?= $st === 'Active' ? 'selected' : '' ?>>Active</option>
-                            <option value="Archived" <?= $st === 'Archived' ? 'selected' : '' ?>>Archived</option>
-                        </select>
-                        <button type="submit" class="btn btn-primary w-100 mb-2">
-                            <span class="fas fa-save me-1"></span>Simpan Formulasi
-                        </button>
-                        <a href="<?= site_url('warehouse/formulations') ?>" class="btn btn-subtle-secondary w-100">Batal</a>
+                        <!-- Status -->
+                        <div class="mb-3">
+                            <label class="form-label" for="f-status">
+                                Status Versi
+                            </label>
+                            <select class="form-select form-select-sm" id="f-status">
+                                <?php $st = $formulation['status'] ?? 'Draft'; ?>
+                                <option value="Draft" <?= $st === 'Draft' ? 'selected' : '' ?>>Draft</option>
+                                <option value="Active" <?= $st === 'Active' ? 'selected' : '' ?>>Active</option>
+                                <option value="Archived" <?= $st === 'Archived' ? 'selected' : '' ?>>Archived</option>
+                            </select>
+                            <?php if (!empty($formulation['id'])): ?>
+                                <div class="form-text mt-1" style="font-size:0.7rem;">
+                                    <span class="fas fa-info-circle me-1"></span>
+                                    Menyimpan akan membuat <strong>versi baru</strong>
+                                </div>
+                            <?php endif; ?>
+                        </div>
+
+                        <!-- Notes -->
+                        <div class="mb-3">
+                            <label class="form-label" for="f-version-notes">
+                                Catatan Versi
+                            </label>
+                            <textarea class="form-control form-control-sm" id="f-version-notes" rows="2"
+                                maxlength="500" placeholder="Catatan perubahan versi..."></textarea>
+                        </div>
+
+                        <hr class="sidebar-divider">
+
+                        <!-- Actions -->
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <span class="fas fa-save me-1"></span>
+                                <?= !empty($formulation['id']) ? 'Simpan sebagai Versi Baru' : 'Simpan Formulasi' ?>
+                            </button>
+                            <a href="<?= site_url('warehouse/formulations') ?>" class="btn btn-subtle-secondary">
+                                <span class="fas fa-times me-1"></span>Batal
+                            </a>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -122,37 +726,109 @@
     </form>
 </div>
 
+<!-- ─── Item Row Template ────────────────────────────────────────── -->
 <template id="item-row-template">
-    <tr class="item-row">
+    <tr class="item-row type-chemical">
         <td>
+            <select class="form-select form-select-sm item-type">
+                <option value="chemical">Chemical</option>
+                <option value="softener_water">Softener Water</option>
+            </select>
+        </td>
+        <td class="item-chemical-cell">
             <select class="form-select form-select-sm item-chemical" required></select>
         </td>
-        <td><input type="number" step="0.0001" class="form-control form-control-sm item-qty" required></td>
-        <td><input type="text" class="form-control form-control-sm item-unit" maxlength="20" placeholder="kg"></td>
-        <td><input type="text" class="form-control form-control-sm item-notes" maxlength="255"></td>
-        <td class="text-end"><button type="button" class="btn btn-subtle-danger btn-sm btn-remove-item"><span class="fas fa-trash"></span></button></td>
+        <td class="item-label-cell">
+            <input type="text" class="form-control form-control-sm item-label" maxlength="150" placeholder="Nama softener...">
+        </td>
+        <td>
+            <div class="input-group input-group-sm">
+                <input type="number" step="0.001" min="0" class="form-control item-percentage" placeholder="0" required>
+                <span class="input-group-text" style="font-size:0.7rem;">%</span>
+            </div>
+        </td>
+        <td>
+            <input type="text" class="form-control form-control-sm item-notes" maxlength="255" placeholder="Catatan...">
+        </td>
+        <td class="text-end">
+            <button type="button" class="btn btn-subtle-danger btn-sm item-remove-btn" style="padding:0.2rem 0.4rem;font-size:0.7rem;">
+                <span class="fas fa-trash"></span>
+            </button>
+        </td>
     </tr>
 </template>
+
+<!-- ─── History Modal ────────────────────────────────────────────── -->
+<div class="modal fade" id="modal-history" tabindex="-1">
+    <div class="modal-dialog modal-dialog-scrollable">
+        <div class="modal-content border-0 shadow-lg rounded-3">
+            <div class="modal-header border-bottom">
+                <div class="d-flex align-items-center gap-2">
+                    <span class="fas fa-clock-rotate-left text-info"></span>
+                    <h5 class="modal-title fw-bold">Riwayat Versi</h5>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="table-responsive">
+                    <table class="table table-sm table-hover align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th>Versi</th>
+                                <th>Status</th>
+                                <th>Hasil</th>
+                                <th>Tanggal</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody id="history-rows">
+                            <tr>
+                                <td colspan="5" class="text-center text-muted py-3">Memuat...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer border-top bg-body-tertiary">
+                <button type="button" class="btn btn-subtle-secondary btn-sm" data-bs-dismiss="modal">
+                    <span class="fas fa-check me-1"></span>Tutup
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
 <?= $this->endSection() ?>
 
 <?= $this->section('scripts') ?>
 <script>
     const FormulationForm = {
         BASE: '<?= base_url() ?>',
+        formulationId: '<?= esc((string)($formulation['id'] ?? '')) ?>',
         existingItems: <?= json_encode($formulation['items'] ?? []) ?>,
 
         init() {
+            this.initSelect2();
+            this.initGroupSelect();
             this.initEvents();
+            this.initCharCounter();
+
             if (this.existingItems.length) {
                 this.existingItems.forEach(item => this.addRow(item));
             } else {
                 this.addRow();
             }
             this.toggleEmptyMsg();
+            this.updateCompositionSummary();
+
+            // Auto generate code if empty
+            if (!document.getElementById('f-code').value) {
+                this.generateCode();
+            }
         },
 
         csrfName: () => document.querySelector('meta[name="csrf-name"]')?.content ?? '',
         csrfToken: () => document.querySelector('meta[name="csrf-token"]')?.content ?? '',
+
         updateCsrf(h) {
             const m = document.querySelector('meta[name="csrf-token"]');
             if (m && h) m.content = h;
@@ -161,12 +837,148 @@
         async post(url, fd) {
             fd.set(this.csrfName(), this.csrfToken());
             const r = await fetch(url, {
-                method: 'POST', body: fd,
-                headers: { 'X-Requested-With': 'XMLHttpRequest', 'X-CSRF-TOKEN': this.csrfToken() }
+                method: 'POST',
+                body: fd,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRF-TOKEN': this.csrfToken()
+                }
             });
             const d = await r.json();
             if (d?.csrfHash) this.updateCsrf(d.csrfHash);
             return d;
+        },
+
+        initSelect2() {
+            // Process Type - Single Select with Tags
+            $('#f-process-type').select2({
+                theme: 'bootstrap-5',
+                placeholder: 'Pilih atau ketik proses...',
+                width: '100%',
+                tags: true,
+                dropdownAutoWidth: true,
+                containerCssClass: 'process-select-container',
+                allowClear: true,
+                language: {
+                    noResults: function() {
+                        return 'Ketik untuk menambah proses baru';
+                    }
+                }
+            });
+
+            // Sub Process Type - Single Select with Tags
+            $('#f-process-sub-type').select2({
+                theme: 'bootstrap-5',
+                placeholder: 'Pilih atau ketik sub proses...',
+                width: '100%',
+                tags: true,
+                dropdownAutoWidth: true,
+                containerCssClass: 'process-select-container',
+                allowClear: true,
+                language: {
+                    noResults: function() {
+                        return 'Ketik untuk menambah sub proses baru';
+                    }
+                }
+            });
+
+            // Handle change events for code generation
+            $('#f-process-type, #f-process-sub-type').on('change', () => {
+                if (!document.getElementById('f-id').value) {
+                    this.generateCode();
+                }
+            });
+        },
+
+        initGroupSelect() {
+            $('#f-group').select2({
+                theme: 'bootstrap-5',
+                placeholder: '— Pilih atau ketik nama baru —',
+                allowClear: true,
+                width: '100%',
+                tags: true,
+                dropdownAutoWidth: true,
+                ajax: {
+                    url: this.BASE + 'warehouse/formulations/groups/select2',
+                    dataType: 'json',
+                    delay: 250,
+                    data: params => ({
+                        search: params.term
+                    }),
+                    processResults: data => ({
+                        results: (data.data ?? []).map(g => ({
+                            id: g.id,
+                            text: g.name
+                        }))
+                    }),
+                },
+            });
+        },
+
+        initChemicalSelect($select) {
+            $select.select2({
+                theme: 'bootstrap-5',
+                placeholder: '— Pilih Bahan Kimia —',
+                width: '100%',
+                dropdownAutoWidth: true,
+                templateResult: this.formatChemicalResult,
+                templateSelection: this.formatChemicalSelection,
+                ajax: {
+                    url: this.BASE + 'warehouse/master/chemicals/select2',
+                    dataType: 'json',
+                    delay: 250,
+                    data: params => ({
+                        search: params.term
+                    }),
+                    processResults: data => ({
+                        results: (data.data ?? []).map(c => ({
+                            id: c.id,
+                            text: `${c.name} (${c.code})`,
+                            code: c.code,
+                            name: c.name
+                        }))
+                    }),
+                },
+            });
+        },
+
+        formatChemicalResult(data) {
+            if (data.loading) return data.text;
+            if (!data.code) return data.text;
+
+            return $(`
+                <div class="chemical-select-result">
+                    <span class="chemical-name">${data.name}</span>
+                    <span class="chemical-code">${data.code}</span>
+                </div>
+            `);
+        },
+
+        formatChemicalSelection(data) {
+            if (!data.code) return data.text;
+            return $(`
+                <span>${data.name}</span>
+                <span class="chemical-code">${data.code}</span>
+            `);
+        },
+
+        initCharCounter() {
+            const desc = document.getElementById('f-description');
+            const counter = document.getElementById('char-count');
+            desc?.addEventListener('input', () => {
+                counter.textContent = desc.value.length;
+            });
+        },
+
+        async generateCode() {
+            try {
+                const res = await this.post(this.BASE + 'warehouse/formulations/generate-code-suggestion', new FormData());
+                if (res.status === 'success' && res.code) {
+                    document.getElementById('f-code').value = res.code;
+                }
+            } catch (e) {
+                console.warn('Generate code error:', e);
+            }
         },
 
         addRow(item = null) {
@@ -175,35 +987,70 @@
             document.getElementById('item-rows').appendChild(row);
 
             const $select = $(row).find('.item-chemical');
-            $select.select2({
-                theme: 'bootstrap-5',
-                placeholder: '— Pilih Bahan Kimia —',
-                width: '100%',
-                ajax: {
-                    url: this.BASE + 'warehouse/master/chemicals/select2',
-                    dataType: 'json',
-                    delay: 250,
-                    data: params => ({ search: params.term }),
-                    processResults: data => ({
-                        results: (data.data ?? []).map(c => ({ id: c.id, text: `${c.name} (${c.code})` }))
-                    }),
-                },
+            this.initChemicalSelect($select);
+
+            const $typeSelect = $(row).find('.item-type');
+            const $labelInput = $(row).find('.item-label');
+            const $chemicalSelect = $(row).find('.item-chemical');
+
+            $typeSelect.on('change', () => {
+                const type = $typeSelect.val();
+                row.classList.toggle('type-chemical', type === 'chemical');
+                row.classList.toggle('type-softener_water', type === 'softener_water');
+
+                if (type === 'chemical') {
+                    // Chemical mode
+                    $chemicalSelect.prop('required', true);
+                    $labelInput.prop('required', false);
+                    $labelInput.val('');
+                    $labelInput.prop('readonly', false);
+                    $labelInput.attr('placeholder', 'Nama softener...');
+                } else {
+                    // Softener Water mode - auto fill
+                    $chemicalSelect.prop('required', false);
+                    $chemicalSelect.val(null).trigger('change');
+                    $labelInput.prop('required', true);
+                    $labelInput.val('Softener Water');
+                    $labelInput.prop('readonly', true);
+                    $labelInput.attr('placeholder', 'Softener Water (readonly)');
+                }
+                this.updateCompositionSummary();
+            });
+
+            // Auto update summary on percentage change
+            const $percentage = $(row).find('.item-percentage');
+            $percentage.on('input', () => {
+                this.updateCompositionSummary();
             });
 
             if (item) {
-                const opt = new Option(`${item.chemical_name} (${item.chemical_code})`, item.chemical_id, true, true);
-                $select.append(opt).trigger('change');
-                row.querySelector('.item-qty').value = item.quantity ?? '';
-                row.querySelector('.item-unit').value = item.unit ?? '';
+                const type = item.composition_type || 'chemical';
+                $typeSelect.val(type).trigger('change');
+
+                if (type === 'chemical' && item.chemical_id) {
+                    const opt = new Option(
+                        `${item.chemical_name} (${item.chemical_code})`,
+                        item.chemical_id,
+                        true,
+                        true
+                    );
+                    $select.append(opt).trigger('change');
+                } else {
+                    $labelInput.val(item.custom_label || 'Softener Water');
+                    $labelInput.prop('readonly', true);
+                }
+                row.querySelector('.item-percentage').value = item.percentage ?? '';
                 row.querySelector('.item-notes').value = item.notes ?? '';
             }
 
-            row.querySelector('.btn-remove-item').addEventListener('click', () => {
+            row.querySelector('.item-remove-btn').addEventListener('click', () => {
                 row.remove();
                 this.toggleEmptyMsg();
+                this.updateCompositionSummary();
             });
 
             this.toggleEmptyMsg();
+            this.updateCompositionSummary();
         },
 
         toggleEmptyMsg() {
@@ -211,19 +1058,72 @@
             document.getElementById('item-empty-msg').classList.toggle('d-none', has);
         },
 
+        updateCompositionSummary() {
+            const rows = document.querySelectorAll('#item-rows .item-row');
+            const total = rows.length;
+            let sum = 0;
+
+            rows.forEach(row => {
+                const val = parseFloat(row.querySelector('.item-percentage').value);
+                if (!isNaN(val)) sum += val;
+            });
+
+            const summary = document.getElementById('composition-summary');
+            const totalEl = document.getElementById('total-percentage');
+            const countEl = document.getElementById('item-count');
+
+            if (total === 0) {
+                summary.style.display = 'none';
+                return;
+            }
+
+            summary.style.display = 'flex';
+            countEl.textContent = `${total} item`;
+
+            // Format dengan 2 desimal
+            const formatted = sum.toFixed(2);
+            totalEl.textContent = `${formatted}%`;
+
+            // Warna berdasarkan total
+            totalEl.className = 'total-value';
+            if (sum === 0) {
+                totalEl.classList.add('total-warning');
+            } else if (sum < 100) {
+                totalEl.classList.add('total-warning');
+            } else if (sum === 100) {
+                totalEl.classList.add('total-ok');
+            } else {
+                totalEl.classList.add('total-danger');
+            }
+        },
+
         collectItems() {
             const rows = document.querySelectorAll('#item-rows .item-row');
             const items = [];
             rows.forEach(row => {
-                const chemicalId = $(row).find('.item-chemical').val();
-                const qty = row.querySelector('.item-qty').value;
-                if (!chemicalId || !qty) return;
-                items.push({
-                    chemical_id: chemicalId,
-                    quantity: qty,
-                    unit: row.querySelector('.item-unit').value,
-                    notes: row.querySelector('.item-notes').value,
-                });
+                const type = row.querySelector('.item-type').value;
+                const percentage = row.querySelector('.item-percentage').value;
+                if (!percentage) return;
+
+                if (type === 'chemical') {
+                    const chemicalId = $(row).find('.item-chemical').val();
+                    if (!chemicalId) return;
+                    items.push({
+                        composition_type: 'chemical',
+                        chemical_id: chemicalId,
+                        percentage,
+                        notes: row.querySelector('.item-notes').value,
+                    });
+                } else {
+                    const label = row.querySelector('.item-label').value.trim();
+                    if (!label) return;
+                    items.push({
+                        composition_type: 'softener_water',
+                        custom_label: label,
+                        percentage,
+                        notes: row.querySelector('.item-notes').value,
+                    });
+                }
             });
             return items;
         },
@@ -231,18 +1131,28 @@
         clearErrors() {
             document.querySelectorAll('.invalid-feedback').forEach(e => e.textContent = '');
             document.querySelectorAll('.is-invalid').forEach(e => e.classList.remove('is-invalid'));
+            $('.select2-container--bootstrap-5').removeClass('is-invalid');
         },
 
         showErrors(errors) {
             const map = {
                 formulation_code: 'f-code',
                 formulation_name: 'f-name',
-                output_quantity: 'f-output-qty',
+                process_type: 'f-process-type',
+                process_sub_type: 'f-process-sub-type',
+                output_percentage: 'f-output-percentage',
             };
             Object.entries(errors ?? {}).forEach(([key, msg]) => {
                 const fieldId = map[key];
                 if (fieldId) {
-                    document.getElementById(fieldId)?.classList.add('is-invalid');
+                    const el = document.getElementById(fieldId);
+                    if (el) {
+                        if (el.tagName === 'SELECT' && $(el).hasClass('select2-hidden-accessible')) {
+                            $(el).next('.select2-container').addClass('is-invalid');
+                        } else {
+                            el.classList.add('is-invalid');
+                        }
+                    }
                     const errEl = document.getElementById('err-' + key);
                     if (errEl) errEl.textContent = msg;
                 } else {
@@ -257,21 +1167,48 @@
 
             const items = this.collectItems();
             if (!items.length) {
-                this.toast('error', 'Minimal 1 bahan kimia harus diisi dalam resep');
+                this.toast('error', 'Minimal 1 baris komposisi harus diisi');
                 return;
             }
 
+            // Get process from Select2
+            const processVal = $('#f-process-type').val();
+            const subProcessVal = $('#f-process-sub-type').val();
+
+            if (!processVal || processVal === '') {
+                $('#f-process-type').next('.select2-container').addClass('is-invalid');
+                this.toast('error', 'Jenis Proses harus dipilih');
+                return;
+            }
+
+            if (!subProcessVal || subProcessVal === '') {
+                $('#f-process-sub-type').next('.select2-container').addClass('is-invalid');
+                this.toast('error', 'Sub Proses harus dipilih');
+                return;
+            }
+
+            const groupVal = $('#f-group').val();
             const fd = new FormData();
             const id = document.getElementById('f-id').value;
+
             if (id) fd.set('id', id);
             fd.set('formulation_code', document.getElementById('f-code').value.trim());
             fd.set('formulation_name', document.getElementById('f-name').value.trim());
-            fd.set('process_type', document.getElementById('f-process-type').value);
-            fd.set('output_quantity', document.getElementById('f-output-qty').value);
-            fd.set('output_unit', document.getElementById('f-output-unit').value.trim());
+            fd.set('process_type', processVal);
+            fd.set('process_sub_type', subProcessVal);
+            fd.set('output_percentage', document.getElementById('f-output-percentage').value);
             fd.set('description', document.getElementById('f-description').value.trim());
-            fd.set('status', document.getElementById('f-status').value);
+            fd.set('version_status', document.getElementById('f-status').value);
+            fd.set('version_notes', document.getElementById('f-version-notes').value.trim());
             fd.set('items', JSON.stringify(items));
+
+            if (groupVal) {
+                if (/^\d+$/.test(String(groupVal))) {
+                    fd.set('group_id', groupVal);
+                } else {
+                    fd.set('group_name', groupVal);
+                }
+            }
 
             try {
                 const res = await this.post(this.BASE + 'warehouse/formulations/store', fd);
@@ -288,13 +1225,78 @@
             }
         },
 
+        async showHistory() {
+            if (!this.formulationId) return;
+            try {
+                const r = await fetch(this.BASE + `warehouse/formulations/${this.formulationId}/versions`, {
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+                const d = await r.json();
+                const tbody = document.getElementById('history-rows');
+                tbody.innerHTML = '';
+                (d.data ?? []).forEach(v => {
+                    const tr = document.createElement('tr');
+                    const statusClass = v.status === 'Active' ? 'success' : v.status === 'Draft' ? 'warning' : 'secondary';
+                    tr.innerHTML = `
+                        <td><strong>#${v.version_no}</strong></td>
+                        <td><span class="badge badge-phoenix badge-phoenix-${statusClass} fs-10">${v.status}</span></td>
+                        <td>${v.output_percentage}%</td>
+                        <td style="font-size:0.8rem;">${v.created_at ? new Date(v.created_at).toLocaleString('id-ID') : '-'}</td>
+                        <td>
+                            ${v.status !== 'Active' ? `<button class="btn btn-sm btn-subtle-primary btn-activate" data-id="${v.id}">Aktifkan</button>` : ''}
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+                if (!d.data?.length) {
+                    tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted py-3">Belum ada versi</td></tr>';
+                }
+                tbody.querySelectorAll('.btn-activate').forEach(btn => {
+                    btn.addEventListener('click', () => this.activateVersion(btn.dataset.id));
+                });
+                new bootstrap.Modal(document.getElementById('modal-history')).show();
+            } catch {
+                document.getElementById('history-rows').innerHTML =
+                    '<tr><td colspan="5" class="text-center text-danger py-3">Gagal memuat riwayat</td></tr>';
+            }
+        },
+
+        async activateVersion(versionId) {
+            try {
+                const res = await this.post(
+                    this.BASE + `warehouse/formulations/${this.formulationId}/versions/${versionId}/activate`,
+                    new FormData()
+                );
+                if (res.status === 'success') {
+                    this.toast('success', res.message);
+                    setTimeout(() => window.location.reload(), 900);
+                } else {
+                    this.toast('error', res.message ?? 'Gagal mengaktifkan versi');
+                }
+            } catch (e) {
+                this.toast('error', e.message);
+            }
+        },
+
         initEvents() {
             document.getElementById('btn-add-item')?.addEventListener('click', () => this.addRow());
+            document.getElementById('btn-generate-code')?.addEventListener('click', () => this.generateCode());
             document.getElementById('formulation-form')?.addEventListener('submit', e => this.submit(e));
+            document.getElementById('btn-show-history')?.addEventListener('click', () => this.showHistory());
         },
 
         toast(type, msg) {
-            Swal.fire({ toast: true, position: 'top-right', icon: type, title: msg, showConfirmButton: false, timer: type === 'success' ? 2000 : 3500, timerProgressBar: true });
+            Swal.fire({
+                toast: true,
+                position: 'top-right',
+                icon: type,
+                title: msg,
+                showConfirmButton: false,
+                timer: type === 'success' ? 2000 : 3500,
+                timerProgressBar: true
+            });
         },
     };
 

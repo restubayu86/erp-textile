@@ -427,7 +427,7 @@
                     <th>No</th>
                     <th>Bahan Kimia</th>
                     <th>Kategori</th>
-                    <th>Jml Varian</th>
+                    <th>Jumlah <br> Varian</th>
                     <th>Status</th>
                     <th>Dibuat</th>
                     <th>Oleh</th>

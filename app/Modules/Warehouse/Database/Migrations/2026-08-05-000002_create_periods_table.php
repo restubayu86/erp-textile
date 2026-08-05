@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Database\Migrations;
+namespace App\Modules\Warehouse\Database\Migrations;
 
 use CodeIgniter\Database\Migration;
 
@@ -10,20 +10,20 @@ class CreatePeriodsTable extends Migration
     {
         $this->forge->addField([
             'id' => [
-                'type'           => 'INT',
-                'constraint'     => 11,
-                'unsigned'       => true,
+                'type' => 'INT',
+                'constraint' => 11,
+                'unsigned' => true,
                 'auto_increment' => true,
             ],
             'period_code' => [
-                'type'       => 'VARCHAR',
+                'type' => 'VARCHAR',
                 'constraint' => 20,
-                'null'       => false,
+                'null' => false,
             ],
             'period_name' => [
-                'type'       => 'VARCHAR',
+                'type' => 'VARCHAR',
                 'constraint' => 50,
-                'null'       => false,
+                'null' => false,
             ],
             'start_date' => [
                 'type' => 'DATE',
@@ -34,16 +34,16 @@ class CreatePeriodsTable extends Migration
                 'null' => false,
             ],
             'status' => [
-                'type'       => 'ENUM',
+                'type' => 'ENUM',
                 'constraint' => ['Open', 'Closed'],
-                'default'    => 'Open',
-                'null'       => false,
+                'default' => 'Open',
+                'null' => false,
             ],
             'is_current' => [
-                'type'       => 'TINYINT',
+                'type' => 'TINYINT',
                 'constraint' => 1,
-                'default'    => 0,
-                'null'       => false,
+                'default' => 0,
+                'null' => false,
             ],
             'notes' => [
                 'type' => 'TEXT',
@@ -54,32 +54,28 @@ class CreatePeriodsTable extends Migration
                 'null' => true,
             ],
             'closed_by' => [
-                'type'       => 'INT',
+                'type' => 'INT',
                 'constraint' => 11,
-                'unsigned'   => true,
-                'null'       => true,
-                'default'    => null,
+                'unsigned' => true,
+                'null' => true,
             ],
             'created_by' => [
-                'type'       => 'INT',
+                'type' => 'INT',
                 'constraint' => 11,
-                'unsigned'   => true,
-                'null'       => true,
-                'default'    => null,
+                'unsigned' => true,
+                'null' => true,
             ],
             'updated_by' => [
-                'type'       => 'INT',
+                'type' => 'INT',
                 'constraint' => 11,
-                'unsigned'   => true,
-                'null'       => true,
-                'default'    => null,
+                'unsigned' => true,
+                'null' => true,
             ],
             'deleted_by' => [
-                'type'       => 'INT',
+                'type' => 'INT',
                 'constraint' => 11,
-                'unsigned'   => true,
-                'null'       => true,
-                'default'    => null,
+                'unsigned' => true,
+                'null' => true,
             ],
             'created_at' => [
                 'type' => 'DATETIME',
@@ -103,12 +99,12 @@ class CreatePeriodsTable extends Migration
         $this->forge->addKey('end_date');
         $this->forge->addKey('deleted_at');
 
-        $this->forge->addForeignKey('closed_by', 'users', 'id', 'SET NULL', 'CASCADE');
-        $this->forge->addForeignKey('created_by', 'users', 'id', 'SET NULL', 'CASCADE');
-        $this->forge->addForeignKey('updated_by', 'users', 'id', 'SET NULL', 'CASCADE');
-        $this->forge->addForeignKey('deleted_by', 'users', 'id', 'SET NULL', 'CASCADE');
+        $this->forge->addForeignKey('closed_by', 'users', 'id', 'CASCADE', 'SET NULL');
+        $this->forge->addForeignKey('created_by', 'users', 'id', 'CASCADE', 'SET NULL');
+        $this->forge->addForeignKey('updated_by', 'users', 'id', 'CASCADE', 'SET NULL');
+        $this->forge->addForeignKey('deleted_by', 'users', 'id', 'CASCADE', 'SET NULL');
 
-        $this->forge->createTable('periods', true);
+        $this->forge->createTable('periods');
     }
 
     public function down()

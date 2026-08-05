@@ -11,7 +11,7 @@
  Target Server Version : 100432 (10.4.32-MariaDB)
  File Encoding         : 65001
 
- Date: 04/08/2026 11:18:53
+ Date: 05/08/2026 17:01:50
 */
 
 SET NAMES utf8mb4;
@@ -63,7 +63,7 @@ CREATE TABLE `auth_identities`  (
 -- ----------------------------
 -- Records of auth_identities
 -- ----------------------------
-INSERT INTO `auth_identities` VALUES (1, 1, 'email_password', NULL, 'admin@erp-textile.local', '$2y$12$3Td6Ec/unlo443/o1xGsceLJgHKZMCQoOct0kowDANV83/SGrijXO', NULL, NULL, 0, '2026-08-04 04:12:27', '2026-06-08 06:04:01', '2026-08-04 04:12:27');
+INSERT INTO `auth_identities` VALUES (1, 1, 'email_password', NULL, 'admin@erp-textile.local', '$2y$12$3Td6Ec/unlo443/o1xGsceLJgHKZMCQoOct0kowDANV83/SGrijXO', NULL, NULL, 0, '2026-08-05 07:31:53', '2026-06-08 06:04:01', '2026-08-05 07:31:53');
 INSERT INTO `auth_identities` VALUES (2, 2, 'email_password', NULL, 'mbcregency.3a@gmail.com', '$2y$12$0cDSVrs6.10gdjFf1TVIUOMAc/g2vRG0cPB.Lv27Do/yCcQXIlPmG', NULL, NULL, 0, '2026-07-08 07:21:57', '2026-06-16 09:09:51', '2026-07-08 07:21:57');
 
 -- ----------------------------
@@ -82,7 +82,7 @@ CREATE TABLE `auth_logins`  (
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `id_type_identifier`(`id_type` ASC, `identifier` ASC) USING BTREE,
   INDEX `user_id`(`user_id` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 31 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 33 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of auth_logins
@@ -117,6 +117,8 @@ INSERT INTO `auth_logins` VALUES (27, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win6
 INSERT INTO `auth_logins` VALUES (28, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36', 'username', 'superadmin', 1, '2026-07-13 06:42:03', 1);
 INSERT INTO `auth_logins` VALUES (29, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36', 'username', 'superadmin', 1, '2026-08-03 06:38:41', 1);
 INSERT INTO `auth_logins` VALUES (30, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36', 'username', 'superadmin', 1, '2026-08-04 04:12:27', 1);
+INSERT INTO `auth_logins` VALUES (31, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36', 'username', 'superadmin', 1, '2026-08-05 06:48:12', 1);
+INSERT INTO `auth_logins` VALUES (32, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36', 'username', 'superadmin', 1, '2026-08-05 07:31:53', 1);
 
 -- ----------------------------
 -- Table structure for auth_permissions_users
@@ -197,16 +199,19 @@ CREATE TABLE `chemical_categories`  (
   `updated_at` datetime NULL DEFAULT NULL,
   `deleted_at` datetime NULL DEFAULT NULL,
   PRIMARY KEY (`id`) USING BTREE,
+  INDEX `chemical_categories_created_by_foreign`(`created_by` ASC) USING BTREE,
+  INDEX `chemical_categories_updated_by_foreign`(`updated_by` ASC) USING BTREE,
+  INDEX `chemical_categories_deleted_by_foreign`(`deleted_by` ASC) USING BTREE,
+  INDEX `category_code`(`category_code` ASC) USING BTREE,
   INDEX `status`(`status` ASC) USING BTREE,
-  INDEX `idx_cat_code`(`category_code` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 5 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Dynamic;
+  CONSTRAINT `chemical_categories_created_by_foreign` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
+  CONSTRAINT `chemical_categories_deleted_by_foreign` FOREIGN KEY (`deleted_by`) REFERENCES `users` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
+  CONSTRAINT `chemical_categories_updated_by_foreign` FOREIGN KEY (`updated_by`) REFERENCES `users` (`id`) ON DELETE SET NULL ON UPDATE CASCADE
+) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of chemical_categories
 -- ----------------------------
-INSERT INTO `chemical_categories` VALUES (1, 'AUX', 'Auxiliaries', 'Kimia pembantu dyeing', 'Active', 1, NULL, NULL, '2026-07-09 07:59:11', '2026-07-09 07:59:11', NULL);
-INSERT INTO `chemical_categories` VALUES (2, 'DYE', 'Dyestuff', NULL, 'Archived', 1, 1, 1, '2026-07-09 08:11:12', '2026-07-11 04:25:52', '2026-07-11 04:25:52');
-INSERT INTO `chemical_categories` VALUES (3, 'FIN', 'Finishing', NULL, 'Active', 1, NULL, NULL, '2026-07-09 08:11:23', '2026-07-09 08:11:23', NULL);
 
 -- ----------------------------
 -- Table structure for chemical_category_map
@@ -222,16 +227,11 @@ CREATE TABLE `chemical_category_map`  (
   INDEX `chemical_category_map_category_id_foreign`(`category_id` ASC) USING BTREE,
   CONSTRAINT `chemical_category_map_category_id_foreign` FOREIGN KEY (`category_id`) REFERENCES `chemical_categories` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT `chemical_category_map_chemical_id_foreign` FOREIGN KEY (`chemical_id`) REFERENCES `chemicals` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE = InnoDB AUTO_INCREMENT = 26 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of chemical_category_map
 -- ----------------------------
-INSERT INTO `chemical_category_map` VALUES (20, 3, 3, '2026-07-10 06:40:10');
-INSERT INTO `chemical_category_map` VALUES (21, 5, 3, NULL);
-INSERT INTO `chemical_category_map` VALUES (23, 2, 1, NULL);
-INSERT INTO `chemical_category_map` VALUES (24, 2, 3, NULL);
-INSERT INTO `chemical_category_map` VALUES (25, 6, 3, NULL);
 
 -- ----------------------------
 -- Table structure for chemical_stock_openings
@@ -250,26 +250,22 @@ CREATE TABLE `chemical_stock_openings`  (
   `created_at` datetime NULL DEFAULT NULL,
   `updated_at` datetime NULL DEFAULT NULL,
   PRIMARY KEY (`id`) USING BTREE,
-  UNIQUE INDEX `uniq_period_warehouse_chemical`(`period_id` ASC, `warehouse_id` ASC, `chemical_id` ASC) USING BTREE,
+  UNIQUE INDEX `period_id_warehouse_id_chemical_id`(`period_id` ASC, `warehouse_id` ASC, `chemical_id` ASC) USING BTREE,
   INDEX `chemical_stock_openings_created_by_foreign`(`created_by` ASC) USING BTREE,
   INDEX `chemical_stock_openings_updated_by_foreign`(`updated_by` ASC) USING BTREE,
   INDEX `period_id`(`period_id` ASC) USING BTREE,
   INDEX `warehouse_id`(`warehouse_id` ASC) USING BTREE,
   INDEX `chemical_id`(`chemical_id` ASC) USING BTREE,
-  CONSTRAINT `chemical_stock_openings_chemical_id_foreign` FOREIGN KEY (`chemical_id`) REFERENCES `chemicals` (`id`) ON DELETE CASCADE ON UPDATE RESTRICT,
-  CONSTRAINT `chemical_stock_openings_created_by_foreign` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE SET NULL,
-  CONSTRAINT `chemical_stock_openings_period_id_foreign` FOREIGN KEY (`period_id`) REFERENCES `periods` (`id`) ON DELETE CASCADE ON UPDATE RESTRICT,
-  CONSTRAINT `chemical_stock_openings_updated_by_foreign` FOREIGN KEY (`updated_by`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE SET NULL,
-  CONSTRAINT `chemical_stock_openings_warehouse_id_foreign` FOREIGN KEY (`warehouse_id`) REFERENCES `warehouses` (`id`) ON DELETE CASCADE ON UPDATE RESTRICT
-) ENGINE = InnoDB AUTO_INCREMENT = 5 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Dynamic;
+  CONSTRAINT `chemical_stock_openings_chemical_id_foreign` FOREIGN KEY (`chemical_id`) REFERENCES `chemicals` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `chemical_stock_openings_created_by_foreign` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
+  CONSTRAINT `chemical_stock_openings_period_id_foreign` FOREIGN KEY (`period_id`) REFERENCES `periods` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `chemical_stock_openings_updated_by_foreign` FOREIGN KEY (`updated_by`) REFERENCES `users` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
+  CONSTRAINT `chemical_stock_openings_warehouse_id_foreign` FOREIGN KEY (`warehouse_id`) REFERENCES `warehouses` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of chemical_stock_openings
 -- ----------------------------
-INSERT INTO `chemical_stock_openings` VALUES (1, 4, 1, 2, 2.250, 'kg', NULL, 1, 1, '2026-08-03 07:07:20', '2026-08-03 08:09:36');
-INSERT INTO `chemical_stock_openings` VALUES (2, 4, 1, 3, 25.000, 'kg', NULL, 1, 1, '2026-08-03 07:07:20', '2026-08-03 08:09:36');
-INSERT INTO `chemical_stock_openings` VALUES (3, 4, 1, 6, 1000.000, 'kg', NULL, 1, 1, '2026-08-03 07:07:20', '2026-08-03 08:09:36');
-INSERT INTO `chemical_stock_openings` VALUES (4, 4, 1, 5, 625.000, 'kg', NULL, 1, 1, '2026-08-03 07:07:20', '2026-08-03 08:09:36');
 
 -- ----------------------------
 -- Table structure for chemical_variants
@@ -290,20 +286,18 @@ CREATE TABLE `chemical_variants`  (
   `created_at` datetime NULL DEFAULT NULL,
   `updated_at` datetime NULL DEFAULT NULL,
   PRIMARY KEY (`id`) USING BTREE,
+  INDEX `chemical_variants_created_by_foreign`(`created_by` ASC) USING BTREE,
+  INDEX `chemical_variants_updated_by_foreign`(`updated_by` ASC) USING BTREE,
   INDEX `chemical_id`(`chemical_id` ASC) USING BTREE,
   INDEX `status`(`status` ASC) USING BTREE,
-  CONSTRAINT `chemical_variants_chemical_id_foreign` FOREIGN KEY (`chemical_id`) REFERENCES `chemicals` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE = InnoDB AUTO_INCREMENT = 9 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Dynamic;
+  CONSTRAINT `chemical_variants_chemical_id_foreign` FOREIGN KEY (`chemical_id`) REFERENCES `chemicals` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `chemical_variants_created_by_foreign` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
+  CONSTRAINT `chemical_variants_updated_by_foreign` FOREIGN KEY (`updated_by`) REFERENCES `users` (`id`) ON DELETE SET NULL ON UPDATE CASCADE
+) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of chemical_variants
 -- ----------------------------
-INSERT INTO `chemical_variants` VALUES (3, 5, 'P-MHC @200', 'Drum', 200.00, 'Kg', NULL, 1, 'Active', 1, 1, '2026-07-13 02:59:20', '2026-07-13 03:05:34');
-INSERT INTO `chemical_variants` VALUES (4, 5, 'p-MHC @1000', 'Kempu', 1000.00, 'Kg', NULL, 0, 'Active', 1, 1, '2026-07-13 03:05:22', '2026-07-13 03:05:34');
-INSERT INTO `chemical_variants` VALUES (5, 5, 'P-MHC 100', NULL, 100.00, NULL, NULL, 0, 'Active', 1, 1, '2026-07-13 03:20:37', '2026-07-13 03:20:37');
-INSERT INTO `chemical_variants` VALUES (6, 5, 'p-MHC 400', NULL, 400.00, NULL, NULL, 0, 'Active', 1, 1, '2026-07-13 03:20:54', '2026-07-13 03:20:54');
-INSERT INTO `chemical_variants` VALUES (7, 5, 'sd', NULL, 200.00, NULL, NULL, 0, 'Active', 1, 1, '2026-07-13 03:21:06', '2026-07-13 03:21:06');
-INSERT INTO `chemical_variants` VALUES (8, 5, 'sdasd', NULL, 50.00, NULL, NULL, 0, 'Active', 1, 1, '2026-07-13 03:21:17', '2026-07-13 03:21:17');
 
 -- ----------------------------
 -- Table structure for chemicals
@@ -322,19 +316,95 @@ CREATE TABLE `chemicals`  (
   `updated_at` datetime NULL DEFAULT NULL,
   `deleted_at` datetime NULL DEFAULT NULL,
   PRIMARY KEY (`id`) USING BTREE,
-  UNIQUE INDEX `uniq_chemical_code`(`chemical_code` ASC) USING BTREE,
+  UNIQUE INDEX `chemical_code`(`chemical_code` ASC) USING BTREE,
+  INDEX `chemicals_created_by_foreign`(`created_by` ASC) USING BTREE,
+  INDEX `chemicals_updated_by_foreign`(`updated_by` ASC) USING BTREE,
+  INDEX `chemicals_deleted_by_foreign`(`deleted_by` ASC) USING BTREE,
   INDEX `status`(`status` ASC) USING BTREE,
-  INDEX `idx_chem_code`(`chemical_code` ASC) USING BTREE,
-  INDEX `idx_chem_name`(`chemical_name` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 7 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Dynamic;
+  INDEX `chemical_name`(`chemical_name` ASC) USING BTREE,
+  CONSTRAINT `chemicals_created_by_foreign` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
+  CONSTRAINT `chemicals_deleted_by_foreign` FOREIGN KEY (`deleted_by`) REFERENCES `users` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
+  CONSTRAINT `chemicals_updated_by_foreign` FOREIGN KEY (`updated_by`) REFERENCES `users` (`id`) ON DELETE SET NULL ON UPDATE CASCADE
+) ENGINE = InnoDB AUTO_INCREMENT = 79 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of chemicals
 -- ----------------------------
-INSERT INTO `chemicals` VALUES (2, 'CH-00002', 'Acetic Acid', NULL, 'Active', 1, 1, NULL, '2026-07-09 09:15:55', '2026-07-13 02:48:42', NULL);
-INSERT INTO `chemicals` VALUES (3, 'CH-00003', 'Aica Aibon RA-940', NULL, 'Active', 1, 1, NULL, '2026-07-09 09:31:49', '2026-07-10 06:40:10', NULL);
-INSERT INTO `chemicals` VALUES (5, 'CH-00004', 'Binder P-MHC', NULL, 'Active', 1, 1, NULL, '2026-07-13 02:36:16', '2026-07-13 02:43:00', NULL);
-INSERT INTO `chemicals` VALUES (6, 'CH-00005', 'Binder', NULL, 'Active', 1, 1, NULL, '2026-07-13 02:43:20', '2026-07-13 02:48:47', NULL);
+INSERT INTO `chemicals` VALUES (1, 'CHM-00001', 'Acetic Acid', NULL, 'Active', NULL, NULL, NULL, NULL, NULL, NULL);
+INSERT INTO `chemicals` VALUES (5, 'CHM-00002', 'Aica Aibon RA 940-1 ID', NULL, 'Active', NULL, NULL, NULL, NULL, NULL, NULL);
+INSERT INTO `chemicals` VALUES (6, 'CHM-00003', 'Bayguard BCS', NULL, 'Active', NULL, NULL, NULL, NULL, NULL, NULL);
+INSERT INTO `chemicals` VALUES (7, 'CHM-00004', 'Bayguard Easy', NULL, 'Active', NULL, NULL, NULL, NULL, NULL, NULL);
+INSERT INTO `chemicals` VALUES (8, 'CHM-00005', 'Baypret Nano PU', NULL, 'Active', NULL, NULL, NULL, NULL, NULL, NULL);
+INSERT INTO `chemicals` VALUES (9, 'CHM-00006', 'Bayscent Neutralizer', NULL, 'Active', NULL, NULL, NULL, NULL, NULL, NULL);
+INSERT INTO `chemicals` VALUES (10, 'CHM-00007', 'Binder FB WB', NULL, 'Active', NULL, NULL, NULL, NULL, NULL, NULL);
+INSERT INTO `chemicals` VALUES (11, 'CHM-00008', 'Binder P-MHC', NULL, 'Active', NULL, NULL, NULL, NULL, NULL, NULL);
+INSERT INTO `chemicals` VALUES (12, 'CHM-00009', 'Binder TB WB', NULL, 'Active', NULL, NULL, NULL, NULL, NULL, NULL);
+INSERT INTO `chemicals` VALUES (13, 'CHM-00010', 'Booster', NULL, 'Active', NULL, NULL, NULL, NULL, NULL, NULL);
+INSERT INTO `chemicals` VALUES (14, 'CHM-00011', 'Celessence Aloevera Aloha', NULL, 'Active', NULL, NULL, NULL, NULL, NULL, NULL);
+INSERT INTO `chemicals` VALUES (15, 'CHM-00012', 'CF-05', NULL, 'Active', NULL, NULL, NULL, NULL, NULL, NULL);
+INSERT INTO `chemicals` VALUES (16, 'CHM-00013', 'CF-06', NULL, 'Active', NULL, NULL, NULL, NULL, NULL, NULL);
+INSERT INTO `chemicals` VALUES (17, 'CHM-00014', 'Citric Acid', NULL, 'Active', NULL, NULL, NULL, NULL, NULL, NULL);
+INSERT INTO `chemicals` VALUES (18, 'CHM-00015', 'Dyasoft CTG', NULL, 'Active', NULL, NULL, NULL, NULL, NULL, NULL);
+INSERT INTO `chemicals` VALUES (19, 'CHM-00016', 'Eucalyptus', NULL, 'Active', NULL, NULL, NULL, NULL, NULL, NULL);
+INSERT INTO `chemicals` VALUES (20, 'CHM-00017', 'Eulan Spa', NULL, 'Active', NULL, NULL, NULL, NULL, NULL, NULL);
+INSERT INTO `chemicals` VALUES (21, 'CHM-00018', 'Fixapret Net Liq', NULL, 'Active', NULL, NULL, NULL, NULL, NULL, NULL);
+INSERT INTO `chemicals` VALUES (22, 'CHM-00019', 'IGNITex F 003', NULL, 'Active', NULL, NULL, NULL, NULL, NULL, NULL);
+INSERT INTO `chemicals` VALUES (23, 'CHM-00020', 'IGNITex F 003 - White', NULL, 'Active', NULL, NULL, NULL, NULL, NULL, NULL);
+INSERT INTO `chemicals` VALUES (24, 'CHM-00021', 'IGNITex IF 004', NULL, 'Active', NULL, NULL, NULL, NULL, NULL, NULL);
+INSERT INTO `chemicals` VALUES (25, 'CHM-00022', 'Ingenus MBX', NULL, 'Active', NULL, NULL, NULL, NULL, NULL, NULL);
+INSERT INTO `chemicals` VALUES (26, 'CHM-00023', 'Jintex Eco APY', NULL, 'Active', NULL, NULL, NULL, NULL, NULL, NULL);
+INSERT INTO `chemicals` VALUES (27, 'CHM-00024', 'JW AT 500', NULL, 'Active', NULL, NULL, NULL, NULL, NULL, NULL);
+INSERT INTO `chemicals` VALUES (28, 'CHM-00025', 'JW HISOFTER CN 500', NULL, 'Active', NULL, NULL, NULL, NULL, NULL, NULL);
+INSERT INTO `chemicals` VALUES (29, 'CHM-00026', 'Kasesol ES 9', NULL, 'Active', NULL, NULL, NULL, NULL, NULL, NULL);
+INSERT INTO `chemicals` VALUES (30, 'CHM-00027', 'Kirakuru DA-12', NULL, 'Active', NULL, NULL, NULL, NULL, NULL, NULL);
+INSERT INTO `chemicals` VALUES (31, 'CHM-00028', 'Megasoft Win', NULL, 'Active', NULL, NULL, NULL, NULL, NULL, NULL);
+INSERT INTO `chemicals` VALUES (32, 'CHM-00029', 'Mowilith DM 60', NULL, 'Active', NULL, NULL, NULL, NULL, NULL, NULL);
+INSERT INTO `chemicals` VALUES (33, 'CHM-00030', 'Myprint 160A', NULL, 'Active', NULL, NULL, NULL, NULL, NULL, NULL);
+INSERT INTO `chemicals` VALUES (34, 'CHM-00031', 'Neocrystal NK 1500', NULL, 'Active', NULL, NULL, NULL, NULL, NULL, NULL);
+INSERT INTO `chemicals` VALUES (35, 'CHM-00032', 'Neostecker HF 9189', NULL, 'Active', NULL, NULL, NULL, NULL, NULL, NULL);
+INSERT INTO `chemicals` VALUES (36, 'CHM-00033', 'Neostecker HF 9432', NULL, 'Active', NULL, NULL, NULL, NULL, NULL, NULL);
+INSERT INTO `chemicals` VALUES (37, 'CHM-00034', 'Nicca Fi-None CN 563', NULL, 'Active', NULL, NULL, NULL, NULL, NULL, NULL);
+INSERT INTO `chemicals` VALUES (38, 'CHM-00035', 'Nicca Fi-None P 205', NULL, 'Active', NULL, NULL, NULL, NULL, NULL, NULL);
+INSERT INTO `chemicals` VALUES (39, 'CHM-00036', 'Nikka Guard S33', NULL, 'Active', NULL, NULL, NULL, NULL, NULL, NULL);
+INSERT INTO `chemicals` VALUES (40, 'CHM-00037', 'Nikkosolt 209', NULL, 'Active', NULL, NULL, NULL, NULL, NULL, NULL);
+INSERT INTO `chemicals` VALUES (41, 'CHM-00038', 'Nuva N 2155 Liq', NULL, 'Active', NULL, NULL, NULL, NULL, NULL, NULL);
+INSERT INTO `chemicals` VALUES (42, 'CHM-00039', 'Pekoflam TC 303 P', NULL, 'Active', NULL, NULL, NULL, NULL, NULL, NULL);
+INSERT INTO `chemicals` VALUES (43, 'CHM-00040', 'Petra Aminon', NULL, 'Active', NULL, NULL, NULL, NULL, NULL, NULL);
+INSERT INTO `chemicals` VALUES (44, 'CHM-00041', 'R/W Black RD Conc', NULL, 'Active', NULL, NULL, NULL, NULL, NULL, NULL);
+INSERT INTO `chemicals` VALUES (45, 'CHM-00042', 'Reapret SR New', NULL, 'Active', NULL, NULL, NULL, NULL, NULL, NULL);
+INSERT INTO `chemicals` VALUES (46, 'CHM-00043', 'Repellan ETP New', NULL, 'Active', NULL, NULL, NULL, NULL, NULL, NULL);
+INSERT INTO `chemicals` VALUES (47, 'CHM-00044', 'Repellan NC6 New', NULL, 'Active', NULL, NULL, NULL, NULL, NULL, NULL);
+INSERT INTO `chemicals` VALUES (48, 'CHM-00045', 'Repellan NFC 0', NULL, 'Active', NULL, NULL, NULL, NULL, NULL, NULL);
+INSERT INTO `chemicals` VALUES (49, 'CHM-00046', 'Repellan NFS', NULL, 'Active', NULL, NULL, NULL, NULL, NULL, NULL);
+INSERT INTO `chemicals` VALUES (50, 'CHM-00047', 'Repellan XLN', NULL, 'Active', NULL, NULL, NULL, NULL, NULL, NULL);
+INSERT INTO `chemicals` VALUES (51, 'CHM-00048', 'Ruco Acid ASC', NULL, 'Active', NULL, NULL, NULL, NULL, NULL, NULL);
+INSERT INTO `chemicals` VALUES (52, 'CHM-00049', 'Rucocoat FRC 9107 EVO-ID', NULL, 'Active', NULL, NULL, NULL, NULL, NULL, NULL);
+INSERT INTO `chemicals` VALUES (53, 'CHM-00050', 'Rucocoat HDSC PLUS-ID', NULL, 'Active', NULL, NULL, NULL, NULL, NULL, NULL);
+INSERT INTO `chemicals` VALUES (54, 'CHM-00051', 'Rucocoat HDSG DOFF', NULL, 'Active', NULL, NULL, NULL, NULL, NULL, NULL);
+INSERT INTO `chemicals` VALUES (55, 'CHM-00052', 'Ruco-Coat LM 7725-ID', NULL, 'Active', NULL, NULL, NULL, NULL, NULL, NULL);
+INSERT INTO `chemicals` VALUES (56, 'CHM-00053', 'Rucocryl FA 8492', NULL, 'Active', NULL, NULL, NULL, NULL, NULL, NULL);
+INSERT INTO `chemicals` VALUES (57, 'CHM-00054', 'Rucocryl VA 1090', NULL, 'Active', NULL, NULL, NULL, NULL, NULL, NULL);
+INSERT INTO `chemicals` VALUES (58, 'CHM-00055', 'Ruco-Dry Eco Plus', NULL, 'Active', NULL, NULL, NULL, NULL, NULL, NULL);
+INSERT INTO `chemicals` VALUES (59, 'CHM-00056', 'Rucofan ECO', NULL, 'Active', NULL, NULL, NULL, NULL, NULL, NULL);
+INSERT INTO `chemicals` VALUES (60, 'CHM-00057', 'Rucofin SIQ New', NULL, 'Active', NULL, NULL, NULL, NULL, NULL, NULL);
+INSERT INTO `chemicals` VALUES (61, 'CHM-00058', 'Rucoflam PSY', NULL, 'Active', NULL, NULL, NULL, NULL, NULL, NULL);
+INSERT INTO `chemicals` VALUES (62, 'CHM-00059', 'Ruco-Guard AFCN6-ID', NULL, 'Active', NULL, NULL, NULL, NULL, NULL, NULL);
+INSERT INTO `chemicals` VALUES (63, 'CHM-00060', 'Rucolink TIE New', NULL, 'Active', NULL, NULL, NULL, NULL, NULL, NULL);
+INSERT INTO `chemicals` VALUES (64, 'CHM-00061', 'Rucolink XCN', NULL, 'Active', NULL, NULL, NULL, NULL, NULL, NULL);
+INSERT INTO `chemicals` VALUES (65, 'CHM-00062', 'Rucowet FN', NULL, 'Active', NULL, NULL, NULL, NULL, NULL, NULL);
+INSERT INTO `chemicals` VALUES (66, 'CHM-00063', 'Sanitized TH14-14', NULL, 'Active', NULL, NULL, NULL, NULL, NULL, NULL);
+INSERT INTO `chemicals` VALUES (67, 'CHM-00064', 'Shearlon P - 92', NULL, 'Active', NULL, NULL, NULL, NULL, NULL, NULL);
+INSERT INTO `chemicals` VALUES (68, 'CHM-00065', 'Silvadur 930', NULL, 'Active', NULL, NULL, NULL, NULL, NULL, NULL);
+INSERT INTO `chemicals` VALUES (69, 'CHM-00066', 'Smartsoft SS 21', NULL, 'Active', NULL, NULL, NULL, NULL, NULL, NULL);
+INSERT INTO `chemicals` VALUES (70, 'CHM-00067', 'Soda Ash', NULL, 'Active', NULL, NULL, NULL, NULL, NULL, NULL);
+INSERT INTO `chemicals` VALUES (71, 'CHM-00068', 'SP 100', NULL, 'Active', NULL, NULL, NULL, NULL, NULL, NULL);
+INSERT INTO `chemicals` VALUES (72, 'CHM-00069', 'Stabiform Foam-9', NULL, 'Active', NULL, NULL, NULL, NULL, NULL, NULL);
+INSERT INTO `chemicals` VALUES (73, 'CHM-00070', 'Sunmarina 155 GT', NULL, 'Active', NULL, NULL, NULL, NULL, NULL, NULL);
+INSERT INTO `chemicals` VALUES (74, 'CHM-00071', 'Synthetic 9200', NULL, 'Active', NULL, NULL, NULL, NULL, NULL, NULL);
+INSERT INTO `chemicals` VALUES (75, 'CHM-00072', 'Tastex Med', NULL, 'Active', NULL, NULL, NULL, NULL, NULL, NULL);
+INSERT INTO `chemicals` VALUES (76, 'CHM-00073', 'Textport AB-964', NULL, 'Active', NULL, NULL, NULL, NULL, NULL, NULL);
+INSERT INTO `chemicals` VALUES (77, 'CHM-00074', 'Textport BG-183', NULL, 'Active', NULL, NULL, NULL, NULL, NULL, NULL);
+INSERT INTO `chemicals` VALUES (78, 'CHM-00075', 'Thickener TJS', NULL, 'Active', NULL, NULL, NULL, NULL, NULL, NULL);
 
 -- ----------------------------
 -- Table structure for departments
@@ -505,6 +575,143 @@ CREATE TABLE `flow_processes`  (
 INSERT INTO `flow_processes` VALUES (1, 1, 'ARCO YD', 'Otomotif', NULL, 'Active', 1, 1, NULL, '2026-06-22 07:03:22', '2026-06-22 09:33:08', NULL);
 
 -- ----------------------------
+-- Table structure for formulation_groups
+-- ----------------------------
+DROP TABLE IF EXISTS `formulation_groups`;
+CREATE TABLE `formulation_groups`  (
+  `id` int UNSIGNED NOT NULL AUTO_INCREMENT,
+  `group_name` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'Nama kelompok/label khusus formulasi',
+  `description` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL,
+  `status` enum('Active','Inactive') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'Active',
+  `created_by` int UNSIGNED NULL DEFAULT NULL,
+  `updated_by` int UNSIGNED NULL DEFAULT NULL,
+  `created_at` datetime NULL DEFAULT NULL,
+  `updated_at` datetime NULL DEFAULT NULL,
+  PRIMARY KEY (`id`) USING BTREE,
+  UNIQUE INDEX `group_name`(`group_name` ASC) USING BTREE,
+  INDEX `formulation_groups_created_by_foreign`(`created_by` ASC) USING BTREE,
+  INDEX `formulation_groups_updated_by_foreign`(`updated_by` ASC) USING BTREE,
+  INDEX `status`(`status` ASC) USING BTREE,
+  CONSTRAINT `formulation_groups_created_by_foreign` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
+  CONSTRAINT `formulation_groups_updated_by_foreign` FOREIGN KEY (`updated_by`) REFERENCES `users` (`id`) ON DELETE SET NULL ON UPDATE CASCADE
+) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Dynamic;
+
+-- ----------------------------
+-- Records of formulation_groups
+-- ----------------------------
+
+-- ----------------------------
+-- Table structure for formulation_items
+-- ----------------------------
+DROP TABLE IF EXISTS `formulation_items`;
+CREATE TABLE `formulation_items`  (
+  `id` int UNSIGNED NOT NULL AUTO_INCREMENT,
+  `formulation_version_id` int UNSIGNED NOT NULL,
+  `chemical_id` int UNSIGNED NULL DEFAULT NULL,
+  `composition_type` enum('chemical','softener_water') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'chemical' COMMENT 'chemical = konsumsi stok bahan kimia, softener_water = tanpa alur stok',
+  `variant_id` int UNSIGNED NULL DEFAULT NULL,
+  `custom_label` varchar(150) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL COMMENT 'Nama bebas untuk softener_water, mis. \"Air Proses/Softening\"',
+  `percentage` decimal(8, 3) NOT NULL DEFAULT 0.000 COMMENT 'Dosis dalam % terhadap berat batch, tidak dibatasi total 100%',
+  `unit` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL,
+  `notes` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL,
+  `sort_order` int NOT NULL DEFAULT 0,
+  `created_at` datetime NULL DEFAULT NULL,
+  `updated_at` datetime NULL DEFAULT NULL,
+  PRIMARY KEY (`id`) USING BTREE,
+  UNIQUE INDEX `formulation_version_id_chemical_id`(`formulation_version_id` ASC, `chemical_id` ASC) USING BTREE,
+  INDEX `formulation_version_id`(`formulation_version_id` ASC) USING BTREE,
+  INDEX `chemical_id`(`chemical_id` ASC) USING BTREE,
+  INDEX `variant_id`(`variant_id` ASC) USING BTREE,
+  INDEX `composition_type`(`composition_type` ASC) USING BTREE,
+  CONSTRAINT `formulation_items_chemical_id_foreign` FOREIGN KEY (`chemical_id`) REFERENCES `chemicals` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `formulation_items_formulation_version_id_foreign` FOREIGN KEY (`formulation_version_id`) REFERENCES `formulation_versions` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `formulation_items_variant_id_foreign` FOREIGN KEY (`variant_id`) REFERENCES `chemical_variants` (`id`) ON DELETE SET NULL ON UPDATE CASCADE
+) ENGINE = InnoDB AUTO_INCREMENT = 7 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Dynamic;
+
+-- ----------------------------
+-- Records of formulation_items
+-- ----------------------------
+INSERT INTO `formulation_items` VALUES (1, 1, NULL, 'softener_water', NULL, 'Softener Water', 98.000, NULL, NULL, 0, '2026-08-05 09:57:19', '2026-08-05 09:57:19');
+INSERT INTO `formulation_items` VALUES (2, 1, 29, 'chemical', NULL, NULL, 2.000, NULL, NULL, 1, '2026-08-05 09:57:19', '2026-08-05 09:57:19');
+INSERT INTO `formulation_items` VALUES (3, 2, NULL, 'softener_water', NULL, 'Softener Water', 97.000, NULL, NULL, 0, '2026-08-05 09:59:45', '2026-08-05 09:59:45');
+INSERT INTO `formulation_items` VALUES (4, 2, 29, 'chemical', NULL, NULL, 3.000, NULL, NULL, 1, '2026-08-05 09:59:45', '2026-08-05 09:59:45');
+INSERT INTO `formulation_items` VALUES (5, 3, NULL, 'softener_water', NULL, 'Softener Water', 97.000, NULL, NULL, 0, '2026-08-05 10:00:34', '2026-08-05 10:00:34');
+INSERT INTO `formulation_items` VALUES (6, 3, 29, 'chemical', NULL, NULL, 3.000, NULL, NULL, 1, '2026-08-05 10:00:34', '2026-08-05 10:00:34');
+
+-- ----------------------------
+-- Table structure for formulation_versions
+-- ----------------------------
+DROP TABLE IF EXISTS `formulation_versions`;
+CREATE TABLE `formulation_versions`  (
+  `id` int UNSIGNED NOT NULL AUTO_INCREMENT,
+  `formulation_id` int UNSIGNED NOT NULL,
+  `version_no` int UNSIGNED NOT NULL COMMENT 'Nomor urut versi per formulasi: 1, 2, 3, dst',
+  `status` enum('Active','Draft','Archived') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'Draft',
+  `output_percentage` decimal(8, 3) NOT NULL DEFAULT 100.000 COMMENT 'Hasil/batch dalam %, tidak dibatasi harus 100 (boleh > 100%)',
+  `notes` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL COMMENT 'Catatan perubahan pada versi ini (changelog)',
+  `created_by` int UNSIGNED NULL DEFAULT NULL,
+  `created_at` datetime NULL DEFAULT NULL,
+  `updated_at` datetime NULL DEFAULT NULL,
+  PRIMARY KEY (`id`) USING BTREE,
+  UNIQUE INDEX `formulation_id_version_no`(`formulation_id` ASC, `version_no` ASC) USING BTREE,
+  INDEX `formulation_versions_created_by_foreign`(`created_by` ASC) USING BTREE,
+  INDEX `formulation_id`(`formulation_id` ASC) USING BTREE,
+  INDEX `status`(`status` ASC) USING BTREE,
+  CONSTRAINT `formulation_versions_created_by_foreign` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
+  CONSTRAINT `formulation_versions_formulation_id_foreign` FOREIGN KEY (`formulation_id`) REFERENCES `formulations` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE = InnoDB AUTO_INCREMENT = 4 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Dynamic;
+
+-- ----------------------------
+-- Records of formulation_versions
+-- ----------------------------
+INSERT INTO `formulation_versions` VALUES (1, 1, 1, 'Active', 100.000, NULL, 1, '2026-08-05 09:57:19', '2026-08-05 09:57:19');
+INSERT INTO `formulation_versions` VALUES (2, 2, 1, 'Archived', 100.000, NULL, 1, '2026-08-05 09:59:45', '2026-08-05 09:59:45');
+INSERT INTO `formulation_versions` VALUES (3, 2, 2, 'Active', 100.000, NULL, 1, '2026-08-05 10:00:34', '2026-08-05 10:00:34');
+
+-- ----------------------------
+-- Table structure for formulations
+-- ----------------------------
+DROP TABLE IF EXISTS `formulations`;
+CREATE TABLE `formulations`  (
+  `id` int UNSIGNED NOT NULL AUTO_INCREMENT,
+  `formulation_code` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `formulation_name` varchar(150) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `group_id` int UNSIGNED NULL DEFAULT NULL COMMENT 'Kelompok/label khusus formulasi (opsional)',
+  `process_type` enum('Dyeing','Finishing','Other') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'Dyeing',
+  `process_sub_type` enum('Dyeing','Dipping','Coating','Spray','Coating_Foam','Finishing','Other') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'Other',
+  `process_sub_type_label` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL COMMENT 'Label custom untuk sub proses jika diperlukan',
+  `current_version_id` int UNSIGNED NULL DEFAULT NULL COMMENT 'ID versi terakhir/aktif yang sedang dipakai',
+  `description` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL,
+  `created_by` int UNSIGNED NULL DEFAULT NULL,
+  `updated_by` int UNSIGNED NULL DEFAULT NULL,
+  `deleted_by` int UNSIGNED NULL DEFAULT NULL,
+  `created_at` datetime NULL DEFAULT NULL,
+  `updated_at` datetime NULL DEFAULT NULL,
+  `deleted_at` datetime NULL DEFAULT NULL,
+  PRIMARY KEY (`id`) USING BTREE,
+  UNIQUE INDEX `formulation_code`(`formulation_code` ASC) USING BTREE,
+  INDEX `formulations_created_by_foreign`(`created_by` ASC) USING BTREE,
+  INDEX `formulations_updated_by_foreign`(`updated_by` ASC) USING BTREE,
+  INDEX `formulations_deleted_by_foreign`(`deleted_by` ASC) USING BTREE,
+  INDEX `group_id`(`group_id` ASC) USING BTREE,
+  INDEX `process_type`(`process_type` ASC) USING BTREE,
+  INDEX `process_sub_type`(`process_sub_type` ASC) USING BTREE,
+  INDEX `current_version_id`(`current_version_id` ASC) USING BTREE,
+  INDEX `deleted_at`(`deleted_at` ASC) USING BTREE,
+  CONSTRAINT `formulations_created_by_foreign` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
+  CONSTRAINT `formulations_current_version_id_foreign` FOREIGN KEY (`current_version_id`) REFERENCES `formulation_versions` (`id`) ON DELETE SET NULL ON UPDATE RESTRICT,
+  CONSTRAINT `formulations_deleted_by_foreign` FOREIGN KEY (`deleted_by`) REFERENCES `users` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
+  CONSTRAINT `formulations_group_id_foreign` FOREIGN KEY (`group_id`) REFERENCES `formulation_groups` (`id`) ON DELETE CASCADE ON UPDATE SET NULL,
+  CONSTRAINT `formulations_updated_by_foreign` FOREIGN KEY (`updated_by`) REFERENCES `users` (`id`) ON DELETE SET NULL ON UPDATE CASCADE
+) ENGINE = InnoDB AUTO_INCREMENT = 3 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Dynamic;
+
+-- ----------------------------
+-- Records of formulations
+-- ----------------------------
+INSERT INTO `formulations` VALUES (1, 'F08260001', 'D-ARCO', NULL, 'Finishing', 'Dipping', NULL, 1, NULL, 1, NULL, NULL, '2026-08-05 09:57:19', '2026-08-05 09:57:19', NULL);
+INSERT INTO `formulations` VALUES (2, 'F08260002', 'D-ARCO', NULL, 'Finishing', 'Dipping', NULL, 3, NULL, 1, 1, NULL, '2026-08-05 09:59:45', '2026-08-05 10:00:34', NULL);
+
+-- ----------------------------
 -- Table structure for machines
 -- ----------------------------
 DROP TABLE IF EXISTS `machines`;
@@ -550,7 +757,7 @@ CREATE TABLE `migrations`  (
   `time` int NOT NULL,
   `batch` int UNSIGNED NOT NULL,
   PRIMARY KEY (`id`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 17 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 39 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of migrations
@@ -571,6 +778,28 @@ INSERT INTO `migrations` VALUES (13, '2026-07-08-083636', 'App\\Database\\Migrat
 INSERT INTO `migrations` VALUES (14, '2026-07-09-000001', 'App\\Database\\Migrations\\ModifyChemicalsMultiCategory', 'default', 'App\\Modules\\Warehouse', 1783587105, 7);
 INSERT INTO `migrations` VALUES (15, '2026-07-10-072230', 'App\\Database\\Migrations\\CreatePeriodsTable', 'default', 'App\\Modules\\Warehouse', 1783668605, 8);
 INSERT INTO `migrations` VALUES (16, '2026-07-10-234132', 'App\\Database\\Migrations\\CreateChemicalStockOpeningsTable', 'default', 'App\\Modules\\Warehouse', 1783735350, 9);
+INSERT INTO `migrations` VALUES (17, '2026-08-04-000001', 'App\\Database\\Migrations\\CreateFormulationsTable', 'default', 'App\\Modules\\Warehouse', 1785912328, 10);
+INSERT INTO `migrations` VALUES (18, '2026-08-04-000002', 'App\\Database\\Migrations\\CreateFormulationItemsTable', 'default', 'App\\Modules\\Warehouse', 1785912328, 10);
+INSERT INTO `migrations` VALUES (19, '2026-08-05-000001', 'App\\Database\\Migrations\\CreateFormulationGroupsTable', 'default', 'App\\Modules\\Warehouse', 1785915988, 11);
+INSERT INTO `migrations` VALUES (20, '2026-08-05-000002', 'App\\Database\\Migrations\\AlterFormulationsAddGroup', 'default', 'App\\Modules\\Warehouse', 1785915988, 11);
+INSERT INTO `migrations` VALUES (21, '2026-08-05-000003', 'App\\Database\\Migrations\\CreateFormulationVersionsTable', 'default', 'App\\Modules\\Warehouse', 1785915988, 11);
+INSERT INTO `migrations` VALUES (22, '2026-08-05-000004', 'App\\Database\\Migrations\\AlterFormulationItemsAddVersioning', 'default', 'App\\Modules\\Warehouse', 1785915988, 11);
+INSERT INTO `migrations` VALUES (23, '2026-08-05-000006', 'App\\Modules\\Warehouse\\Database\\Migrations\\AddProcessSubTypeToFormulations', 'default', 'App\\Modules\\Warehouse', 1785919341, 12);
+INSERT INTO `migrations` VALUES (24, '2026-08-05-000004', 'App\\Modules\\Warehouse\\Database\\Migrations\\AlterFormulationItemsAddVersioning', 'default', 'App\\Modules\\Warehouse', 1785920012, 13);
+INSERT INTO `migrations` VALUES (25, '2026-08-05-000007', 'App\\Modules\\Warehouse\\Database\\Migrations\\AddCurrentVersionIdToFormulations', 'default', 'App\\Modules\\Warehouse', 1785920012, 13);
+INSERT INTO `migrations` VALUES (26, '2026-08-05-999999', 'App\\Modules\\Warehouse\\Database\\Migrations\\DropAllWarehouseTablesSimple', 'default', 'App\\Modules\\Warehouse', 1785920012, 13);
+INSERT INTO `migrations` VALUES (27, '2026-08-05-000001', 'App\\Modules\\Warehouse\\Database\\Migrations\\CreateWarehousesTable', 'default', 'App\\Modules\\Warehouse', 1785920361, 14);
+INSERT INTO `migrations` VALUES (28, '2026-08-05-000002', 'App\\Modules\\Warehouse\\Database\\Migrations\\CreatePeriodsTable', 'default', 'App\\Modules\\Warehouse', 1785920362, 14);
+INSERT INTO `migrations` VALUES (29, '2026-08-05-000003', 'App\\Modules\\Warehouse\\Database\\Migrations\\CreateChemicalCategoriesTable', 'default', 'App\\Modules\\Warehouse', 1785920362, 14);
+INSERT INTO `migrations` VALUES (30, '2026-08-05-000004', 'App\\Modules\\Warehouse\\Database\\Migrations\\CreateChemicalsTable', 'default', 'App\\Modules\\Warehouse', 1785920362, 14);
+INSERT INTO `migrations` VALUES (31, '2026-08-05-000005', 'App\\Modules\\Warehouse\\Database\\Migrations\\CreateChemicalCategoryMapTable', 'default', 'App\\Modules\\Warehouse', 1785920362, 14);
+INSERT INTO `migrations` VALUES (32, '2026-08-05-000006', 'App\\Modules\\Warehouse\\Database\\Migrations\\CreateChemicalVariantsTable', 'default', 'App\\Modules\\Warehouse', 1785920362, 14);
+INSERT INTO `migrations` VALUES (33, '2026-08-05-000007', 'App\\Modules\\Warehouse\\Database\\Migrations\\CreateChemicalStockOpeningsTable', 'default', 'App\\Modules\\Warehouse', 1785920362, 14);
+INSERT INTO `migrations` VALUES (34, '2026-08-05-000008', 'App\\Modules\\Warehouse\\Database\\Migrations\\CreateFormulationGroupsTable', 'default', 'App\\Modules\\Warehouse', 1785920362, 14);
+INSERT INTO `migrations` VALUES (35, '2026-08-05-000009', 'App\\Modules\\Warehouse\\Database\\Migrations\\CreateFormulationsTable', 'default', 'App\\Modules\\Warehouse', 1785920362, 14);
+INSERT INTO `migrations` VALUES (36, '2026-08-05-000010', 'App\\Modules\\Warehouse\\Database\\Migrations\\CreateFormulationVersionsTable', 'default', 'App\\Modules\\Warehouse', 1785920362, 14);
+INSERT INTO `migrations` VALUES (37, '2026-08-05-000011', 'App\\Modules\\Warehouse\\Database\\Migrations\\CreateFormulationItemsTable', 'default', 'App\\Modules\\Warehouse', 1785920362, 14);
+INSERT INTO `migrations` VALUES (38, '2026-08-05-000012', 'App\\Modules\\Warehouse\\Database\\Migrations\\AddForeignKeyCurrentVersion', 'default', 'App\\Modules\\Warehouse', 1785920362, 14);
 
 -- ----------------------------
 -- Table structure for periods
@@ -604,18 +833,15 @@ CREATE TABLE `periods`  (
   INDEX `start_date`(`start_date` ASC) USING BTREE,
   INDEX `end_date`(`end_date` ASC) USING BTREE,
   INDEX `deleted_at`(`deleted_at` ASC) USING BTREE,
-  CONSTRAINT `periods_closed_by_foreign` FOREIGN KEY (`closed_by`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE SET NULL,
-  CONSTRAINT `periods_created_by_foreign` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE SET NULL,
-  CONSTRAINT `periods_deleted_by_foreign` FOREIGN KEY (`deleted_by`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE SET NULL,
-  CONSTRAINT `periods_updated_by_foreign` FOREIGN KEY (`updated_by`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE SET NULL
-) ENGINE = InnoDB AUTO_INCREMENT = 5 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Dynamic;
+  CONSTRAINT `periods_closed_by_foreign` FOREIGN KEY (`closed_by`) REFERENCES `users` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
+  CONSTRAINT `periods_created_by_foreign` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
+  CONSTRAINT `periods_deleted_by_foreign` FOREIGN KEY (`deleted_by`) REFERENCES `users` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
+  CONSTRAINT `periods_updated_by_foreign` FOREIGN KEY (`updated_by`) REFERENCES `users` (`id`) ON DELETE SET NULL ON UPDATE CASCADE
+) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of periods
 -- ----------------------------
-INSERT INTO `periods` VALUES (1, '2026-01', 'Jan 2026', '2025-12-31', '2026-01-30', 'Closed', 0, NULL, '2026-07-10 07:38:44', 1, 1, NULL, NULL, '2026-07-10 07:34:32', '2026-07-10 07:38:44', NULL);
-INSERT INTO `periods` VALUES (2, '2026-02', 'Feb 2026', '2026-01-31', '2026-02-27', 'Closed', 0, NULL, '2026-07-11 02:05:53', 1, 1, NULL, NULL, '2026-07-10 07:45:24', '2026-07-11 02:05:53', NULL);
-INSERT INTO `periods` VALUES (4, '2026-03', 'Maret 2026', '2026-02-28', '2026-03-30', 'Open', 1, NULL, NULL, NULL, 1, 1, NULL, '2026-07-11 03:16:55', '2026-07-11 03:18:03', NULL);
 
 -- ----------------------------
 -- Table structure for positions
@@ -694,7 +920,7 @@ CREATE TABLE `users`  (
 -- ----------------------------
 -- Records of users
 -- ----------------------------
-INSERT INTO `users` VALUES (1, 'superadmin', 3, NULL, NULL, 1, '2026-08-04 04:15:59', '2026-06-08 06:04:01', '2026-06-16 06:51:56', NULL);
+INSERT INTO `users` VALUES (1, 'superadmin', 3, NULL, NULL, 1, '2026-08-05 10:01:10', '2026-06-08 06:04:01', '2026-06-16 06:51:56', NULL);
 INSERT INTO `users` VALUES (2, 'Alex', 9, NULL, NULL, 1, '2026-07-08 07:21:58', '2026-06-16 09:09:51', '2026-06-18 09:01:38', NULL);
 
 -- ----------------------------
@@ -716,23 +942,16 @@ CREATE TABLE `warehouses`  (
   `updated_at` datetime NULL DEFAULT NULL,
   `deleted_at` datetime NULL DEFAULT NULL,
   PRIMARY KEY (`id`) USING BTREE,
-  INDEX `warehouses_created_by_foreign`(`created_by` ASC) USING BTREE,
-  INDEX `warehouses_updated_by_foreign`(`updated_by` ASC) USING BTREE,
-  INDEX `warehouses_deleted_by_foreign`(`deleted_by` ASC) USING BTREE,
   INDEX `warehouse_code`(`warehouse_code` ASC) USING BTREE,
   INDEX `warehouse_name`(`warehouse_name` ASC) USING BTREE,
   INDEX `department_id`(`department_id` ASC) USING BTREE,
   INDEX `status`(`status` ASC) USING BTREE,
-  INDEX `deleted_at`(`deleted_at` ASC) USING BTREE,
-  CONSTRAINT `warehouses_created_by_foreign` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE SET NULL,
-  CONSTRAINT `warehouses_deleted_by_foreign` FOREIGN KEY (`deleted_by`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE SET NULL,
-  CONSTRAINT `warehouses_department_id_foreign` FOREIGN KEY (`department_id`) REFERENCES `departments` (`id`) ON DELETE CASCADE ON UPDATE SET NULL,
-  CONSTRAINT `warehouses_updated_by_foreign` FOREIGN KEY (`updated_by`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE SET NULL
-) ENGINE = InnoDB AUTO_INCREMENT = 6 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Dynamic;
+  INDEX `deleted_at`(`deleted_at` ASC) USING BTREE
+) ENGINE = InnoDB AUTO_INCREMENT = 2 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of warehouses
 -- ----------------------------
-INSERT INTO `warehouses` VALUES (1, 'G-DYE', 'Gudang Dyestuff', 1, NULL, NULL, 'Active', 1, 1, NULL, '2026-07-08 09:12:55', '2026-07-11 03:07:34', NULL);
+INSERT INTO `warehouses` VALUES (1, 'GFIN', 'GD FINISHING', 2, 'Finishing', NULL, 'Active', 1, NULL, NULL, '2026-08-05 09:06:32', '2026-08-05 09:06:32', NULL);
 
 SET FOREIGN_KEY_CHECKS = 1;
