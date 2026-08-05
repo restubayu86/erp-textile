@@ -43,13 +43,15 @@ class ChemicalStockOpeningModel extends Model
                 'c.id as chemical_id',
                 'c.chemical_code',
                 'c.chemical_name',
-                'cc.category_name',
+                'GROUP_CONCAT(DISTINCT cc.category_name ORDER BY cc.category_name SEPARATOR ", ") as category_name',
                 'dv.unit as default_unit',
             ])
-            ->join('chemical_categories cc', 'cc.id = c.category_id', 'left')
+            ->join('chemical_category_map ccm', 'ccm.chemical_id = c.id', 'left')
+            ->join('chemical_categories cc', 'cc.id = ccm.category_id', 'left')
             ->join('chemical_variants dv', 'dv.chemical_id = c.id AND dv.is_default = 1', 'left')
             ->where('c.status', 'Active')
             ->where('c.deleted_at', null)
+            ->groupBy('c.id, c.chemical_code, c.chemical_name, dv.unit')
             ->orderBy('c.chemical_name', 'ASC')
             ->get()->getResultArray();
 
@@ -95,7 +97,7 @@ class ChemicalStockOpeningModel extends Model
             if (!$chemicalId) continue;
 
             $quantity = is_numeric($row['quantity'] ?? null) ? (float) $row['quantity'] : 0;
-            $unit     = trim($row['unit'] ?? '') ?: null;
+            $unit     = 'kg';
             $notes    = trim($row['notes'] ?? '') ?: null;
 
             $existing = $this->where('period_id', $periodId)
@@ -142,13 +144,15 @@ class ChemicalStockOpeningModel extends Model
                 'c.id as chemical_id',
                 'c.chemical_code',
                 'c.chemical_name',
-                'cc.category_name',
+                'GROUP_CONCAT(DISTINCT cc.category_name ORDER BY cc.category_name SEPARATOR ", ") as category_name',
                 'dv.unit as default_unit',
             ])
-            ->join('chemical_categories cc', 'cc.id = c.category_id', 'left')
+            ->join('chemical_category_map ccm', 'ccm.chemical_id = c.id', 'left')
+            ->join('chemical_categories cc', 'cc.id = ccm.category_id', 'left')
             ->join('chemical_variants dv', 'dv.chemical_id = c.id AND dv.is_default = 1', 'left')
             ->where('c.status', 'Active')
             ->where('c.deleted_at', null)
+            ->groupBy('c.id, c.chemical_code, c.chemical_name, dv.unit')
             ->orderBy('c.chemical_name', 'ASC')
             ->get()->getResultArray();
 

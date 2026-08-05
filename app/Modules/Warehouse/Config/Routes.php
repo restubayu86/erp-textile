@@ -27,6 +27,13 @@ $routes->group('warehouse', [
     $routes->post('formulations/(:num)/update',  'FormulationController::update/$1');
     $routes->post('formulations/(:num)/delete',  'FormulationController::delete/$1');
     $routes->get('formulations/categories',      'FormulationController::categories');
+    $routes->get('formulations/trash',                 'FormulationController::trash');
+    $routes->get('formulations/trash-datatables',       'FormulationController::trashDatatables');
+    $routes->get('formulations/select2',                'FormulationController::select2');
+    $routes->get('formulations/stats',                  'FormulationController::stats');
+    $routes->post('formulations/(:num)/restore',        'FormulationController::restore/$1');
+    $routes->post('formulations/(:num)/force-delete',   'FormulationController::forceDelete/$1');
+    $routes->post('formulations/empty-trash',            'FormulationController::emptyTrash');
 
     // ============================================================
     // Master: Chemical Categories (modal)

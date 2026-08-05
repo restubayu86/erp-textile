@@ -58,7 +58,7 @@ class ChemicalModel extends Model
     // CRUD (main chemical)
     // ============================================================
 
-    public function createData(array $data): array
+    public function createData(array $data, array $categoryIds = []): array
     {
         if ($this->isDuplicateCode($data['chemical_code'] ?? '')) {
             return ['status' => 'error', 'errors' => ['chemical_code' => 'Kode bahan kimia sudah digunakan']];
@@ -69,10 +69,14 @@ class ChemicalModel extends Model
         if (!$this->insert($data)) {
             return ['status' => 'error', 'message' => 'Gagal menyimpan data', 'errors' => $this->errors()];
         }
-        return ['status' => 'success', 'message' => 'Bahan kimia berhasil ditambahkan', 'id' => $this->getInsertID()];
+
+        $chemicalId = $this->getInsertID();
+        $this->syncCategories($chemicalId, $categoryIds);
+
+        return ['status' => 'success', 'message' => 'Bahan kimia berhasil ditambahkan', 'id' => $chemicalId];
     }
 
-    public function updateData(int $id, array $data): array
+    public function updateData(int $id, array $data, array $categoryIds = []): array
     {
         if (!$this->find($id)) return ['status' => 'error', 'message' => 'Data tidak ditemukan'];
         if ($this->isDuplicateCode($data['chemical_code'] ?? '', $id)) {
@@ -84,21 +88,63 @@ class ChemicalModel extends Model
         if (!$this->update($id, $data)) {
             return ['status' => 'error', 'message' => 'Gagal memperbarui data', 'errors' => $this->errors()];
         }
+
+        $this->syncCategories($id, $categoryIds);
+
         return ['status' => 'success', 'message' => 'Bahan kimia berhasil diperbarui'];
+    }
+
+    private function syncCategories(int $chemicalId, array $categoryIds): void
+    {
+        $this->db->table('chemical_category_map')->where('chemical_id', $chemicalId)->delete();
+
+        if (empty($categoryIds)) return;
+
+        $rows = array_map(fn($catId) => [
+            'chemical_id' => $chemicalId,
+            'category_id' => (int) $catId,
+        ], array_unique($categoryIds));
+
+        $this->db->table('chemical_category_map')->insertBatch($rows);
+    }
+
+    public function peekNextCode(): string
+    {
+        $prefix = 'CH-';
+        $last = $this->db->table('chemicals')
+            ->select('chemical_code')
+            ->like('chemical_code', $prefix, 'after')
+            ->orderBy('id', 'DESC')
+            ->limit(1)
+            ->get()->getRowArray();
+
+        $nextNumber = 1;
+        if ($last && preg_match('/(\d+)$/', $last['chemical_code'], $m)) {
+            $nextNumber = (int) $m[1] + 1;
+        }
+
+        return $prefix . str_pad((string) $nextNumber, 5, '0', STR_PAD_LEFT);
     }
 
     public function getData(int $id): array
     {
         $data = $this->db->table('chemicals c')
-            ->select('c.*, cc.category_name, cc.category_code')
-            ->join('chemical_categories cc', 'cc.id = c.category_id', 'left')
+            ->select('c.*')
             ->where('c.id', $id)
             ->where('c.deleted_at', null)
             ->get()->getRowArray();
 
         if (!$data) return ['status' => 'error', 'message' => 'Data tidak ditemukan'];
 
-        // Sertakan varian
+        $categories = $this->db->table('chemical_category_map m')
+            ->select('cc.id, cc.category_name, cc.category_code')
+            ->join('chemical_categories cc', 'cc.id = m.category_id')
+            ->where('m.chemical_id', $id)
+            ->get()->getResultArray();
+
+        $data['category_ids'] = array_column($categories, 'id');
+        $data['categories']   = $categories;
+
         $data['variants'] = $this->getVariants($id);
 
         return ['status' => 'success', 'data' => $data];

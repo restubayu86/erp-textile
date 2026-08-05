@@ -8,44 +8,176 @@
         overflow-x: hidden;
     }
 
-    .select2-container .select2-selection--single {
-        height: calc(1.5em + 1.1rem + 2px) !important;
+    .stat-card {
+        border: none;
+        border-radius: 1rem;
+        transition: all .2s;
     }
 
-    #stock-grid-wrapper {
+    .stat-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 24px rgba(0, 0, 0, .1);
+    }
+
+    .stat-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.35rem;
+        flex-shrink: 0;
+    }
+
+    .info-label {
+        font-size: .65rem;
+        text-transform: uppercase;
+        letter-spacing: .06em;
+        color: var(--phoenix-secondary-color);
+        margin-bottom: .2rem;
+    }
+
+    .info-value {
+        font-weight: 700;
+        font-size: 1.5rem;
+        line-height: 1;
+    }
+
+    .filter-toggle {
+        position: fixed;
+        right: 0;
+        top: 50%;
+        transform: translateY(-50%);
+        z-index: 1040;
+        border-radius: .75rem 0 0 .75rem !important;
+        box-shadow: -2px 0 12px rgba(0, 0, 0, .12);
+        text-decoration: none;
+        border: 1px solid var(--phoenix-border-color) !important;
+        border-right: none !important;
+    }
+
+    .filter-toggle .card-body {
+        padding: .9rem .5rem;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: .45rem;
+    }
+
+    .filter-toggle .filter-label {
+        writing-mode: vertical-rl;
+        font-size: .6rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: .06em;
+        color: var(--phoenix-body-color);
+        opacity: .5;
+    }
+
+    .filter-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: var(--phoenix-danger);
+        display: none;
+    }
+
+    .filter-toggle.has-filter .filter-dot {
+        display: block;
+    }
+
+    #so-stock-table_wrapper,
+    #so-stock-table-combined_wrapper {
         max-width: 100%;
-        overflow-x: auto;
     }
 
-    #stock-grid-table {
-        width: 100%;
+    #so-stock-table_wrapper .top,
+    #so-stock-table-combined_wrapper .top {
+        display: flex;
+        justify-content: center;
+        margin-bottom: 1rem;
     }
 
-    #stock-grid-table th {
-        position: sticky;
-        top: 0;
-        background: var(--phoenix-body-bg);
-        z-index: 1;
-        white-space: nowrap;
+    #so-stock-table_wrapper .top input,
+    #so-stock-table-combined_wrapper .top input {
+        width: 300px;
+        border-radius: 20px;
+        padding: 0.375rem 1rem;
+        text-align: center;
     }
 
-    #stock-grid-table input.qty-input {
+    #so-stock-table_wrapper .bottom,
+    #so-stock-table-combined_wrapper .bottom {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 1rem;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+
+    #so-stock-table_wrapper .bottom .dataTables_length,
+    #so-stock-table-combined_wrapper .bottom .dataTables_length {
+        flex: 1;
+        text-align: left;
+        order: 1;
+    }
+
+    #so-stock-table_wrapper .bottom .dataTables_paginate,
+    #so-stock-table-combined_wrapper .bottom .dataTables_paginate {
+        flex: 1;
+        text-align: center;
+        order: 2;
+    }
+
+    #so-stock-table_wrapper .bottom .dataTables_info,
+    #so-stock-table-combined_wrapper .bottom .dataTables_info {
+        flex: 1;
+        text-align: right;
+        order: 3;
+    }
+
+    #so-stock-table_wrapper .dataTables_filter label,
+    #so-stock-table_wrapper .dataTables_length label,
+    #so-stock-table-combined_wrapper .dataTables_filter label,
+    #so-stock-table-combined_wrapper .dataTables_length label {
+        margin-bottom: 0;
+    }
+
+    #so-stock-table_wrapper .dataTables_length select,
+    #so-stock-table-combined_wrapper .dataTables_length select {
+        width: auto;
+        display: inline-block;
+        margin: 0 0.5rem;
+        border-radius: 0.375rem;
+    }
+
+    #so-stock-table_wrapper .dataTables_paginate .paginate_button,
+    #so-stock-table-combined_wrapper .dataTables_paginate .paginate_button {
+        padding: 0.375rem 0.75rem;
+        margin: 0 0.25rem;
+        border-radius: 0.375rem;
+    }
+
+    #so-stock-table_wrapper .dataTables_paginate .paginate_button.current,
+    #so-stock-table-combined_wrapper .dataTables_paginate .paginate_button.current {
+        background: var(--phoenix-primary);
+        border-color: var(--phoenix-primary);
+        color: white !important;
+    }
+
+    #so-stock-table,
+    #so-stock-table-combined {
+        width: 100% !important;
+    }
+
+    #so-stock-table input.qty-input {
         text-align: right;
         max-width: 140px;
     }
 
-    #stock-grid-table input.unit-input {
-        max-width: 90px;
-    }
-
-    .grid-scroll {
-        max-height: 60vh;
-        overflow-y: auto;
-        border: 1px solid var(--phoenix-border-color);
-        border-radius: .5rem;
-    }
-
-    .row-touched {
+    #so-stock-table tr.row-touched {
         background-color: rgba(var(--phoenix-warning-rgb), .06);
     }
 
@@ -54,9 +186,39 @@
         font-weight: 600;
     }
 
-    .empty-placeholder {
-        padding: 3rem 1rem;
-        text-align: center;
+    tr.combined-row {
+        cursor: pointer;
+    }
+
+    .dt-buttons {
+        margin-bottom: .75rem;
+    }
+
+    .print-header {
+        display: none;
+    }
+
+    @media print {
+        .no-print {
+            display: none !important;
+        }
+
+        .print-header {
+            display: block !important;
+        }
+
+        .card {
+            box-shadow: none !important;
+            border: 1px solid #dee2e6 !important;
+        }
+    }
+
+    .select2-container .select2-selection--single {
+        height: calc(1.5em + 1.1rem + 2px) !important;
+    }
+
+    .period-range-text {
+        font-size: .68rem;
         color: var(--phoenix-secondary-color);
     }
 </style>
@@ -83,65 +245,207 @@
         </div>
     </div>
 
-    <!-- Filter bar -->
-    <div class="card mb-3">
-        <div class="card-body">
-            <div class="row g-3 align-items-end">
-                <div class="col-md-4">
-                    <label class="form-label fs-9 fw-semibold text-uppercase text-muted">Periode <span class="text-danger">*</span></label>
-                    <select class="form-select form-select-sm" id="f-period" style="width:100%">
-                        <option value=""></option>
-                    </select>
+    <!-- Stat Cards -->
+    <div class="row g-3 mb-4 no-print">
+        <div class="col-md-3 col-6">
+            <div class="card stat-card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="info-label">Total Bahan Kimia</div>
+                            <div class="info-value text-primary" id="so-stat-total">—</div>
+                        </div>
+                        <div class="stat-icon bg-primary bg-opacity-10 text-primary">
+                            <span class="fas fa-flask"></span>
+                        </div>
+                    </div>
                 </div>
-                <div class="col-md-4">
-                    <label class="form-label fs-9 fw-semibold text-uppercase text-muted">Gudang <span class="text-danger">*</span></label>
-                    <select class="form-select form-select-sm" id="f-warehouse" style="width:100%">
-                        <option value="__combined__">— Gabungan (Semua Gudang) —</option>
-                    </select>
+            </div>
+        </div>
+        <div class="col-md-3 col-6">
+            <div class="card stat-card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="info-label">Sudah Diinput</div>
+                            <div class="info-value text-success" id="so-stat-filled">—</div>
+                        </div>
+                        <div class="stat-icon bg-success bg-opacity-10 text-success">
+                            <span class="fas fa-check-circle"></span>
+                        </div>
+                    </div>
                 </div>
-                <div class="col-md-4">
-                    <label class="form-label fs-9 fw-semibold text-uppercase text-muted">Cari Bahan Kimia</label>
-                    <input type="text" class="form-control form-control-sm" id="f-search" placeholder="Nama / kode..." disabled>
+            </div>
+        </div>
+        <div class="col-md-3 col-6">
+            <div class="card stat-card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="info-label">Belum Diinput</div>
+                            <div class="info-value text-warning" id="so-stat-empty">—</div>
+                        </div>
+                        <div class="stat-icon bg-warning bg-opacity-10 text-warning">
+                            <span class="fas fa-exclamation-triangle"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-6">
+            <div class="card stat-card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="info-label">Status Periode</div>
+                            <div class="info-value" id="so-stat-period">—</div>
+                            <div class="period-range-text" id="so-stat-period-range"></div>
+                        </div>
+                        <div class="stat-icon bg-secondary bg-opacity-10 text-secondary" id="so-stat-period-icon">
+                            <span class="fas fa-calendar-alt"></span>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
     <!-- Status banner -->
-    <div id="status-banner" class="d-none mb-3"></div>
+    <div id="so-status-banner" class="d-none mb-3 no-print"></div>
 
-    <!-- Grid -->
-    <div id="grid-container">
-        <div class="empty-placeholder">
+    <!-- Toolbar -->
+    <div class="d-flex justify-content-between align-items-center mb-3 gap-2 flex-wrap no-print">
+        <div class="d-flex gap-2 align-items-center">
+            <span class="badge badge-phoenix badge-phoenix-secondary fs-9 p-2 px-3" id="so-context-badge">
+                <span class="fas fa-info-circle me-1"></span>Pilih periode &amp; gudang
+            </span>
+        </div>
+        <div class="d-flex gap-2">
+            <button class="btn btn-subtle-secondary btn-sm" id="so-btn-refresh" type="button">
+                <span class="fas fa-sync-alt me-1"></span>Refresh
+            </button>
+            <button class="btn btn-subtle-secondary btn-sm d-none" id="so-btn-reset-grid" type="button">
+                <span class="fas fa-undo me-1"></span>Batalkan Perubahan
+            </button>
+            <button class="btn btn-primary btn-sm d-none" id="so-btn-save-grid" type="button">
+                <span class="fas fa-save me-1" id="so-save-icon"></span>
+                <span id="so-save-text">Simpan Stok Awal</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Print header -->
+    <div class="print-header mb-3">
+        <h5 class="fw-bold mb-1">Stok Awal Bahan Kimia</h5>
+        <div class="text-muted small" id="so-print-context"></div>
+        <div class="text-muted small" id="so-print-period-range"></div>
+        <div class="text-muted small">Dicetak: <span id="so-print-date"></span></div>
+        <hr class="my-2">
+    </div>
+
+    <!-- Empty state -->
+    <div class="mx-n4 px-4 mx-lg-n6 px-lg-6 bg-body-emphasis py-5 border-y" id="so-empty-wrapper">
+        <div class="text-center py-5 text-body-tertiary">
             <span class="fas fa-boxes fa-2x mb-2 d-block opacity-50"></span>
             Pilih periode dan gudang terlebih dahulu untuk menampilkan data stok awal.
         </div>
     </div>
 
-    <div class="d-flex justify-content-end gap-2 mt-3 d-none" id="action-bar">
-        <button class="btn btn-subtle-secondary btn-sm" id="btn-reset-grid" type="button">
-            <span class="fas fa-undo me-1"></span>Batalkan Perubahan
-        </button>
-        <button class="btn btn-primary btn-sm" id="btn-save-grid" type="button">
-            <span class="fas fa-save me-1" id="save-icon"></span>
-            <span id="save-text">Simpan Stok Awal</span>
-        </button>
+    <!-- Table (editable per gudang) -->
+    <div class="mx-n4 px-4 mx-lg-n6 px-lg-6 bg-body-emphasis py-5 border-y d-none" id="so-editable-wrapper">
+        <table class="table table-hover fs-9 nowrap align-middle" id="so-stock-table">
+            <thead>
+                <tr>
+                    <th>No</th>
+                    <th>Bahan Kimia</th>
+                    <th>Kategori</th>
+                    <th>Stok Awal (kg)</th>
+                    <th class="no-print">Catatan</th>
+                </tr>
+            </thead>
+        </table>
+    </div>
+
+    <!-- Table (combined, semua gudang) -->
+    <div class="mx-n4 px-4 mx-lg-n6 px-lg-6 bg-body-emphasis py-5 border-y d-none" id="so-combined-wrapper">
+        <table class="table table-hover fs-9 nowrap align-middle" id="so-stock-table-combined">
+            <thead>
+                <tr>
+                    <th>No</th>
+                    <th>Bahan Kimia</th>
+                    <th>Kategori</th>
+                    <th>Total Stok Awal (kg)</th>
+                    <th>Tersebar di</th>
+                    <th class="no-print"></th>
+                </tr>
+            </thead>
+        </table>
+    </div>
+</div>
+
+<!-- Filter toggle -->
+<a class="card filter-toggle no-print" href="#so-filter-offcanvas" data-bs-toggle="offcanvas" id="so-filter-toggle">
+    <div class="card-body">
+        <span class="fas fa-filter text-primary"></span>
+        <span class="filter-label">Filter</span>
+        <span class="filter-dot"></span>
+    </div>
+</a>
+
+<!-- Filter Offcanvas -->
+<div class="offcanvas offcanvas-end" tabindex="-1" id="so-filter-offcanvas" style="width:320px">
+    <div class="offcanvas-header border-bottom">
+        <h5 class="offcanvas-title"><span class="fas fa-filter me-2 text-primary"></span>Filter</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
+    </div>
+    <div class="offcanvas-body d-flex flex-column">
+        <div class="flex-grow-1">
+            <div class="mb-3">
+                <label class="form-label fw-semibold fs-9 text-uppercase text-muted" for="so-filter-period">
+                    Periode <span class="text-danger">*</span>
+                </label>
+                <input type="month" class="form-control form-control-sm" id="so-filter-period">
+                <div class="form-text fs-10" id="so-period-status-hint"></div>
+            </div>
+            <div class="mb-4">
+                <label class="form-label fw-semibold fs-9 text-uppercase text-muted" for="so-filter-warehouse">
+                    Gudang <span class="text-danger">*</span>
+                </label>
+                <select class="form-select form-select-sm" id="so-filter-warehouse" style="width:100%">
+                    <option value="__combined__">— Gabungan (Semua Gudang) —</option>
+                </select>
+            </div>
+        </div>
+        <div id="so-filter-summary" class="mb-3 d-none">
+            <div class="alert alert-subtle-info py-2 px-3 mb-0 fs-10">
+                <span class="fas fa-info-circle me-1"></span>
+                <span id="so-filter-summary-text"></span>
+            </div>
+        </div>
+        <div class="d-grid gap-2">
+            <button class="btn btn-primary btn-sm" id="so-btn-apply-filter">
+                <span class="fas fa-search me-1"></span>Terapkan
+            </button>
+            <button class="btn btn-subtle-secondary btn-sm" id="so-btn-reset-filter">
+                <span class="fas fa-times me-1"></span>Reset
+            </button>
+        </div>
     </div>
 </div>
 
 <!-- Modal Rincian per Gudang (mode Gabungan) -->
-<div class="modal fade" id="breakdownModal" tabindex="-1" aria-hidden="true">
+<div class="modal fade" id="so-breakdownModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg rounded-3 overflow-hidden">
             <div class="modal-header border-bottom py-3 px-4">
                 <div>
-                    <h5 class="modal-title fw-bold mb-0" id="breakdown-title">Rincian per Gudang</h5>
-                    <p class="text-muted fs-10 mb-0" id="breakdown-subtitle"></p>
+                    <h5 class="modal-title fw-bold mb-0" id="so-breakdown-title">Rincian per Gudang</h5>
+                    <p class="text-muted fs-10 mb-0" id="so-breakdown-subtitle"></p>
                 </div>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body px-4 py-3">
-                <div id="breakdown-body"></div>
+                <div id="so-breakdown-body"></div>
             </div>
         </div>
     </div>
@@ -150,20 +454,32 @@
 <?= $this->endSection() ?>
 
 <?= $this->section('scripts') ?>
+
 <script>
     const CAN_CREATE_OPENING = <?= json_encode(canDo('warehouse.stock_opening.create')) ?>;
 
     const StockOpening = {
         BASE: '<?= base_url() ?>',
         currentPeriodId: null,
+        currentPeriodMonth: null,
+        currentPeriodRange: null,
         currentWarehouseId: null,
+        currentWarehouseText: null,
+        currentPeriodStatus: null,
         periodStatus: null,
-        rows: [],
-        touched: new Set(),
+        dtEditable: null,
+        dtCombined: null,
 
         init() {
             this.initSelect2();
             this.initEvents();
+            document.getElementById('so-print-date').textContent = new Date().toLocaleDateString('id-ID', {
+                day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit'
+            });
+
+            const now = new Date();
+            document.getElementById('so-filter-period').value =
+                `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
         },
 
         csrfName: () => document.querySelector('meta[name="csrf-name"]')?.content ?? '',
@@ -179,10 +495,7 @@
             const r = await fetch(url, {
                 method: 'POST',
                 body: fd,
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'X-CSRF-TOKEN': this.csrfToken()
-                }
+                headers: { 'X-Requested-With': 'XMLHttpRequest', 'X-CSRF-TOKEN': this.csrfToken() }
             });
             if (r.status === 403) throw new Error('Sesi habis, muat ulang halaman');
             const d = await r.json();
@@ -191,36 +504,13 @@
         },
 
         async get(url) {
-            const r = await fetch(url, {
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest'
-                }
-            });
+            const r = await fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
             return r.json();
         },
 
         initSelect2() {
-            $('#f-period').select2({
-                width: '100%',
-                theme: 'bootstrap-5',
-                placeholder: '— Pilih Periode —',
-                ajax: {
-                    url: this.BASE + 'warehouse/master/periods/select2',
-                    dataType: 'json',
-                    delay: 250,
-                    data: params => ({
-                        search: params.term
-                    }),
-                    processResults: data => ({
-                        results: (data.data ?? []).map(p => ({
-                            id: p.id,
-                            text: `${p.name} (${p.code})${p.status === 'Closed' ? ' — Ditutup' : ''}`
-                        }))
-                    }),
-                },
-            });
-
-            $('#f-warehouse').select2({
+            $('#so-filter-warehouse').select2({
+                dropdownParent: $('#so-filter-offcanvas'),
                 width: '100%',
                 theme: 'bootstrap-5',
                 placeholder: '— Pilih Gudang —',
@@ -228,18 +518,11 @@
                     url: this.BASE + 'warehouse/master/warehouses/select2',
                     dataType: 'json',
                     delay: 250,
-                    data: params => ({
-                        search: params.term
-                    }),
+                    data: params => ({ search: params.term }),
                     processResults: data => ({
-                        results: [{
-                                id: '__combined__',
-                                text: '— Gabungan (Semua Gudang) —'
-                            },
-                            ...(data.data ?? []).map(w => ({
-                                id: w.id,
-                                text: `${w.name} (${w.code})`
-                            }))
+                        results: [
+                            { id: '__combined__', text: '— Gabungan (Semua Gudang) —' },
+                            ...(data.data ?? []).map(w => ({ id: w.id, text: `${w.name} (${w.code})` }))
                         ]
                     }),
                 },
@@ -247,38 +530,110 @@
         },
 
         initEvents() {
-            $('#f-period').on('change', () => this.onFilterChange());
-            $('#f-warehouse').on('change', () => this.onFilterChange());
-
-            document.getElementById('f-search')?.addEventListener('input', e => this.applySearch(e.target.value));
-            document.getElementById('btn-save-grid')?.addEventListener('click', () => this.save());
-            document.getElementById('btn-reset-grid')?.addEventListener('click', () => this.reload());
-
-            $(document).on('click', '.btn-breakdown', e => {
-                const btn = $(e.currentTarget);
-                this.openBreakdown(btn.data('chemical-id'), btn.data('chemical-name'));
-            });
+            document.getElementById('so-btn-refresh')?.addEventListener('click', () => this.reload());
+            document.getElementById('so-btn-apply-filter')?.addEventListener('click', () => this.applyFilter());
+            document.getElementById('so-btn-reset-filter')?.addEventListener('click', () => this.resetFilter());
+            document.getElementById('so-btn-save-grid')?.addEventListener('click', () => this.save());
+            document.getElementById('so-btn-reset-grid')?.addEventListener('click', () => this.reload());
         },
 
-        onFilterChange() {
-            const periodId = $('#f-period').val();
-            const warehouseId = $('#f-warehouse').val();
-            document.getElementById('f-search').disabled = !periodId || !warehouseId;
-            document.getElementById('f-search').value = '';
+        async resolvePeriod(monthValue) {
+            if (!monthValue) return null;
+            const d = await this.get(this.BASE + `warehouse/master/periods/by-month?month=${monthValue}`);
+            if (d.status === 'success' && d.data) return d.data;
+            return null;
+        },
 
-            if (!periodId || !warehouseId) {
-                this.renderEmpty();
+        fmtDateOnly(d) {
+            if (!d) return '—';
+            return new Date(d).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
+        },
+
+        async applyFilter() {
+            const monthValue = document.getElementById('so-filter-period').value;
+            const warehouseId = $('#so-filter-warehouse').val();
+            const warehouseText = $('#so-filter-warehouse option:selected').text() || $('#so-filter-warehouse').find(':selected').text();
+
+            if (!monthValue || !warehouseId) {
+                this.toast('error', 'Periode dan gudang wajib dipilih');
                 return;
             }
 
-            this.currentPeriodId = periodId;
+            const period = await this.resolvePeriod(monthValue);
+            if (!period) {
+                document.getElementById('so-period-status-hint').textContent = 'Periode belum tersedia untuk bulan ini.';
+                document.getElementById('so-period-status-hint').classList.add('text-danger');
+                this.renderEmpty();
+                return;
+            }
+            document.getElementById('so-period-status-hint').classList.remove('text-danger');
+            const rangeText = `${this.fmtDateOnly(period.start_date)} — ${this.fmtDateOnly(period.end_date)}`;
+            document.getElementById('so-period-status-hint').textContent =
+                `${period.name} (${period.code})${period.status === 'Closed' ? ' — Ditutup' : ''} · ${rangeText}`;
+
+            this.currentPeriodId = period.id;
+            this.currentPeriodMonth = monthValue;
+            this.currentPeriodRange = rangeText;
+            this.currentPeriodStatus = period.status;
             this.currentWarehouseId = warehouseId;
+            this.currentWarehouseText = warehouseId === '__combined__'
+                ? 'Gabungan (Semua Gudang)'
+                : (this.dtFromSelect2Text(warehouseId) ?? warehouseText);
+
+            this.updateFilterUI(monthValue, this.currentWarehouseText);
+            bootstrap.Offcanvas.getInstance(document.getElementById('so-filter-offcanvas'))?.hide();
             this.reload();
         },
 
-        async reload() {
-            if (!this.currentPeriodId || !this.currentWarehouseId) return;
+        dtFromSelect2Text(id) {
+            const data = $('#so-filter-warehouse').select2('data');
+            const found = (data ?? []).find(x => String(x.id) === String(id));
+            return found?.text ?? null;
+        },
 
+        resetFilter() {
+            const now = new Date();
+            document.getElementById('so-filter-period').value =
+                `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+            $('#so-filter-warehouse').val('__combined__').trigger('change');
+            document.getElementById('so-period-status-hint').textContent = '';
+            this.currentPeriodId = null;
+            this.currentPeriodRange = null;
+            this.currentPeriodStatus = null;
+            this.currentWarehouseId = null;
+            this.renderEmpty();
+            this.updateFilterUI(null, null);
+        },
+
+        updateFilterUI(monthValue, warehouseText) {
+            const labels = [];
+            if (monthValue) {
+                const [y, m] = monthValue.split('-');
+                const monthName = new Date(`${y}-${m}-01`).toLocaleDateString('id-ID', { month: 'long', year: 'numeric' });
+                labels.push(`Periode: ${monthName}`);
+            }
+            if (warehouseText) labels.push(`Gudang: ${warehouseText}`);
+
+            document.getElementById('so-filter-toggle').classList.toggle('has-filter', labels.length > 0);
+            document.getElementById('so-filter-summary-text').textContent = labels.join(' · ');
+            document.getElementById('so-filter-summary').classList.toggle('d-none', labels.length === 0);
+
+            const badge = document.getElementById('so-context-badge');
+            if (labels.length) {
+                badge.innerHTML = `<span class="fas fa-check-circle me-1"></span>${labels.join(' · ')}`;
+            } else {
+                badge.innerHTML = `<span class="fas fa-info-circle me-1"></span>Pilih periode &amp; gudang`;
+            }
+            document.getElementById('so-print-context').textContent = labels.join(' · ');
+            document.getElementById('so-print-period-range').textContent = this.currentPeriodRange ? `Rentang: ${this.currentPeriodRange}` : '';
+            document.getElementById('so-stat-period-range').textContent = this.currentPeriodRange ?? '';
+        },
+
+        async reload() {
+            if (!this.currentPeriodId || !this.currentWarehouseId) {
+                this.renderEmpty();
+                return;
+            }
             if (this.currentWarehouseId === '__combined__') {
                 await this.loadCombined();
             } else {
@@ -296,11 +651,10 @@
                     this.renderEmpty();
                     return;
                 }
-                this.rows = d.data;
                 this.periodStatus = d.period_status;
-                this.touched.clear();
                 this.renderBanner(d.is_initialized, d.period_status);
-                this.renderEditableGrid();
+                this.showWrapper('editable');
+                this.buildEditableTable(d.data);
             } catch (e) {
                 this.toast('error', 'Gagal memuat data');
                 this.renderEmpty();
@@ -316,18 +670,85 @@
                     this.renderEmpty();
                     return;
                 }
-                this.rows = d.data;
                 this.renderBanner(null, null, true);
-                this.renderCombinedGrid();
+                this.showWrapper('combined');
+                this.buildCombinedTable(d.data);
             } catch (e) {
                 this.toast('error', 'Gagal memuat data');
                 this.renderEmpty();
             }
         },
 
+        showWrapper(mode) {
+            document.getElementById('so-empty-wrapper').classList.add('d-none');
+            document.getElementById('so-editable-wrapper').classList.toggle('d-none', mode !== 'editable');
+            document.getElementById('so-combined-wrapper').classList.toggle('d-none', mode !== 'combined');
+        },
+
+        showLoading() {
+            document.getElementById('so-empty-wrapper').classList.remove('d-none');
+            document.getElementById('so-empty-wrapper').innerHTML = `
+                <div class="text-center py-5 text-body-tertiary">
+                    <span class="spinner-border spinner-border-sm text-primary me-2"></span>Memuat data...
+                </div>`;
+            document.getElementById('so-editable-wrapper').classList.add('d-none');
+            document.getElementById('so-combined-wrapper').classList.add('d-none');
+        },
+
+        renderEmpty() {
+            document.getElementById('so-status-banner').classList.add('d-none');
+            document.getElementById('so-btn-save-grid').classList.add('d-none');
+            document.getElementById('so-btn-reset-grid').classList.add('d-none');
+            document.getElementById('so-editable-wrapper').classList.add('d-none');
+            document.getElementById('so-combined-wrapper').classList.add('d-none');
+            const empty = document.getElementById('so-empty-wrapper');
+            empty.classList.remove('d-none');
+            empty.innerHTML = `
+                <div class="text-center py-5 text-body-tertiary">
+                    <span class="fas fa-boxes fa-2x mb-2 d-block opacity-50"></span>
+                    Pilih periode dan gudang terlebih dahulu untuk menampilkan data stok awal.
+                </div>`;
+            this.setStats(null);
+            this.setPeriodStatCard(null);
+        },
+
+        /**
+         * Warna stat card "Status Periode": hijau=Open, abu=Close. Hanya 2 state.
+         */
+        setPeriodStatCard(status) {
+            const valueEl = document.getElementById('so-stat-period');
+            const iconEl = document.getElementById('so-stat-period-icon');
+
+            if (!valueEl || !iconEl) {
+                console.warn('setPeriodStatCard: elemen so-stat-period / so-stat-period-icon tidak ditemukan di DOM');
+                return;
+            }
+
+            valueEl.className = 'info-value';
+            iconEl.className = 'stat-icon';
+
+            const states = {
+                Open: { text: 'Open', color: 'success', icon: 'fa-lock-open' },
+                Closed: { text: 'Close', color: 'secondary', icon: 'fa-lock' },
+            };
+
+            // Default ke Close kalau status belum diketahui/belum ada periode dipilih.
+            const s = states[status] ?? states.Closed;
+
+            valueEl.textContent = s.text;
+            valueEl.classList.add(`text-${s.color}`);
+            iconEl.classList.add(`bg-${s.color}`, 'bg-opacity-10', `text-${s.color}`);
+
+            // Rebuild isi icon dari nol setiap kali dipanggil, supaya selalu
+            // ada tepat satu <span> dan tidak pernah menumpuk.
+            iconEl.innerHTML = `<span class="fas ${s.icon}"></span>`;
+        },
+
         renderBanner(isInitialized, periodStatus, isCombined = false) {
-            const banner = document.getElementById('status-banner');
+            const banner = document.getElementById('so-status-banner');
             banner.classList.remove('d-none');
+
+            this.setPeriodStatCard(isCombined ? this.currentPeriodStatus : periodStatus);
 
             if (isCombined) {
                 banner.innerHTML = `
@@ -335,7 +756,8 @@
                         <span class="fas fa-layer-group me-1"></span>
                         Mode gabungan — total stok awal dari seluruh gudang untuk periode ini. Klik baris untuk lihat rincian per gudang. Mode ini hanya untuk melihat, bukan untuk mengedit.
                     </div>`;
-                document.getElementById('action-bar').classList.add('d-none');
+                document.getElementById('so-btn-save-grid').classList.add('d-none');
+                document.getElementById('so-btn-reset-grid').classList.add('d-none');
                 return;
             }
 
@@ -345,7 +767,8 @@
                         <span class="fas fa-lock me-1"></span>
                         Periode ini sudah <strong>ditutup</strong>. Stok awal tidak bisa diubah lagi.
                     </div>`;
-                document.getElementById('action-bar').classList.add('d-none');
+                document.getElementById('so-btn-save-grid').classList.add('d-none');
+                document.getElementById('so-btn-reset-grid').classList.add('d-none');
                 return;
             }
 
@@ -362,165 +785,270 @@
                         Stok awal sudah diinput untuk kombinasi ini. Kamu masih bisa mengubahnya selama periode masih <strong>Open</strong>.
                     </div>`;
             }
-            if (CAN_CREATE_OPENING) document.getElementById('action-bar').classList.remove('d-none');
+            if (CAN_CREATE_OPENING) {
+                document.getElementById('so-btn-save-grid').classList.remove('d-none');
+                document.getElementById('so-btn-reset-grid').classList.remove('d-none');
+            }
         },
 
-        showLoading() {
-            document.getElementById('grid-container').innerHTML = `
-                <div class="empty-placeholder">
-                    <span class="spinner-border spinner-border-sm text-primary me-2"></span>Memuat data...
-                </div>`;
+        setStats(rows) {
+            if (!rows) {
+                document.getElementById('so-stat-total').textContent = '—';
+                document.getElementById('so-stat-filled').textContent = '—';
+                document.getElementById('so-stat-empty').textContent = '—';
+                return;
+            }
+            const total = rows.length;
+            const filled = rows.filter(r => Number(r.quantity) > 0).length;
+            document.getElementById('so-stat-total').textContent = total;
+            document.getElementById('so-stat-filled').textContent = filled;
+            document.getElementById('so-stat-empty').textContent = total - filled;
         },
 
-        renderEmpty() {
-            document.getElementById('status-banner').classList.add('d-none');
-            document.getElementById('action-bar').classList.add('d-none');
-            document.getElementById('grid-container').innerHTML = `
-                <div class="empty-placeholder">
-                    <span class="fas fa-boxes fa-2x mb-2 d-block opacity-50"></span>
-                    Pilih periode dan gudang terlebih dahulu untuk menampilkan data stok awal.
-                </div>`;
-        },
+        // ============================================================
+        // EDITABLE TABLE (per gudang)
+        // ============================================================
+        buildEditableTable(rows) {
+            this.setStats(rows);
 
-        renderEditableGrid() {
+            if ($.fn.DataTable.isDataTable('#so-stock-table')) {
+                this.dtEditable.destroy();
+                $('#so-stock-table tbody').remove();
+            }
+
             const readOnly = this.periodStatus === 'Closed' || !CAN_CREATE_OPENING;
+            const self = this;
 
-            const rowsHtml = this.rows.map((r, i) => `
-                <tr data-chemical-id="${r.chemical_id}" data-row-index="${i}">
-                    <td class="text-muted">${i + 1}</td>
-                    <td>
-                        <span class="fw-semibold">${this.e(r.chemical_name)}</span>
-                        <div class="text-muted small font-monospace">${this.e(r.chemical_code)}</div>
-                    </td>
-                    <td>${r.category_name ? `<span class="badge badge-phoenix badge-phoenix-secondary fs-10">${this.e(r.category_name)}</span>` : '<span class="text-muted fst-italic">—</span>'}</td>
-                    <td>
-                        <input type="number" step="0.001" min="0" class="form-control form-control-sm qty-input"
-                            value="${r.quantity ?? ''}" placeholder="0" ${readOnly ? 'disabled' : ''}>
-                    </td>
-                    <td>
-                        <input type="text" class="form-control form-control-sm unit-input"
-                            value="${this.e(r.unit ?? '')}" placeholder="satuan" ${readOnly ? 'disabled' : ''}>
-                    </td>
-                    <td>
-                        <input type="text" class="form-control form-control-sm notes-input"
-                            value="${this.e(r.notes ?? '')}" placeholder="opsional" ${readOnly ? 'disabled' : ''}>
-                    </td>
-                </tr>
-            `).join('');
-
-            document.getElementById('grid-container').innerHTML = `
-                <div class="grid-scroll">
-                    <table class="table table-hover fs-9 align-middle mb-0" id="stock-grid-table">
-                        <thead>
-                            <tr>
-                                <th style="width:40px">No</th>
-                                <th style="width:220px">Bahan Kimia</th>
-                                <th style="width:140px">Kategori</th>
-                                <th style="width:150px">Stok Awal</th>
-                                <th style="width:110px">Satuan</th>
-                                <th>Catatan</th>
-                            </tr>
-                        </thead>
-                        <tbody>${rowsHtml || `<tr><td colspan="6" class="empty-placeholder">Belum ada bahan kimia aktif.</td></tr>`}</tbody>
-                    </table>
-                </div>
-            `;
+            this.dtEditable = $('#so-stock-table').DataTable({
+                data: rows,
+                rowId: 'chemical_id',
+                responsive: true,
+                scrollX: true,
+                pageLength: 25,
+                lengthMenu: [[-1, 10, 25, 50, 100], ['Semua', 10, 25, 50, 100]],
+                order: [[1, 'asc']],
+                dom: '<"top"Bf>rt<"bottom"lpi>',
+                buttons: [
+                    {
+                        extend: 'excelHtml5',
+                        text: '<span class="fas fa-file-excel me-1"></span>Export Excel',
+                        className: 'btn btn-subtle-success btn-sm',
+                        title: 'Stok Awal Bahan Kimia',
+                        exportOptions: { columns: [0, 1, 2, 3], format: { body: (data) => data.replace(/<[^>]*>/g, '').trim() } },
+                    },
+                ],
+                language: {
+                    search: '',
+                    searchPlaceholder: 'Cari bahan kimia...',
+                    lengthMenu: '_MENU_ / hal',
+                    info: 'Tampil _START_–_END_ dari _TOTAL_',
+                    infoEmpty: 'Tidak ada data',
+                    zeroRecords: 'Data tidak ditemukan',
+                    paginate: { previous: '‹', next: '›' },
+                },
+                columnDefs: [
+                    { targets: 0, width: '30px' },
+                    { targets: 1, width: '220px' },
+                    { targets: 2, width: '150px' },
+                    { targets: 3, width: '150px' },
+                ],
+                columns: [
+                    {
+                        data: null, orderable: false, searchable: false,
+                        render: (d, t, r, meta) => meta.row + 1,
+                    },
+                    {
+                        data: 'chemical_name',
+                        render: (data, type, row) => {
+                            if (type !== 'display') return data;
+                            return `<span class="fw-semibold">${self.e(data)}</span>
+                                    <div class="text-muted small font-monospace">${self.e(row.chemical_code)}</div>`;
+                        },
+                    },
+                    {
+                        data: 'category_name',
+                        render: d => d
+                            ? d.split(', ').map(c => `<span class="badge badge-phoenix badge-phoenix-secondary p-2 fs-10 me-1 mb-1">${self.e(c)}</span>`).join('')
+                            : '<span class="text-muted fst-italic">—</span>',
+                    },
+                    {
+                        data: 'quantity',
+                        render: (data, type) => {
+                            if (type !== 'display') return data ?? 0;
+                            return `<input type="number" step="0.001" min="0" class="form-control form-control-sm qty-input"
+                                        value="${data ?? ''}" placeholder="0" ${readOnly ? 'disabled' : ''}>`;
+                        },
+                    },
+                    {
+                        data: 'notes',
+                        className: 'no-print',
+                        render: (data, type) => {
+                            if (type !== 'display') return data ?? '';
+                            return `<input type="text" class="form-control form-control-sm notes-input"
+                                        value="${self.e(data ?? '')}" placeholder="opsional" ${readOnly ? 'disabled' : ''}>`;
+                        },
+                    },
+                ],
+                createdRow: (tr, rowData) => {
+                    if (rowData._touched) tr.classList.add('row-touched');
+                },
+            });
 
             if (!readOnly) {
-                document.querySelectorAll('#stock-grid-table input').forEach(el => {
-                    el.addEventListener('input', e => {
-                        e.target.closest('tr')?.classList.add('row-touched');
-                        this.touched.add(e.target.closest('tr')?.dataset.chemicalId);
-                    });
+                $('#so-stock-table tbody').off('input').on('input', '.qty-input, .notes-input', function () {
+                    const tr = $(this).closest('tr');
+                    const rowApi = self.dtEditable.row(tr);
+                    const rowData = rowApi.data();
+                    if (!rowData) return;
+
+                    if (this.classList.contains('qty-input')) rowData.quantity = this.value;
+                    if (this.classList.contains('notes-input')) rowData.notes = this.value;
+                    rowData._touched = true;
+                    tr.addClass('row-touched');
                 });
             }
         },
 
-        renderCombinedGrid() {
-            const rowsHtml = this.rows.map((r, i) => `
-                <tr class="btn-breakdown" style="cursor:pointer" data-chemical-id="${r.chemical_id}" data-chemical-name="${this.e(r.chemical_name)}">
-                    <td class="text-muted">${i + 1}</td>
-                    <td>
-                        <span class="fw-semibold">${this.e(r.chemical_name)}</span>
-                        <div class="text-muted small font-monospace">${this.e(r.chemical_code)}</div>
-                    </td>
-                    <td>${r.category_name ? `<span class="badge badge-phoenix badge-phoenix-secondary fs-10">${this.e(r.category_name)}</span>` : '<span class="text-muted fst-italic">—</span>'}</td>
-                    <td class="fw-semibold">${this.fmtNumber(r.quantity)} <span class="text-muted fw-normal">${this.e(r.unit ?? '')}</span></td>
-                    <td><span class="badge badge-phoenix badge-phoenix-info badge-wh-count">${r.warehouse_count} gudang</span></td>
-                    <td class="text-end"><span class="fas fa-chevron-right text-muted"></span></td>
-                </tr>
-            `).join('');
+        // ============================================================
+        // COMBINED TABLE (gabungan semua gudang, read-only)
+        // ============================================================
+        buildCombinedTable(rows) {
+            this.setStats(rows);
 
-            document.getElementById('grid-container').innerHTML = `
-                <div class="grid-scroll">
-                    <table class="table table-hover fs-9 align-middle mb-0" id="stock-grid-table">
-                        <thead>
-                            <tr>
-                                <th style="width:40px">No</th>
-                                <th style="width:220px">Bahan Kimia</th>
-                                <th style="width:140px">Kategori</th>
-                                <th style="width:160px">Total Stok Awal</th>
-                                <th style="width:110px">Tersebar di</th>
-                                <th style="width:40px"></th>
-                            </tr>
-                        </thead>
-                        <tbody>${rowsHtml || `<tr><td colspan="6" class="empty-placeholder">Belum ada bahan kimia aktif.</td></tr>`}</tbody>
-                    </table>
-                </div>
-            `;
-        },
+            if ($.fn.DataTable.isDataTable('#so-stock-table-combined')) {
+                this.dtCombined.destroy();
+                $('#so-stock-table-combined tbody').remove();
+            }
 
-        applySearch(term) {
-            term = term.trim().toLowerCase();
-            document.querySelectorAll('#stock-grid-table tbody tr').forEach(tr => {
-                if (!term) {
-                    tr.style.display = '';
-                    return;
-                }
-                const text = tr.textContent.toLowerCase();
-                tr.style.display = text.includes(term) ? '' : 'none';
+            const self = this;
+
+            this.dtCombined = $('#so-stock-table-combined').DataTable({
+                data: rows,
+                rowId: 'chemical_id',
+                responsive: true,
+                scrollX: true,
+                pageLength: 25,
+                lengthMenu: [[-1, 10, 25, 50, 100], ['Semua', 10, 25, 50, 100]],
+                order: [[1, 'asc']],
+                dom: '<"top"Bf>rt<"bottom"lpi>',
+                buttons: [
+                    {
+                        extend: 'excelHtml5',
+                        text: '<span class="fas fa-file-excel me-1"></span>Export Excel',
+                        className: 'btn btn-subtle-success btn-sm',
+                        title: 'Stok Awal Bahan Kimia (Gabungan)',
+                        exportOptions: { columns: [0, 1, 2, 3, 4] },
+                    },
+                ],
+                language: {
+                    search: '',
+                    searchPlaceholder: 'Cari bahan kimia...',
+                    lengthMenu: '_MENU_ / hal',
+                    info: 'Tampil _START_–_END_ dari _TOTAL_',
+                    infoEmpty: 'Tidak ada data',
+                    zeroRecords: 'Data tidak ditemukan',
+                    paginate: { previous: '‹', next: '›' },
+                },
+                columnDefs: [
+                    { targets: 0, width: '30px' },
+                    { targets: 1, width: '220px' },
+                    { targets: 2, width: '150px' },
+                    { targets: 3, width: '160px' },
+                    { targets: 4, width: '110px' },
+                    { targets: 5, width: '30px' },
+                ],
+                columns: [
+                    {
+                        data: null, orderable: false, searchable: false,
+                        render: (d, t, r, meta) => meta.row + 1,
+                    },
+                    {
+                        data: 'chemical_name',
+                        render: (data, type, row) => {
+                            if (type !== 'display') return data;
+                            return `<span class="fw-semibold">${self.e(data)}</span>
+                                    <div class="text-muted small font-monospace">${self.e(row.chemical_code)}</div>`;
+                        },
+                    },
+                    {
+                        data: 'category_name',
+                        render: d => d
+                            ? d.split(', ').map(c => `<span class="badge badge-phoenix badge-phoenix-secondary p-2 fs-10 me-1 mb-1">${self.e(c)}</span>`).join('')
+                            : '<span class="text-muted fst-italic">—</span>',
+                    },
+                    {
+                        data: 'quantity',
+                        render: {
+                            display: (data) => `<span class="fw-semibold">${self.fmtNumber(data)}</span> <span class="text-muted">kg</span>`,
+                            sort: data => Number(data ?? 0),
+                            type: data => Number(data ?? 0),
+                            _: data => data,
+                        },
+                    },
+                    {
+                        data: 'warehouse_count',
+                        render: d => `<span class="badge badge-phoenix badge-phoenix-info badge-wh-count">${d} gudang</span>`,
+                    },
+                    {
+                        data: null, orderable: false, searchable: false, className: 'text-end no-print',
+                        render: () => '<span class="fas fa-chevron-right text-muted"></span>',
+                    },
+                ],
+                createdRow: tr => tr.classList.add('combined-row'),
+            });
+
+            $('#so-stock-table-combined tbody').off('click').on('click', 'tr', function () {
+                const rowData = self.dtCombined.row(this).data();
+                if (rowData) self.openBreakdown(rowData.chemical_id, rowData.chemical_name);
             });
         },
 
+        // ============================================================
+        // BREAKDOWN MODAL
+        // ============================================================
         async openBreakdown(chemicalId, chemicalName) {
-            document.getElementById('breakdown-title').textContent = chemicalName;
-            document.getElementById('breakdown-subtitle').textContent = 'Rincian stok awal per gudang';
-            document.getElementById('breakdown-body').innerHTML = `<div class="text-center py-3"><span class="spinner-border spinner-border-sm text-primary"></span></div>`;
-            new bootstrap.Modal(document.getElementById('breakdownModal')).show();
+            document.getElementById('so-breakdown-title').textContent = chemicalName;
+            document.getElementById('so-breakdown-subtitle').textContent = 'Rincian stok awal per gudang';
+            document.getElementById('so-breakdown-body').innerHTML = `<div class="text-center py-3"><span class="spinner-border spinner-border-sm text-primary"></span></div>`;
+            new bootstrap.Modal(document.getElementById('so-breakdownModal')).show();
 
             try {
                 const d = await this.get(this.BASE +
                     `warehouse/stocks/opening/breakdown?period_id=${this.currentPeriodId}&chemical_id=${chemicalId}`);
                 if (d.status !== 'success' || !d.data.length) {
-                    document.getElementById('breakdown-body').innerHTML = `<p class="text-muted text-center mb-0">Belum ada data di gudang manapun.</p>`;
+                    document.getElementById('so-breakdown-body').innerHTML = `<p class="text-muted text-center mb-0">Belum ada data di gudang manapun.</p>`;
                     return;
                 }
                 const rows = d.data.map(r => `
                     <tr>
                         <td>${this.e(r.warehouse_name)} <span class="text-muted small">(${this.e(r.warehouse_code)})</span></td>
-                        <td class="text-end fw-semibold">${this.fmtNumber(r.quantity)} ${this.e(r.unit ?? '')}</td>
+                        <td class="text-end fw-semibold">${this.fmtNumber(r.quantity)} kg</td>
                     </tr>
                 `).join('');
-                document.getElementById('breakdown-body').innerHTML = `
+                document.getElementById('so-breakdown-body').innerHTML = `
                     <table class="table table-sm fs-9 mb-0">
                         <thead><tr><th>Gudang</th><th class="text-end">Stok Awal</th></tr></thead>
                         <tbody>${rows}</tbody>
                     </table>`;
             } catch {
-                document.getElementById('breakdown-body').innerHTML = `<p class="text-danger text-center mb-0">Gagal memuat rincian.</p>`;
+                document.getElementById('so-breakdown-body').innerHTML = `<p class="text-danger text-center mb-0">Gagal memuat rincian.</p>`;
             }
         },
 
+        // ============================================================
+        // SAVE
+        // ============================================================
         async save() {
-            const rows = [];
-            document.querySelectorAll('#stock-grid-table tbody tr[data-chemical-id]').forEach(tr => {
-                rows.push({
-                    chemical_id: tr.dataset.chemicalId,
-                    quantity: tr.querySelector('.qty-input')?.value || 0,
-                    unit: tr.querySelector('.unit-input')?.value || '',
-                    notes: tr.querySelector('.notes-input')?.value || '',
-                });
-            });
+            if (!this.dtEditable) {
+                this.toast('error', 'Tidak ada data untuk disimpan');
+                return;
+            }
+
+            const rows = this.dtEditable.rows().data().toArray().map(r => ({
+                chemical_id: r.chemical_id,
+                quantity: r.quantity || 0,
+                notes: r.notes || '',
+            }));
 
             if (!rows.length) {
                 this.toast('error', 'Tidak ada data untuk disimpan');
@@ -549,8 +1077,8 @@
         },
 
         setLoading(on) {
-            const btn = document.getElementById('btn-save-grid');
-            const ico = document.getElementById('save-icon');
+            const btn = document.getElementById('so-btn-save-grid');
+            const ico = document.getElementById('so-save-icon');
             if (!btn) return;
             btn.disabled = on;
             ico.className = on ? 'spinner-border spinner-border-sm me-1' : 'fas fa-save me-1';
@@ -567,10 +1095,7 @@
         },
 
         fmtNumber(n) {
-            return Number(n ?? 0).toLocaleString('id-ID', {
-                minimumFractionDigits: 0,
-                maximumFractionDigits: 3
-            });
+            return Number(n ?? 0).toLocaleString('id-ID', { minimumFractionDigits: 0, maximumFractionDigits: 3 });
         },
 
         toast(type, msg) {

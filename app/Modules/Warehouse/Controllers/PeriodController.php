@@ -226,6 +226,37 @@ class PeriodController extends BaseController
         return $this->jsonResponse($result, $result['status'] === 'success' ? 200 : 422);
     }
 
+    /**
+     * Resolve bulan kalender (YYYY-MM) -> data periode.
+     * GET ?month=2026-08
+     */
+    public function byMonth()
+    {
+        if (!$this->request->isAJAX()) return $this->jsonError('Method not allowed', 405);
+
+        $month = trim((string) $this->request->getGet('month'));
+        if (!preg_match('/^\d{4}-\d{2}$/', $month)) {
+            return $this->jsonError('Format bulan tidak valid', 422);
+        }
+
+        $period = $this->model->findByMonth($month);
+        if (!$period) {
+            return $this->jsonError('Periode tidak ditemukan untuk bulan ini', 404);
+        }
+
+        return $this->response->setJSON([
+            'status' => 'success',
+            'data'   => [
+                'id'         => $period['id'],
+                'name'       => $period['period_name'] ?? $period['name'] ?? null,
+                'code'       => $period['period_code'] ?? $period['code'] ?? null,
+                'status'     => $period['status'],
+                'start_date' => $period['start_date'] ?? null,
+                'end_date'   => $period['end_date'] ?? null,
+            ],
+        ]);
+    }
+
     public function stats()
     {
         if (!canDo('warehouse.periods.view')) return $this->jsonError('Akses ditolak', 403);

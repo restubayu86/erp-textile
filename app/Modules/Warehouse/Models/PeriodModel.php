@@ -206,6 +206,21 @@ class PeriodModel extends Model
         $q->update(['is_current' => 0]);
     }
 
+    /**
+     * Cari periode yang cakupannya meliputi bulan kalender tertentu.
+     * $month format: 'YYYY-MM'
+     */
+    public function findByMonth(string $month): ?array
+    {
+        $firstDay = $month . '-01';
+        $lastDay  = date('Y-m-t', strtotime($firstDay));
+
+        return $this->where('deleted_at', null)
+            ->where('start_date <=', $lastDay)
+            ->where('end_date >=', $firstDay)
+            ->first();
+    }
+
     // ============================================================
     // HELPERS
     // ============================================================

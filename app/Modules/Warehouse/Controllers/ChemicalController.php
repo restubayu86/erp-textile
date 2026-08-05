@@ -190,6 +190,7 @@ class ChemicalController extends BaseController
 
             $userId = auth()->id();
             $data = [
+                'chemical_code' => strtoupper(trim($this->request->getPost('chemical_code') ?? '')),
                 'chemical_name' => trim($this->request->getPost('chemical_name')),
                 'description'   => trim($this->request->getPost('description') ?? '') ?: null,
                 'status'        => $this->request->getPost('status'),

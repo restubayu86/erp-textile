@@ -10,6 +10,14 @@
  * Helper canDo($permission) → auth()->user()->can($permission)
  * Didefinisikan di app/Helpers/auth_helper.php
  *
+ * PENTING: string permission di sini HARUS sama persis dengan yang
+ * dicek di controller (lihat masing-masing Controller::method) dan
+ * yang terdaftar di app/Config/AuthGroups.php. Ketidakcocokan akan
+ * membuat menu tampil tapi halamannya 403.
+ *
+ * Item yang controllernya belum dibangun ditandai badge "Segera"
+ * dan tidak diberi href aktif, supaya tidak 404.
+ *
  * Konvensi active link: cek URI segment dengan service('uri')
  */
 
@@ -139,6 +147,8 @@ function navActive(string $seg1, string $seg2 = ''): string
                         <hr class="navbar-vertical-line">
 
                         <!-- Dashboard Production -->
+                        <!-- CATATAN: Production\Controllers\DashboardController belum ada
+                             (route sudah didaftarkan tapi filenya belum dibuat) -->
                         <div class="nav-item-wrapper">
                             <a class="nav-link label-1<?= navActive('production', 'dashboard') ?>"
                                 href="<?= base_url('production/dashboard') ?>">
@@ -146,6 +156,7 @@ function navActive(string $seg1, string $seg2 = ''): string
                                     <span class="nav-link-icon"><span data-feather="pie-chart"></span></span>
                                     <span class="nav-link-text-wrapper">
                                         <span class="nav-link-text">Dashboard</span>
+                                        <span class="badge ms-2 badge-phoenix badge-phoenix-warning nav-link-badge">Segera</span>
                                     </span>
                                 </div>
                             </a>
@@ -297,7 +308,7 @@ function navActive(string $seg1, string $seg2 = ''): string
                         </div>
 
                         <!-- Stok Kimia -->
-                        <?php if (canDo('warehouse.stocks.view')): ?>
+                        <?php if (canDo('warehouse.stocks.view') || canDo('warehouse.stock_opening.view')): ?>
                             <div class="nav-item-wrapper">
                                 <a class="nav-link dropdown-indicator label-1"
                                     href="#nv-wh-stock"
@@ -318,7 +329,20 @@ function navActive(string $seg1, string $seg2 = ''): string
                                         id="nv-wh-stock">
                                         <li class="collapsed-nav-item-title d-none">Stok Kimia</li>
 
+                                        <!-- Stok Awal Periode (ChemicalStockOpeningController — sudah jadi) -->
+                                        <?php if (canDo('warehouse.stock_opening.view')): ?>
+                                            <li class="nav-item">
+                                                <a class="nav-link<?= navActive('warehouse', 'stocks') ?>" href="<?= base_url('warehouse/stocks/opening') ?>">
+                                                    <div class="d-flex align-items-center">
+                                                        <span class="nav-link-text">Stok Awal Periode</span>
+                                                    </div>
+                                                </a>
+                                            </li>
+                                        <?php endif; ?>
+
                                         <!-- Transaksi -->
+                                        <!-- CATATAN: StockController (receipt/issue/adjustment/stock-card/position)
+                                             belum dibangun — route sudah terdaftar, ditandai "Segera" sampai controllernya ada -->
                                         <li class="nav-item">
                                             <a class="nav-link dropdown-indicator"
                                                 href="#nv-wh-stock-transaksi"
@@ -333,29 +357,42 @@ function navActive(string $seg1, string $seg2 = ''): string
                                             </a>
                                             <div class="parent-wrapper">
                                                 <ul class="nav collapse parent" id="nv-wh-stock-transaksi">
-                                                    <?php if (canDo('warehouse.stocks.receipt')): ?>
+                                                    <?php if (canDo('warehouse.stocks.receive')): ?>
                                                         <li class="nav-item">
-                                                            <a class="nav-link" href="<?= base_url('warehouse/stocks/receipt') ?>">
+                                                            <a class="nav-link disabled" href="#" aria-disabled="true" tabindex="-1">
                                                                 <div class="d-flex align-items-center">
                                                                     <span class="nav-link-text">Penerimaan</span>
+                                                                    <span class="badge ms-2 badge-phoenix badge-phoenix-warning nav-link-badge">Segera</span>
                                                                 </div>
                                                             </a>
                                                         </li>
                                                     <?php endif; ?>
                                                     <?php if (canDo('warehouse.stocks.issue')): ?>
                                                         <li class="nav-item">
-                                                            <a class="nav-link" href="<?= base_url('warehouse/stocks/issue') ?>">
+                                                            <a class="nav-link disabled" href="#" aria-disabled="true" tabindex="-1">
                                                                 <div class="d-flex align-items-center">
-                                                                    <span class="nav-link-text">Pengeluaran</span>
+                                                                    <span class="nav-link-text">Pemakaian</span>
+                                                                    <span class="badge ms-2 badge-phoenix badge-phoenix-warning nav-link-badge">Segera</span>
                                                                 </div>
                                                             </a>
                                                         </li>
                                                     <?php endif; ?>
-                                                    <?php if (canDo('warehouse.stocks.adjust')): ?>
+                                                    <?php if (canDo('warehouse.stocks.transfer')): ?>
                                                         <li class="nav-item">
-                                                            <a class="nav-link" href="<?= base_url('warehouse/stocks/adjustment') ?>">
+                                                            <a class="nav-link disabled" href="#" aria-disabled="true" tabindex="-1">
                                                                 <div class="d-flex align-items-center">
-                                                                    <span class="nav-link-text">Penyesuaian</span>
+                                                                    <span class="nav-link-text">Transfer Stok</span>
+                                                                    <span class="badge ms-2 badge-phoenix badge-phoenix-warning nav-link-badge">Segera</span>
+                                                                </div>
+                                                            </a>
+                                                        </li>
+                                                    <?php endif; ?>
+                                                    <?php if (canDo('warehouse.chemicals.adjust')): ?>
+                                                        <li class="nav-item">
+                                                            <a class="nav-link disabled" href="#" aria-disabled="true" tabindex="-1">
+                                                                <div class="d-flex align-items-center">
+                                                                    <span class="nav-link-text">Penyesuaian (Adjustment)</span>
+                                                                    <span class="badge ms-2 badge-phoenix badge-phoenix-warning nav-link-badge">Segera</span>
                                                                 </div>
                                                             </a>
                                                         </li>
@@ -380,16 +417,18 @@ function navActive(string $seg1, string $seg2 = ''): string
                                             <div class="parent-wrapper">
                                                 <ul class="nav collapse parent" id="nv-wh-stock-laporan">
                                                     <li class="nav-item">
-                                                        <a class="nav-link" href="<?= base_url('warehouse/stocks/stock-card') ?>">
+                                                        <a class="nav-link disabled" href="#" aria-disabled="true" tabindex="-1">
                                                             <div class="d-flex align-items-center">
-                                                                <span class="nav-link-text">Kartu Stok</span>
+                                                                <span class="nav-link-text">Kartu Stok (Available/Allocated/Pemakaian)</span>
+                                                                <span class="badge ms-2 badge-phoenix badge-phoenix-warning nav-link-badge">Segera</span>
                                                             </div>
                                                         </a>
                                                     </li>
                                                     <li class="nav-item">
-                                                        <a class="nav-link" href="<?= base_url('warehouse/stocks/position') ?>">
+                                                        <a class="nav-link disabled" href="#" aria-disabled="true" tabindex="-1">
                                                             <div class="d-flex align-items-center">
                                                                 <span class="nav-link-text">Posisi Stok</span>
+                                                                <span class="badge ms-2 badge-phoenix badge-phoenix-warning nav-link-badge">Segera</span>
                                                             </div>
                                                         </a>
                                                     </li>
@@ -399,6 +438,22 @@ function navActive(string $seg1, string $seg2 = ''): string
 
                                     </ul>
                                 </div>
+                            </div>
+                        <?php endif; ?>
+
+                        <!-- Stok Formulasi (Premix) -->
+                        <!-- CATATAN: belum ada tabel/controller — placeholder sampai dibangun -->
+                        <?php if (canDo('warehouse.formulations.view')): ?>
+                            <div class="nav-item-wrapper">
+                                <a class="nav-link disabled label-1" href="#" aria-disabled="true" tabindex="-1">
+                                    <div class="d-flex align-items-center">
+                                        <span class="nav-link-icon"><span data-feather="package"></span></span>
+                                        <span class="nav-link-text-wrapper">
+                                            <span class="nav-link-text">Stok Formulasi (Premix)</span>
+                                            <span class="badge ms-2 badge-phoenix badge-phoenix-warning nav-link-badge">Segera</span>
+                                        </span>
+                                    </div>
+                                </a>
                             </div>
                         <?php endif; ?>
 
@@ -430,7 +485,7 @@ function navActive(string $seg1, string $seg2 = ''): string
                                                 </div>
                                             </a>
                                         </li>
-                                        <?php if (canDo('warehouse.formulations.create')): ?>
+                                        <?php if (canDo('warehouse.formulations.manage')): ?>
                                             <li class="nav-item">
                                                 <a class="nav-link" href="<?= base_url('warehouse/formulations/create') ?>">
                                                     <div class="d-flex align-items-center">
@@ -438,21 +493,21 @@ function navActive(string $seg1, string $seg2 = ''): string
                                                     </div>
                                                 </a>
                                             </li>
+                                            <li class="nav-item">
+                                                <a class="nav-link" href="<?= base_url('warehouse/formulations/trash') ?>">
+                                                    <div class="d-flex align-items-center">
+                                                        <span class="nav-link-text">Sampah Formulasi</span>
+                                                    </div>
+                                                </a>
+                                            </li>
                                         <?php endif; ?>
-                                        <li class="nav-item">
-                                            <a class="nav-link" href="<?= base_url('warehouse/formulations/categories') ?>">
-                                                <div class="d-flex align-items-center">
-                                                    <span class="nav-link-text">Kategori Formula</span>
-                                                </div>
-                                            </a>
-                                        </li>
                                     </ul>
                                 </div>
                             </div>
                         <?php endif; ?>
 
                         <!-- Master Data Warehouse -->
-                        <?php if (canDo('warehouse.chemicals.view')): ?>
+                        <?php if (canDo('warehouse.chemicals.view') || canDo('warehouse.chemical_categories.view') || canDo('warehouse.warehouses.view') || canDo('warehouse.periods.view')): ?>
                             <hr class="navbar-vertical-line">
                             <div class="nav-item-wrapper">
                                 <a class="nav-link dropdown-indicator label-1"
@@ -473,34 +528,47 @@ function navActive(string $seg1, string $seg2 = ''): string
                                         data-bs-parent="#navbarVerticalCollapse"
                                         id="nv-wh-master">
                                         <li class="collapsed-nav-item-title d-none">Master Warehouse</li>
-                                        <li class="nav-item">
-                                            <a class="nav-link" href="<?= base_url('warehouse/master/chemicals') ?>">
-                                                <div class="d-flex align-items-center">
-                                                    <span class="nav-link-text">Data Kimia</span>
-                                                </div>
-                                            </a>
-                                        </li>
-                                        <li class="nav-item">
-                                            <a class="nav-link" href="<?= base_url('warehouse/master/chemical-categories') ?>">
-                                                <div class="d-flex align-items-center">
-                                                    <span class="nav-link-text">Kategori Kimia</span>
-                                                </div>
-                                            </a>
-                                        </li>
-                                        <li class="nav-item">
-                                            <a class="nav-link" href="<?= base_url('warehouse/master/warehouses') ?>">
-                                                <div class="d-flex align-items-center">
-                                                    <span class="nav-link-text">Gudang</span>
-                                                </div>
-                                            </a>
-                                        </li>
-                                        <li class="nav-item">
-                                            <a class="nav-link" href="<?= base_url('warehouse/master/periods') ?>">
-                                                <div class="d-flex align-items-center">
-                                                    <span class="nav-link-text">Periode</span>
-                                                </div>
-                                            </a>
-                                        </li>
+
+                                        <?php if (canDo('warehouse.chemicals.view')): ?>
+                                            <li class="nav-item">
+                                                <a class="nav-link" href="<?= base_url('warehouse/master/chemicals') ?>">
+                                                    <div class="d-flex align-items-center">
+                                                        <span class="nav-link-text">Data Kimia</span>
+                                                    </div>
+                                                </a>
+                                            </li>
+                                        <?php endif; ?>
+
+                                        <?php if (canDo('warehouse.chemical_categories.view')): ?>
+                                            <li class="nav-item">
+                                                <a class="nav-link" href="<?= base_url('warehouse/master/chemical-categories') ?>">
+                                                    <div class="d-flex align-items-center">
+                                                        <span class="nav-link-text">Kategori Kimia</span>
+                                                    </div>
+                                                </a>
+                                            </li>
+                                        <?php endif; ?>
+
+                                        <?php if (canDo('warehouse.warehouses.view')): ?>
+                                            <li class="nav-item">
+                                                <a class="nav-link" href="<?= base_url('warehouse/master/warehouses') ?>">
+                                                    <div class="d-flex align-items-center">
+                                                        <span class="nav-link-text">Gudang</span>
+                                                    </div>
+                                                </a>
+                                            </li>
+                                        <?php endif; ?>
+
+                                        <?php if (canDo('warehouse.periods.view')): ?>
+                                            <li class="nav-item">
+                                                <a class="nav-link" href="<?= base_url('warehouse/master/periods') ?>">
+                                                    <div class="d-flex align-items-center">
+                                                        <span class="nav-link-text">Periode</span>
+                                                    </div>
+                                                </a>
+                                            </li>
+                                        <?php endif; ?>
+
                                     </ul>
                                 </div>
                             </div>
@@ -511,9 +579,9 @@ function navActive(string $seg1, string $seg2 = ''): string
 
                 <!-- ================================================
                      MANAJEMEN HAK AKSES
-                     Tampil jika user punya permission user.view
+                     Tampil jika user punya permission access.users.view
                 ================================================ -->
-                <?php if (canDo('user.view')): ?>
+                <?php if (canDo('access.users.view')): ?>
                     <li class="nav-item">
                         <p class="navbar-vertical-label">HAK AKSES</p>
                         <hr class="navbar-vertical-line">
@@ -547,22 +615,22 @@ function navActive(string $seg1, string $seg2 = ''): string
                                         </a>
                                     </li>
 
-                                    <?php if (canDo('permission.view')): ?>
-                                        <li class="nav-item">
-                                            <a class="nav-link<?= navActive('access', 'permissions') ?>"
-                                                href="<?= base_url('access/permissions') ?>">
-                                                <div class="d-flex align-items-center">
-                                                    <span class="nav-link-text">Permissions</span>
-                                                </div>
-                                            </a>
-                                        </li>
-                                    <?php endif; ?>
+                                    <!-- CATATAN: belum ada controller/permission khusus manajemen
+                                         permission per-role (fitur pengelolaan permission granular) -->
+                                    <li class="nav-item">
+                                        <a class="nav-link disabled" href="#" aria-disabled="true" tabindex="-1">
+                                            <div class="d-flex align-items-center">
+                                                <span class="nav-link-text">Permissions</span>
+                                                <span class="badge ms-2 badge-phoenix badge-phoenix-warning nav-link-badge">Segera</span>
+                                            </div>
+                                        </a>
+                                    </li>
 
                                     <li class="nav-item">
-                                        <a class="nav-link" href="#">
+                                        <a class="nav-link disabled" href="#" aria-disabled="true" tabindex="-1">
                                             <div class="d-flex align-items-center">
                                                 <span class="nav-link-text">Log Login</span>
-                                                <span class="badge ms-2 badge-phoenix badge-phoenix-warning nav-link-badge">Soon</span>
+                                                <span class="badge ms-2 badge-phoenix badge-phoenix-warning nav-link-badge">Segera</span>
                                             </div>
                                         </a>
                                     </li>
