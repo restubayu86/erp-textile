@@ -39,7 +39,6 @@ class FormulationController extends BaseController
     {
         if (!canDo('warehouse.formulations.manage')) return $this->forbidden();
 
-        // Generate kode otomatis format FMMYY0001
         $suggestedCode = $this->model->generateNextCode();
 
         return view('App\Modules\Warehouse\Views\formulations\form', [
@@ -65,7 +64,7 @@ class FormulationController extends BaseController
         return view('App\Modules\Warehouse\Views\formulations\form', [
             'title'            => 'Edit Formulasi',
             'page_title'       => 'Edit Formulasi',
-            'page_description' => 'Perbarui resep formulasi — menyimpan akan membuat VERSI BARU, versi lama tetap tersimpan',
+            'page_description' => 'Perbarui resep formulasi',
             'breadcrumbs'      => $this->breadcrumbs([['name' => 'Edit', 'active' => true]]),
             'formulation'      => $result['data'],
             'suggested_code'   => null,
@@ -110,6 +109,7 @@ class FormulationController extends BaseController
                 'f.process_type',
                 'f.process_sub_type',
                 'f.process_sub_type_label',
+                'f.last_used_at',
                 'g.group_name',
                 'v.output_percentage',
                 'v.status',
@@ -200,13 +200,14 @@ class FormulationController extends BaseController
                 'formulation_code'  => 'permit_empty|max_length[50]|alpha_numeric_punct',
                 'formulation_name'  => 'required|max_length[150]',
                 'process_type'      => 'required|in_list[Dyeing,Finishing,Other]',
-                'process_sub_type'  => 'required|in_list[Dyeing,Dipping,Coating,Spray,Coating_Foam,Finishing,Other]',
+                'process_sub_type'  => 'required|in_list[Dyeing,Dipping,Dipping 1,Dipping 2,Coating,Spray,Coating_Foam,Finishing,Other]',
                 'process_sub_type_label' => 'permit_empty|max_length[50]',
-                'output_percentage' => 'required|decimal|greater_than_equal_to[0]',
+                'output_percentage' => 'permit_empty|decimal|greater_than_equal_to[0]',
                 'version_status'    => 'required|in_list[Active,Draft,Archived]',
                 'description'       => 'permit_empty|max_length[500]',
                 'group_id'          => 'permit_empty|integer',
                 'group_name'        => 'permit_empty|max_length[100]',
+                'create_new_version' => 'permit_empty|in_list[0,1]',
             ];
 
             if (!$this->validate($rules)) {
@@ -219,7 +220,6 @@ class FormulationController extends BaseController
 
             $userId = auth()->id();
 
-            // group: pakai group_id kalau dipilih dari daftar, atau buat baru dari group_name (mode tag)
             $groupId = (int) ($this->request->getPost('group_id') ?: 0) ?: null;
             $groupName = trim((string) $this->request->getPost('group_name'));
             if (!$groupId && $groupName !== '') {
@@ -236,16 +236,26 @@ class FormulationController extends BaseController
                 'description'        => trim($this->request->getPost('description') ?? '') ?: null,
             ];
 
+            $outputPercentage = $this->request->getPost('output_percentage');
+            $outputPercentage = ($outputPercentage !== '' && $outputPercentage !== null) ? $outputPercentage : null;
+
             $versionMeta = [
                 'status'            => $this->request->getPost('version_status'),
-                'output_percentage' => $this->request->getPost('output_percentage'),
+                'output_percentage' => $outputPercentage,
                 'notes'             => trim($this->request->getPost('version_notes') ?? '') ?: null,
             ];
+
+            $createNewVersion = (bool) $this->request->getPost('create_new_version');
 
             if ($isUpdate) {
                 $data['updated_by'] = $userId;
                 $versionMeta['created_by'] = $userId;
-                $result = $this->model->updateData($id, $data, $items, $versionMeta);
+
+                if ($createNewVersion) {
+                    $result = $this->model->updateData($id, $data, $items, $versionMeta);
+                } else {
+                    $result = $this->model->updateDataWithoutVersion($id, $data, $items, $versionMeta);
+                }
             } else {
                 $data['created_by'] = $userId;
                 $versionMeta['created_by'] = $userId;
@@ -340,6 +350,167 @@ class FormulationController extends BaseController
     }
 
     // ============================================================
+    // VERSION DETAIL & PREVIEW
+    // ============================================================
+
+    public function getVersionDetail(int $formulationId, int $versionId)
+    {
+        if (!canDo('warehouse.formulations.view')) return $this->jsonError('Akses ditolak', 403);
+
+        $formulation = $this->model->find($formulationId);
+        if (!$formulation) {
+            return $this->jsonError('Formulasi tidak ditemukan', 404);
+        }
+
+        $db = \Config\Database::connect();
+        $version = $db->table('formulation_versions v')
+            ->select('v.*, u.username as created_by_name')
+            ->join('users u', 'u.id = v.created_by', 'left')
+            ->where('v.id', $versionId)
+            ->where('v.formulation_id', $formulationId)
+            ->get()->getRowArray();
+
+        if (!$version) {
+            return $this->jsonError('Versi tidak ditemukan', 404);
+        }
+
+        $items = $this->model->getItems($versionId);
+
+        // Format items
+        $formattedItems = [];
+        foreach ($items as $item) {
+            $formattedItems[] = [
+                'id' => $item['id'],
+                'composition_type' => $item['composition_type'],
+                'chemical_id' => $item['chemical_id'],
+                'chemical_name' => $item['chemical_name'] ?? null,
+                'chemical_code' => $item['chemical_code'] ?? null,
+                'custom_label' => $item['custom_label'] ?? null,
+                'percentage' => $item['percentage'] ? (float) $item['percentage'] : 0,
+                'unit' => $item['unit'] ?? null,
+                'notes' => $item['notes'] ?? null,
+                'sort_order' => $item['sort_order'] ?? 0,
+            ];
+        }
+
+        return $this->jsonResponse([
+            'status' => 'success',
+            'data' => [
+                'formulation' => [
+                    'id' => $formulation['id'],
+                    'formulation_code' => $formulation['formulation_code'],
+                    'formulation_name' => $formulation['formulation_name'],
+                    'process_type' => $formulation['process_type'],
+                    'process_sub_type' => $formulation['process_sub_type'],
+                    'process_sub_type_label' => $formulation['process_sub_type_label'] ?? null,
+                    'group_name' => $formulation['group_name'] ?? null,
+                    'description' => $formulation['description'] ?? null,
+                ],
+                'version' => [
+                    'id' => $version['id'],
+                    'version_no' => $version['version_no'],
+                    'status' => $version['status'],
+                    'output_percentage' => $version['output_percentage'] ? (float) $version['output_percentage'] : null,
+                    'notes' => $version['notes'] ?? null,
+                    'created_at' => $version['created_at'],
+                    'created_by_name' => $version['created_by_name'] ?? null,
+                ],
+                'items' => $formattedItems,
+            ]
+        ]);
+    }
+
+    // ============================================================
+    // COMPARISON
+    // ============================================================
+
+    public function compareVersions()
+    {
+        if (!canDo('warehouse.formulations.view')) return $this->jsonError('Akses ditolak', 403);
+
+        $formulationId = (int) $this->request->getGet('formulation_id');
+        $versionIds = $this->request->getGet('version_ids');
+
+        if (empty($versionIds) || !is_array($versionIds) || count($versionIds) < 2) {
+            return $this->jsonError('Pilih minimal 2 versi untuk komparasi', 422);
+        }
+
+        $formulation = $this->model->find($formulationId);
+        if (!$formulation) {
+            return $this->jsonError('Formulasi tidak ditemukan', 404);
+        }
+
+        $db = \Config\Database::connect();
+        $comparison = [];
+        foreach ($versionIds as $vid) {
+            $version = $db->table('formulation_versions v')
+                ->select('v.*, u.username as created_by_name')
+                ->join('users u', 'u.id = v.created_by', 'left')
+                ->where('v.id', $vid)
+                ->where('v.formulation_id', $formulationId)
+                ->get()->getRowArray();
+
+            if ($version) {
+                $version['items'] = $this->model->getItems((int) $vid);
+                $comparison[] = $version;
+            }
+        }
+
+        if (count($comparison) < 2) {
+            return $this->jsonError('Versi yang dipilih tidak valid', 422);
+        }
+
+        return $this->jsonResponse([
+            'status' => 'success',
+            'data' => [
+                'formulation' => $formulation,
+                'versions' => $comparison,
+            ]
+        ]);
+    }
+
+    public function compareFormulations()
+    {
+        if (!canDo('warehouse.formulations.view')) return $this->jsonError('Akses ditolak', 403);
+
+        $formulationIds = $this->request->getGet('formulation_ids');
+
+        if (empty($formulationIds) || !is_array($formulationIds) || count($formulationIds) < 2) {
+            return $this->jsonError('Pilih minimal 2 formulasi untuk komparasi', 422);
+        }
+
+        $comparison = [];
+        foreach ($formulationIds as $fid) {
+            $result = $this->model->getData((int) $fid);
+            if ($result['status'] === 'success') {
+                $comparison[] = $result['data'];
+            }
+        }
+
+        if (count($comparison) < 2) {
+            return $this->jsonError('Formulasi yang dipilih tidak valid', 422);
+        }
+
+        return $this->jsonResponse([
+            'status' => 'success',
+            'data' => $comparison,
+        ]);
+    }
+
+    public function markUsed(int $id)
+    {
+        if (!$this->request->isAJAX()) return $this->jsonError('Method not allowed', 405);
+        if (!canDo('warehouse.formulations.manage')) return $this->jsonError('Akses ditolak', 403);
+
+        $result = $this->model->updateLastUsed($id);
+
+        return $this->jsonResponse([
+            'status' => $result ? 'success' : 'error',
+            'message' => $result ? 'Berhasil menandai penggunaan' : 'Gagal menandai penggunaan'
+        ]);
+    }
+
+    // ============================================================
     // CODE GENERATION
     // ============================================================
 
@@ -429,6 +600,36 @@ class FormulationController extends BaseController
         ]);
     }
 
+    public function checkName()
+    {
+        if (!$this->request->isAJAX()) return $this->jsonError('Method not allowed', 405);
+        if (!canDo('warehouse.formulations.manage')) return $this->jsonError('Akses ditolak', 403);
+
+        $name = trim($this->request->getPost('name') ?? '');
+        $excludeId = (int) $this->request->getPost('exclude_id') ?: null;
+
+        if (empty($name)) {
+            return $this->jsonResponse(['status' => 'error', 'message' => 'Nama tidak boleh kosong'], 422);
+        }
+
+        $db = \Config\Database::connect();
+        $builder = $db->table('formulations')
+            ->where('LOWER(formulation_name)', strtolower($name))
+            ->where('deleted_at', null);
+
+        if ($excludeId) {
+            $builder->where('id !=', $excludeId);
+        }
+
+        $exists = $builder->countAllResults() > 0;
+
+        return $this->jsonResponse([
+            'status' => 'success',
+            'available' => !$exists,
+            'message' => $exists ? 'Nama formulasi sudah digunakan' : 'Nama tersedia'
+        ]);
+    }
+
     // ============================================================
     // PRIVATE HELPERS
     // ============================================================
@@ -468,6 +669,8 @@ class FormulationController extends BaseController
         return [
             ['value' => 'Dyeing',       'label' => 'Dyeing',       'process' => 'Dyeing'],
             ['value' => 'Dipping',      'label' => 'Dipping',      'process' => 'Dyeing'],
+            ['value' => 'Dipping 1',    'label' => 'Dipping 1',    'process' => 'Dyeing'],
+            ['value' => 'Dipping 2',    'label' => 'Dipping 2',    'process' => 'Dyeing'],
             ['value' => 'Coating',      'label' => 'Coating',      'process' => 'Dyeing'],
             ['value' => 'Spray',        'label' => 'Spray',        'process' => 'Dyeing'],
             ['value' => 'Coating_Foam', 'label' => 'Coating Foam', 'process' => 'Dyeing'],

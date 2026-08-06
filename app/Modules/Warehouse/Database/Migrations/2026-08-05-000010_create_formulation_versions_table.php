@@ -38,7 +38,7 @@ class CreateFormulationVersionsTable extends Migration
                 'type' => 'DECIMAL',
                 'constraint' => '8,3',
                 'default' => 100.000,
-                'null' => false,
+                'null' => true,
                 'comment' => 'Hasil/batch dalam %, tidak dibatasi harus 100 (boleh > 100%)',
             ],
             'notes' => [

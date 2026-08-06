@@ -38,23 +38,28 @@ $routes->group('warehouse', [
     $routes->post('formulations/(:num)/restore', 'FormulationController::restore/$1');
     $routes->post('formulations/(:num)/force-delete', 'FormulationController::forceDelete/$1');
     $routes->post('formulations/empty-trash',    'FormulationController::emptyTrash');
-
-    // ===== NEW ROUTE FOR CODE GENERATION =====
     $routes->post('formulations/generate-code-suggestion', 'FormulationController::generateCodeSuggestion');
+    $routes->post('formulations/check-name',     'FormulationController::checkName');
 
-    // Versioning formulasi
+    // Versioning
     $routes->get('formulations/(:num)/versions',                       'FormulationController::versions/$1');
     $routes->post('formulations/(:num)/versions/(:num)/activate',      'FormulationController::activateVersion/$1/$2');
+    $routes->get('formulations/(:num)/versions/(:num)/detail',         'FormulationController::getVersionDetail/$1/$2');
+
+    // Comparison
+    $routes->get('formulations/compare-versions',       'FormulationController::compareVersions');
+    $routes->get('formulations/compare-formulations',   'FormulationController::compareFormulations');
+    $routes->post('formulations/(:num)/mark-used',      'FormulationController::markUsed/$1');
 
     // ============================================================
-    // Master: Chemical Categories (modal)
+    // Master: Chemical Categories
     // ============================================================
     $routes->get('master/chemical-categories',                    'ChemicalCategoryController::index');
     $routes->get('master/chemical-categories/trash',               'ChemicalCategoryController::trash');
     $routes->get('master/chemical-categories/datatables',          'ChemicalCategoryController::datatables');
     $routes->get('master/chemical-categories/trash-datatables',    'ChemicalCategoryController::trashDatatables');
     $routes->get('master/chemical-categories/select2',             'ChemicalCategoryController::select2');
-    $routes->get('master/chemical-categories/stats',               'ChemicalCategoryController::stats');
+    $routes->get('master/chemical-categories/stats',                'ChemicalCategoryController::stats');
     $routes->get('master/chemical-categories/(:num)',               'ChemicalCategoryController::get/$1');
     $routes->post('master/chemical-categories/store',               'ChemicalCategoryController::store');
     $routes->post('master/chemical-categories/(:num)/delete',       'ChemicalCategoryController::delete/$1');
@@ -63,7 +68,7 @@ $routes->group('warehouse', [
     $routes->post('master/chemical-categories/empty-trash',         'ChemicalCategoryController::emptyTrash');
 
     // ============================================================
-    // Master: Warehouses (modal)
+    // Master: Warehouses
     // ============================================================
     $routes->get('master/warehouses',                    'WarehouseController::index');
     $routes->get('master/warehouses/trash',               'WarehouseController::trash');
@@ -79,7 +84,7 @@ $routes->group('warehouse', [
     $routes->post('master/warehouses/empty-trash',         'WarehouseController::emptyTrash');
 
     // ============================================================
-    // Master: Chemicals (modal — chemical utama + varian)
+    // Master: Chemicals
     // ============================================================
     $routes->get('master/chemicals',                    'ChemicalController::index');
     $routes->get('master/chemicals/trash',               'ChemicalController::trash');
@@ -94,7 +99,7 @@ $routes->group('warehouse', [
     $routes->post('master/chemicals/(:num)/force-delete', 'ChemicalController::forceDelete/$1');
     $routes->post('master/chemicals/empty-trash',         'ChemicalController::emptyTrash');
 
-    // Varian bahan kimia (CRUD lewat modal per baris)
+    // Varian
     $routes->get('master/chemicals/variants/next-code',                'ChemicalController::nextCode');
     $routes->get('master/chemicals/(:num)/variants',                  'ChemicalController::getVariants/$1');
     $routes->post('master/chemicals/(:num)/variants/store',           'ChemicalController::storeVariant/$1');
@@ -102,6 +107,7 @@ $routes->group('warehouse', [
     $routes->post('master/chemicals/variants/(:num)/delete',          'ChemicalController::deleteVariant/$1');
     $routes->post('master/chemicals/(:num)/variants/(:num)/default',  'ChemicalController::setDefaultVariant/$1/$2');
 
+    // Periods
     $routes->get('master/periods',                    'PeriodController::index');
     $routes->get('master/periods/trash',               'PeriodController::trash');
     $routes->get('master/periods/datatables',          'PeriodController::datatables');
@@ -114,14 +120,10 @@ $routes->group('warehouse', [
     $routes->post('master/periods/(:num)/restore',      'PeriodController::restore/$1');
     $routes->post('master/periods/(:num)/force-delete', 'PeriodController::forceDelete/$1');
     $routes->post('master/periods/empty-trash',         'PeriodController::emptyTrash');
-
-    // Aksi bisnis khusus periode
     $routes->post('master/periods/(:num)/set-current', 'PeriodController::setCurrent/$1');
     $routes->post('master/periods/(:num)/close',        'PeriodController::closePeriod/$1');
 
-    // ============================================================
-    // Stok Awal Bahan Kimia (per gudang & gabungan seluruh gudang)
-    // ============================================================
+    // Stock Opening
     $routes->get('stocks/opening',               'ChemicalStockOpeningController::index');
     $routes->get('stocks/opening/grid',          'ChemicalStockOpeningController::grid');
     $routes->get('stocks/opening/combined',      'ChemicalStockOpeningController::combinedGrid');

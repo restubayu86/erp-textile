@@ -21,6 +21,7 @@ class FormulationModel extends Model
         'process_sub_type_label',
         'description',
         'current_version_id',
+        'last_used_at',
         'created_by',
         'updated_by',
         'deleted_by',
@@ -39,22 +40,10 @@ class FormulationModel extends Model
     // AUTO GENERATE CODE - Format FMMYY0001
     // ============================================================
 
-    /**
-     * Generate kode formulasi otomatis dengan format:
-     * F[MM][YY]XXXX
-     * 
-     * Contoh: F08260001 (Agustus 2026, nomor urut 0001)
-     * - F: Prefix Formulasi
-     * - MM: Bulan (2 digit, 01-12)
-     * - YY: Tahun (2 digit, 24, 25, 26, dst)
-     * - XXXX: Nomor urut (4 digit, 0001-9999)
-     */
     public function generateCode(): string
     {
-        $month = date('m'); // 01-12
-        $year = date('y');  // 24, 25, 26, dst
-
-        // Cari nomor urut terakhir untuk bulan/tahun ini
+        $month = date('m');
+        $year = date('y');
         $prefix = 'F' . $month . $year;
 
         $builder = $this->db->table('formulations')
@@ -67,17 +56,14 @@ class FormulationModel extends Model
         $last = $builder->get()->getRowArray();
 
         if ($last && !empty($last['formulation_code'])) {
-            // Ambil 4 digit terakhir
             $lastNumber = (int) substr($last['formulation_code'], -4);
             $newNumber = $lastNumber + 1;
         } else {
             $newNumber = 1;
         }
 
-        // Format dengan 4 digit (0001, 0002, dst)
         $code = $prefix . str_pad($newNumber, 4, '0', STR_PAD_LEFT);
 
-        // Jika kode sudah ada (kemungkinan duplikat), increment sampai unik
         $counter = 0;
         while ($this->isDuplicateCode($code)) {
             $counter++;
@@ -88,9 +74,6 @@ class FormulationModel extends Model
         return $code;
     }
 
-    /**
-     * Generate next code untuk preview
-     */
     public function generateNextCode(): string
     {
         return $this->generateCode();
@@ -109,11 +92,6 @@ class FormulationModel extends Model
         return $q->countAllResults() > 0;
     }
 
-    /**
-     * Validasi baris komposisi:
-     * - chemical  -> chemical_id wajib
-     * - softener_water -> custom_label wajib, tidak butuh chemical_id (tanpa alur stok)
-     */
     private function validateCompositionItems(array $items): ?string
     {
         if (empty($items)) return 'Minimal 1 baris komposisi harus diisi dalam resep';
@@ -136,24 +114,19 @@ class FormulationModel extends Model
             }
         }
 
-        return null; // valid
+        return null;
     }
 
     // ============================================================
-    // CRUD FORMULASI (identitas) + VERSIONING
+    // CRUD
     // ============================================================
 
-    /**
-     * Buat formulasi baru sekaligus versi pertamanya (v1).
-     */
     public function createData(array $data, array $items, array $versionMeta = []): array
     {
-        // Auto generate code jika tidak diset atau kosong
         if (empty($data['formulation_code'])) {
             $data['formulation_code'] = $this->generateCode();
         }
 
-        // Validate duplicate
         if ($this->isDuplicateCode($data['formulation_code'] ?? '')) {
             return ['status' => 'error', 'errors' => ['formulation_code' => 'Kode formulasi sudah digunakan']];
         }
@@ -185,23 +158,15 @@ class FormulationModel extends Model
         return ['status' => 'success', 'message' => 'Formulasi berhasil ditambahkan', 'id' => $formulationId];
     }
 
-    /**
-     * "Update" formulasi = buat VERSI BARU (tidak menimpa versi lama).
-     * Identitas formulasi (kode/nama/group/process_type) tetap boleh diedit langsung
-     * di tabel formulations, tapi resep & hasil/batch selalu jadi versi baru.
-     */
-    public function updateData(int $id, array $data, array $items, array $versionMeta = []): array
+    public function updateDataWithoutVersion(int $id, array $data, array $items, array $versionMeta = []): array
     {
         $formulation = $this->find($id);
         if (!$formulation) return ['status' => 'error', 'message' => 'Data tidak ditemukan'];
 
-        // Auto generate code jika tidak diset atau kosong
         if (empty($data['formulation_code'])) {
-            // Jika kode kosong, pertahankan kode lama (tidak diganti)
             $data['formulation_code'] = $formulation['formulation_code'];
         }
 
-        // Validate duplicate
         if ($this->isDuplicateCode($data['formulation_code'] ?? '', $id)) {
             return ['status' => 'error', 'errors' => ['formulation_code' => 'Kode formulasi sudah digunakan']];
         }
@@ -212,8 +177,67 @@ class FormulationModel extends Model
 
         $this->db->transStart();
 
-        // identitas formulasi (bukan bagian dari versi)
-        unset($data['current_version_id']); // dikelola otomatis oleh createNewVersion()
+        unset($data['current_version_id']);
+        if (!$this->update($id, $data)) {
+            $this->db->transRollback();
+            return ['status' => 'error', 'message' => 'Gagal memperbarui data', 'errors' => $this->errors()];
+        }
+
+        $currentVersionId = $formulation['current_version_id'];
+        if ($currentVersionId) {
+            $versionData = [];
+            if (isset($versionMeta['output_percentage'])) {
+                $versionData['output_percentage'] = $versionMeta['output_percentage'];
+            }
+            if (isset($versionMeta['status'])) {
+                $versionData['status'] = $versionMeta['status'];
+            }
+            if (isset($versionMeta['notes'])) {
+                $versionData['notes'] = $versionMeta['notes'];
+            }
+            if (!empty($versionData)) {
+                $versionData['updated_at'] = date('Y-m-d H:i:s');
+                $this->db->table('formulation_versions')
+                    ->where('id', $currentVersionId)
+                    ->update($versionData);
+            }
+
+            $this->db->table('formulation_items')
+                ->where('formulation_version_id', $currentVersionId)
+                ->delete();
+
+            $this->saveItems($currentVersionId, $items);
+        }
+
+        $this->db->transComplete();
+
+        if ($this->db->transStatus() === false) {
+            return ['status' => 'error', 'message' => 'Gagal memperbarui formulasi'];
+        }
+
+        return ['status' => 'success', 'message' => 'Formulasi berhasil diperbarui (tanpa versi baru)'];
+    }
+
+    public function updateData(int $id, array $data, array $items, array $versionMeta = []): array
+    {
+        $formulation = $this->find($id);
+        if (!$formulation) return ['status' => 'error', 'message' => 'Data tidak ditemukan'];
+
+        if (empty($data['formulation_code'])) {
+            $data['formulation_code'] = $formulation['formulation_code'];
+        }
+
+        if ($this->isDuplicateCode($data['formulation_code'] ?? '', $id)) {
+            return ['status' => 'error', 'errors' => ['formulation_code' => 'Kode formulasi sudah digunakan']];
+        }
+
+        if ($err = $this->validateCompositionItems($items)) {
+            return ['status' => 'error', 'errors' => ['items' => $err]];
+        }
+
+        $this->db->transStart();
+
+        unset($data['current_version_id']);
         if (!$this->update($id, $data)) {
             $this->db->transRollback();
             return ['status' => 'error', 'message' => 'Gagal memperbarui data', 'errors' => $this->errors()];
@@ -233,13 +257,6 @@ class FormulationModel extends Model
         return ['status' => 'success', 'message' => 'Formulasi berhasil disimpan sebagai versi baru'];
     }
 
-    /**
-     * Inti dari versioning:
-     * - Hitung version_no berikutnya
-     * - Kalau versi baru langsung dibuat 'Active', arsipkan versi 'Active' sebelumnya
-     * - Simpan komposisi (formulation_items) terikat ke formulation_version_id yang baru
-     * - Update formulations.current_version_id supaya query cepat tahu versi mana yang dipakai
-     */
     public function createNewVersion(int $formulationId, array $items, array $meta = []): int
     {
         $versionModel = $this->db->table('formulation_versions');
@@ -251,19 +268,18 @@ class FormulationModel extends Model
 
         $status = $meta['status'] ?? 'Draft';
 
-        if ($status === 'Active') {
-            // hanya boleh 1 versi Active per formulasi
-            $this->db->table('formulation_versions')
-                ->where('formulation_id', $formulationId)
-                ->where('status', 'Active')
-                ->update(['status' => 'Archived']);
+        // Versi aktif boleh lebih dari 1 - tidak ada auto archive
+
+        $outputPercentage = $meta['output_percentage'] ?? null;
+        if ($outputPercentage !== null && $outputPercentage !== '') {
+            $outputPercentage = (float) $outputPercentage;
         }
 
         $versionModel->insert([
             'formulation_id'    => $formulationId,
             'version_no'        => $nextVersionNo,
             'status'            => $status,
-            'output_percentage' => $meta['output_percentage'] ?? 100,
+            'output_percentage' => $outputPercentage,
             'notes'             => $meta['notes'] ?? null,
             'created_by'        => $meta['created_by'] ?? null,
             'created_at'        => date('Y-m-d H:i:s'),
@@ -274,7 +290,6 @@ class FormulationModel extends Model
 
         $this->saveItems($versionId, $items);
 
-        // versi terbaru otomatis jadi acuan tampilan/pemakaian, apapun statusnya
         $this->db->table('formulations')->where('id', $formulationId)->update([
             'current_version_id' => $versionId,
         ]);
@@ -282,9 +297,6 @@ class FormulationModel extends Model
         return $versionId;
     }
 
-    /**
-     * Aktifkan versi tertentu (mis. rollback ke versi lama, atau publish versi draft).
-     */
     public function activateVersion(int $formulationId, int $versionId): array
     {
         $version = $this->db->table('formulation_versions')
@@ -296,10 +308,7 @@ class FormulationModel extends Model
 
         $this->db->transStart();
 
-        $this->db->table('formulation_versions')
-            ->where('formulation_id', $formulationId)
-            ->where('status', 'Active')
-            ->update(['status' => 'Archived']);
+        // Versi aktif boleh lebih dari 1 - tidak ada auto archive
 
         $this->db->table('formulation_versions')->where('id', $versionId)->update(['status' => 'Active']);
         $this->db->table('formulations')->where('id', $formulationId)->update(['current_version_id' => $versionId]);
@@ -333,6 +342,10 @@ class FormulationModel extends Model
 
         if (!$data) return ['status' => 'error', 'message' => 'Data tidak ditemukan'];
 
+        if ($data['output_percentage'] === null) {
+            $data['output_percentage'] = '';
+        }
+
         $data['items']    = $data['version_id'] ? $this->getItems((int) $data['version_id']) : [];
         $data['versions'] = $this->getVersions($id);
 
@@ -341,61 +354,21 @@ class FormulationModel extends Model
 
     public function getVersions(int $formulationId): array
     {
-        return $this->db->table('formulation_versions v')
-            ->select('v.id, v.version_no, v.status, v.output_percentage, v.notes, v.created_at, u.username as created_by_name')
+        $versions = $this->db->table('formulation_versions v')
+            ->select('v.*, u.username as created_by_name')
             ->join('users u', 'u.id = v.created_by', 'left')
             ->where('v.formulation_id', $formulationId)
             ->orderBy('v.version_no', 'DESC')
             ->get()->getResultArray();
-    }
 
-    public function deleteData(int $id, int $userId): array
-    {
-        if (!$this->find($id)) return ['status' => 'error', 'message' => 'Data tidak ditemukan'];
-
-        // arsipkan versi aktif (kalau ada) supaya tidak lagi terpakai di modul lain
-        $this->db->table('formulation_versions')
-            ->where('formulation_id', $id)
-            ->where('status', 'Active')
-            ->update(['status' => 'Archived']);
-
-        $this->update($id, ['deleted_by' => $userId]);
-        $this->delete($id);
-        return ['status' => 'success', 'message' => 'Formulasi dipindahkan ke sampah'];
-    }
-
-    public function restoreData(int $id): array
-    {
-        if (!$this->onlyDeleted()->find($id)) return ['status' => 'error', 'message' => 'Data tidak ditemukan di sampah'];
-        $this->db->table($this->table)->where('id', $id)->update(['deleted_at' => null, 'deleted_by' => null]);
-        return ['status' => 'success', 'message' => 'Formulasi berhasil dipulihkan'];
-    }
-
-    public function forceDeleteData(int $id): array
-    {
-        if (!$this->onlyDeleted()->find($id)) return ['status' => 'error', 'message' => 'Data tidak ditemukan di sampah'];
-
-        $used = $this->db->table('formulation_stock_openings')->where('formulation_id', $id)->countAllResults();
-        if ($used > 0) {
-            return ['status' => 'error', 'message' => "Formulasi tidak dapat dihapus permanen karena sudah memiliki {$used} data stok"];
+        foreach ($versions as &$version) {
+            if ($version['output_percentage'] === null) {
+                $version['output_percentage'] = '-';
+            }
         }
 
-        $versionIds = array_column(
-            $this->db->table('formulation_versions')->select('id')->where('formulation_id', $id)->get()->getResultArray(),
-            'id'
-        );
-        if (!empty($versionIds)) {
-            $this->db->table('formulation_items')->whereIn('formulation_version_id', $versionIds)->delete();
-            $this->db->table('formulation_versions')->where('formulation_id', $id)->delete();
-        }
-
-        if (!$this->delete($id, true)) return ['status' => 'error', 'message' => 'Gagal menghapus permanen'];
-        return ['status' => 'success', 'message' => 'Formulasi berhasil dihapus permanen'];
+        return $versions;
     }
-
-    // ============================================================
-    // ITEMS (komposisi resep, per versi)
-    // ============================================================
 
     public function getItems(int $formulationVersionId): array
     {
@@ -420,11 +393,11 @@ class FormulationModel extends Model
             $rows[] = [
                 'formulation_version_id' => $formulationVersionId,
                 'composition_type'       => $type,
-                // softener_water tidak terikat item master / stok
                 'chemical_id'            => $type === 'chemical' ? (int) ($item['chemical_id'] ?? 0) : null,
                 'variant_id'             => !empty($item['variant_id']) ? (int) $item['variant_id'] : null,
                 'custom_label'           => $type === 'softener_water' ? trim($item['custom_label'] ?? '') : null,
                 'percentage'             => is_numeric($item['percentage'] ?? '') ? $item['percentage'] : 0,
+                'unit'                   => $item['unit'] ?? null, // Tambahkan unit
                 'notes'                  => trim($item['notes'] ?? '') ?: null,
                 'sort_order'             => $i,
                 'created_at'             => date('Y-m-d H:i:s'),
@@ -437,9 +410,50 @@ class FormulationModel extends Model
         }
     }
 
-    // ============================================================
-    // HELPERS
-    // ============================================================
+    public function deleteData(int $id, int $userId): array
+    {
+        if (!$this->find($id)) return ['status' => 'error', 'message' => 'Data tidak ditemukan'];
+
+        $this->db->table('formulation_versions')
+            ->where('formulation_id', $id)
+            ->where('status', 'Active')
+            ->update(['status' => 'Archived']);
+
+        $this->update($id, ['deleted_by' => $userId]);
+        $this->delete($id);
+        return ['status' => 'success', 'message' => 'Formulasi dipindahkan ke sampah'];
+    }
+
+    public function restoreData(int $id): array
+    {
+        if (!$this->onlyDeleted()->find($id)) return ['status' => 'error', 'message' => 'Data tidak ditemukan di sampah'];
+        $this->db->table($this->table)->where('id', $id)->update(['deleted_at' => null, 'deleted_by' => null]);
+        return ['status' => 'success', 'message' => 'Formulasi berhasil dipulihkan'];
+    }
+
+    public function forceDeleteData(int $id): array
+    {
+        if (!$this->onlyDeleted()->find($id)) return ['status' => 'error', 'message' => 'Data tidak ditemukan di sampah'];
+
+        $versionIds = array_column(
+            $this->db->table('formulation_versions')->select('id')->where('formulation_id', $id)->get()->getResultArray(),
+            'id'
+        );
+        if (!empty($versionIds)) {
+            $this->db->table('formulation_items')->whereIn('formulation_version_id', $versionIds)->delete();
+            $this->db->table('formulation_versions')->where('formulation_id', $id)->delete();
+        }
+
+        if (!$this->delete($id, true)) return ['status' => 'error', 'message' => 'Gagal menghapus permanen'];
+        return ['status' => 'success', 'message' => 'Formulasi berhasil dihapus permanen'];
+    }
+
+    public function updateLastUsed(int $id): bool
+    {
+        return $this->db->table('formulations')
+            ->where('id', $id)
+            ->update(['last_used_at' => date('Y-m-d H:i:s')]);
+    }
 
     public function getStats(): array
     {
@@ -456,23 +470,23 @@ class FormulationModel extends Model
             $key = strtolower($row['status'] ?? 'draft');
             if (isset($stats[$key])) $stats[$key] = (int) $row['count'];
         }
+
+        $withoutVersion = $this->db->table('formulations')
+            ->where('deleted_at', null)
+            ->where('current_version_id', null)
+            ->countAllResults();
+        if ($withoutVersion > 0) {
+            $stats['total'] += $withoutVersion;
+            $stats['draft'] += $withoutVersion;
+        }
+
         $stats['trash'] = $this->db->table('formulations')->where('deleted_at IS NOT NULL')->countAllResults();
         return $stats;
     }
 
-    /**
-     * Hitung kebutuhan bahan untuk sejumlah berat batch tertentu (basis %).
-     * Dipisah dua kelompok:
-     * - 'chemical'       -> dipakai modul stok/produksi untuk memotong stok
-     * - 'softener_water' -> HANYA untuk info/laporan, TIDAK PERNAH memotong stok
-     *
-     * @param int   $formulationVersionId
-     * @param float $batchWeight berat batch/kain (basis dari mana % dihitung)
-     */
     public function calculateRequirement(int $formulationVersionId, float $batchWeight): array
     {
         $items = $this->getItems($formulationVersionId);
-
         $result = ['chemical' => [], 'softener_water' => []];
 
         foreach ($items as $item) {
@@ -484,7 +498,6 @@ class FormulationModel extends Model
                     'chemical_name' => $item['chemical_name'],
                     'percentage'    => $item['percentage'],
                     'qty_actual'    => $qtyActual,
-                    // baris ini WAJIB dipotong dari stok saat produksi berjalan
                     'affects_stock' => true,
                 ];
             } else {
@@ -492,7 +505,6 @@ class FormulationModel extends Model
                     'label'         => $item['custom_label'],
                     'percentage'    => $item['percentage'],
                     'qty_actual'    => $qtyActual,
-                    // baris ini tidak pernah menyentuh stok/item master
                     'affects_stock' => false,
                 ];
             }
