@@ -372,10 +372,32 @@
         font-weight: 600;
         color: var(--phoenix-primary);
     }
+
+    /* Barcode */
+    .barcode-row {
+        text-align: center;
+        margin-top: 5px;
+        padding: 5px 0;
+        border-top: 1px dashed #ddd;
+    }
+
+    .barcode-row img {
+        max-width: 100%;
+        max-height: 40px;
+    }
+
+    .barcode-row .barcode-text {
+        font-size: 7pt;
+        font-family: 'Courier New', monospace;
+        letter-spacing: 0.1em;
+        margin-top: 2px;
+        color: #333;
+    }
 </style>
 <?= $this->endSection() ?>
 
 <?= $this->section('content') ?>
+<!-- Sama seperti sebelumnya hingga table -->
 <div class="w-100">
     <!-- Page Header -->
     <div class="d-flex justify-content-between align-items-start mb-4">
@@ -465,7 +487,7 @@
                     <th>Formulasi</th>
                     <th>Proses</th>
                     <th>Sub Proses</th>
-                    <th>Total %</th>
+                    <th> Total Nilai</th>
                     <th>Jumlah <br> Kimia</th>
                     <th>Status</th>
                     <th>Versi</th>
@@ -478,7 +500,7 @@
     </div>
 </div>
 
-<!-- Filter toggle -->
+<!-- Filter toggle dan offcanvas (sama) -->
 <a class="card filter-toggle no-print" href="#filter-offcanvas" data-bs-toggle="offcanvas" id="filter-toggle">
     <div class="card-body">
         <span class="fas fa-filter text-primary"></span>
@@ -514,6 +536,9 @@
                     <option value="">Semua</option>
                     <option value="Dyeing">Dyeing</option>
                     <option value="Dipping">Dipping</option>
+                    <option value="Dipping 1">Dipping 1</option>
+                    <option value="Dipping 2">Dipping 2</option>
+                    <option value="Dip+Coat">Dip+Coat</option>
                     <option value="Coating">Coating</option>
                     <option value="Spray">Spray</option>
                     <option value="Coating_Foam">Coating Foam</option>
@@ -554,6 +579,7 @@
     </div>
 </div>
 
+<!-- Modals (Versi, Preview, Komparasi) -->
 <!-- ─── Modal Riwayat Versi ────────────────────────────────────────── -->
 <div class="modal fade" id="versionsModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-xl modal-dialog-scrollable">
@@ -576,9 +602,12 @@
                         <thead>
                             <tr>
                                 <th>Versi</th>
+                                <th class="text-center">Aktif</th>
                                 <th>Status</th>
-                                <th>Total %</th>
+                                <th>Total Nilai</th>
+                                <th>Satuan</th>
                                 <th>Catatan</th>
+                                <th>Last Used</th>
                                 <th>Tanggal</th>
                                 <th>Dibuat Oleh</th>
                                 <th class="text-end">Aksi</th>
@@ -586,7 +615,7 @@
                         </thead>
                         <tbody id="versions-list-body">
                             <tr>
-                                <td colspan="7" class="text-center text-muted py-3">Memuat...</td>
+                                <td colspan="10" class="text-center text-muted py-3">Memuat...</td>
                             </tr>
                         </tbody>
                     </table>
@@ -648,7 +677,12 @@
                         <p class="text-muted fs-10 mb-0">Bandingkan 2 atau lebih formulasi/versi</p>
                     </div>
                 </div>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                <div class="d-flex gap-2">
+                    <button type="button" class="btn btn-subtle-secondary btn-sm" id="btn-print-compare" style="display:none;">
+                        <span class="fas fa-print me-1"></span>Print
+                    </button>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
             </div>
             <div class="modal-body px-4 py-3">
                 <!-- Repeater Container -->
@@ -694,6 +728,7 @@
         </div>
     </div>
 </div>
+
 <?= $this->endSection() ?>
 
 <?= $this->section('scripts') ?>
@@ -713,36 +748,27 @@
         compareCounter: 0,
         compareData: [],
         isComparing: false,
+        lastCompareResults: null,
 
         // ============================================================
-        // FORMATTER - Desimal
+        // FORMATTER - Desimal (tanpa %)
         // ============================================================
 
-        /**
-         * Format angka desimal - hilangkan .00 jika tidak perlu
-         * Contoh: 100.00 -> 100, 100.50 -> 100.5
-         */
         formatNumber(value) {
             if (value === null || value === undefined || value === '') return '—';
             const num = parseFloat(value);
             if (isNaN(num)) return '—';
-            // Jika angka bulat (misal 100.00), tampilkan tanpa desimal
             if (Number.isInteger(num)) {
                 return num.toString();
             }
-            // Jika tidak bulat, tampilkan dengan desimal seperlunya (hilangkan trailing zeros)
             return num.toFixed(4).replace(/\.?0+$/, '');
         },
 
-        /**
-         * Format persentase - hilangkan .00 jika tidak perlu
-         */
-        formatPercentage(value) {
+        formatValue(value) {
             if (value === null || value === undefined || value === '') return '—';
             const num = parseFloat(value);
             if (isNaN(num)) return '—';
-            const formatted = this.formatNumber(num);
-            return formatted !== '—' ? formatted + '%' : '—';
+            return this.formatNumber(num);
         },
 
         // ============================================================
@@ -750,9 +776,12 @@
         // ============================================================
 
         init() {
+            const statusEl = document.getElementById('filter-status');
+            if (statusEl) statusEl.value = this.filters.status;
             this.initSelect2();
             this.initDatatable();
             this.initEvents();
+            this.updateFilterUI();
             this.loadStats();
             document.getElementById('print-date').textContent = new Date().toLocaleDateString('id-ID', {
                 day: '2-digit',
@@ -969,6 +998,7 @@
                                 'Dipping': 'Dipping',
                                 'Dipping 1': 'Dipping 1',
                                 'Dipping 2': 'Dipping 2',
+                                'Dip+Coat': 'Dip+Coat',
                                 'Coating': 'Coating',
                                 'Spray': 'Spray',
                                 'Coating_Foam': 'Coating Foam',
@@ -985,7 +1015,7 @@
                             if (val === null || val === undefined || val === '') {
                                 return '<span class="text-muted fst-italic">—</span>';
                             }
-                            return `<span class="fw-semibold">${self.formatPercentage(val)}</span>`;
+                            return `<span class="fw-semibold">${self.formatValue(val)}</span>`;
                         }
                     },
                     {
@@ -1071,6 +1101,7 @@
                     'Dipping': 'Dipping',
                     'Dipping 1': 'Dipping 1',
                     'Dipping 2': 'Dipping 2',
+                    'Dip+Coat': 'Dip+Coat',
                     'Coating': 'Coating',
                     'Spray': 'Spray',
                     'Coating_Foam': 'Coating Foam',
@@ -1096,37 +1127,53 @@
         async openVersions(id, name) {
             document.getElementById('versions-modal-subtitle').textContent = name;
             const tbody = document.getElementById('versions-list-body');
-            tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted py-3"><span class="spinner-border spinner-border-sm me-2"></span>Memuat...</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="10" class="text-center text-muted py-3"><span class="spinner-border spinner-border-sm me-2"></span>Memuat...</td></tr>';
 
             try {
                 const d = await this.get(this.BASE + `warehouse/formulations/${id}/versions`);
                 if (d.status !== 'success') {
-                    tbody.innerHTML = `<tr><td colspan="7" class="text-center text-danger py-3">${this.e(d.message || 'Gagal memuat data')}</td></tr>`;
+                    tbody.innerHTML = `<tr><td colspan="10" class="text-center text-danger py-3">${this.e(d.message || 'Gagal memuat data')}</td></tr>`;
                     return;
                 }
 
                 if (!d.data || !d.data.length) {
-                    tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted py-3">Belum ada versi</td></tr>';
+                    tbody.innerHTML = '<tr><td colspan="10" class="text-center text-muted py-3">Belum ada versi</td></tr>';
                     return;
                 }
 
                 tbody.innerHTML = d.data.map(v => {
                     const statusClass = v.status === 'Active' ? 'success' : v.status === 'Draft' ? 'warning' : 'secondary';
                     const outputDisplay = v.output_percentage !== null && v.output_percentage !== '-' ?
-                        this.formatPercentage(v.output_percentage) :
+                        this.formatValue(v.output_percentage) :
                         '—';
+                    const isActive = v.status === 'Active';
                     return `
                         <tr class="version-row">
                             <td><strong>#${v.version_no}</strong></td>
+                            <td class="text-center">
+                                <div class="form-check form-switch d-flex justify-content-center mb-0">
+                                    <input class="form-check-input toggle-version-active" type="checkbox"
+                                        role="switch"
+                                        data-formulation="${id}"
+                                        data-version="${v.id}"
+                                        ${isActive ? 'checked' : ''}
+                                        title="${isActive ? 'Klik untuk nonaktifkan versi ini' : 'Klik untuk aktifkan versi ini'}">
+                                </div>
+                            </td>
                             <td><span class="badge badge-phoenix badge-phoenix-${statusClass} fs-10">${v.status}</span></td>
                             <td>${outputDisplay}</td>
+                            <td>${v.unit ? this.e(v.unit) : '<span class="text-muted fst-italic">—</span>'}</td>
                             <td>${v.notes ? this.e(v.notes) : '<span class="text-muted fst-italic">—</span>'}</td>
+                            <td>${v.last_used_at ? this.fmtDate(v.last_used_at) : '<span class="text-muted fst-italic">Belum pernah</span>'}</td>
                             <td style="font-size:0.8rem;">${v.created_at ? new Date(v.created_at).toLocaleString('id-ID') : '-'}</td>
                             <td>${v.created_by_name ? this.e(v.created_by_name) : '<span class="text-muted fst-italic">—</span>'}</td>
                             <td class="text-end">
                                 <div class="btn-group btn-group-sm">
                                     <button class="btn btn-subtle-primary btn-sm btn-preview-version" data-formulation="${id}" data-version="${v.id}" title="Preview"><span class="fas fa-eye"></span></button>
-                                    ${v.status !== 'Active' ? `<button class="btn btn-subtle-success btn-sm btn-activate-version" data-formulation="${id}" data-version="${v.id}" title="Aktifkan"><span class="fas fa-check"></span></button>` : ''}
+                                    ${isActive ?
+                                        `<button class="btn btn-subtle-warning btn-sm btn-deactivate-version" data-formulation="${id}" data-version="${v.id}" title="Nonaktifkan"><span class="fas fa-ban"></span></button>` :
+                                        `<button class="btn btn-subtle-success btn-sm btn-activate-version" data-formulation="${id}" data-version="${v.id}" title="Aktifkan"><span class="fas fa-check"></span></button>`
+                                    }
                                 </div>
                             </td>
                         </tr>
@@ -1140,14 +1187,59 @@
                 });
                 tbody.querySelectorAll('.btn-activate-version').forEach(btn => {
                     btn.addEventListener('click', () => {
-                        this.activateVersion(btn.dataset.formulation, btn.dataset.version);
+                        this.setVersionActive(btn.dataset.formulation, btn.dataset.version, name, true);
+                    });
+                });
+                tbody.querySelectorAll('.btn-deactivate-version').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        this.setVersionActive(btn.dataset.formulation, btn.dataset.version, name, false);
+                    });
+                });
+                tbody.querySelectorAll('.toggle-version-active').forEach(chk => {
+                    chk.addEventListener('change', () => {
+                        this.setVersionActive(chk.dataset.formulation, chk.dataset.version, name, chk.checked, chk);
                     });
                 });
 
-                new bootstrap.Modal(document.getElementById('versionsModal')).show();
+                bootstrap.Modal.getOrCreateInstance(document.getElementById('versionsModal')).show();
             } catch (e) {
-                tbody.innerHTML = `<tr><td colspan="7" class="text-center text-danger py-3">Gagal memuat data</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="10" class="text-center text-danger py-3">Gagal memuat data</td></tr>`;
             }
+        },
+
+        async setVersionActive(formulationId, versionId, formulationName, activate, checkboxEl = null) {
+            if (checkboxEl) checkboxEl.disabled = true;
+            try {
+                const endpoint = activate ? 'activate' : 'deactivate';
+                const res = await this.post(this.BASE + `warehouse/formulations/${formulationId}/versions/${versionId}/${endpoint}`, new FormData());
+                if (res.status === 'success') {
+                    this.toast('success', res.message || (activate ? 'Versi berhasil diaktifkan' : 'Versi berhasil dinonaktifkan'));
+                    await this.openVersions(formulationId, formulationName);
+                    this.dt.ajax.reload(null, false);
+                    this.loadStats();
+                } else {
+                    if (checkboxEl) {
+                        checkboxEl.checked = !activate;
+                        checkboxEl.disabled = false;
+                    }
+                    this.toast('error', res.message || 'Gagal mengubah status versi');
+                }
+            } catch (e) {
+                if (checkboxEl) {
+                    checkboxEl.checked = !activate;
+                    checkboxEl.disabled = false;
+                }
+                this.toast('error', e.message);
+            }
+        },
+
+        // ============================================================
+        // GENERATE BARCODE
+        // ============================================================
+
+        generateBarcode(text) {
+            if (!text) return '';
+            return `https://barcode.tec-it.com/barcode.ashx?data=${encodeURIComponent(text)}&code=Code128&dpi=96&width=300&height=60`;
         },
 
         // ============================================================
@@ -1155,7 +1247,7 @@
         // ============================================================
 
         async previewVersion(formulationId, versionId) {
-            const modal = new bootstrap.Modal(document.getElementById('versionPreviewModal'));
+            const modal = bootstrap.Modal.getOrCreateInstance(document.getElementById('versionPreviewModal'));
             const body = document.getElementById('preview-body');
             body.innerHTML = '<div class="text-center text-muted py-4"><span class="spinner-border spinner-border-sm me-2"></span>Memuat...</div>';
             modal.show();
@@ -1168,378 +1260,177 @@
                 }
 
                 const data = d.data;
+                const barcode = this.generateBarcode(data.formulation.formulation_code);
                 document.getElementById('preview-title').textContent = `${this.e(data.formulation.formulation_name)} - Versi #${data.version.version_no}`;
-                document.getElementById('preview-subtitle').textContent = `Status: ${data.version.status} · Total %: ${this.formatPercentage(data.version.output_percentage)}`;
+                document.getElementById('preview-subtitle').textContent = `Status: ${data.version.status} · Nilai: ${this.formatValue(data.version.output_percentage)}`;
 
                 let itemsHtml = '';
                 if (data.items && data.items.length) {
                     itemsHtml = `
-                <div class="table-responsive">
-                    <table class="table table-sm table-bordered align-middle">
-                        <thead class="table-light">
-                            <tr>
-                                <th>#</th>
-                                <th>Jenis</th>
-                                <th>Bahan / Label</th>
-                                <th>Satuan</th>
-                                <th>Persentase</th>
-                                <th>Catatan</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${data.items.map((item, i) => `
-                                <tr>
-                                    <td>${i + 1}</td>
-                                    <td><span class="badge badge-phoenix badge-phoenix-${item.composition_type === 'chemical' ? 'primary' : 'info'} fs-10">${item.composition_type === 'chemical' ? 'Chemical' : 'Softener Water'}</span></td>
-                                    <td>${item.composition_type === 'chemical' ? this.e(item.chemical_name) + (item.chemical_code ? ` <small class="text-muted">(${this.e(item.chemical_code)})</small>` : '') : this.e(item.custom_label)}</td>
-                                    <td>${item.unit ? this.e(item.unit) : '<span class="text-muted fst-italic">—</span>'}</td>
-                                    <td><strong>${this.formatPercentage(item.percentage)}</strong></td>
-                                    <td>${item.notes ? this.e(item.notes) : '<span class="text-muted fst-italic">—</span>'}</td>
-                                </tr>
-                            `).join('')}
-                        </tbody>
-                        <tfoot class="table-light">
-                            <tr>
-                                <td colspan="4" class="text-end fw-bold">Total</td>
-                                <td><strong>${this.formatPercentage(data.items.reduce((sum, item) => sum + parseFloat(item.percentage || 0), 0))}</strong></td>
-                                <td></td>
-                            </tr>
-                        </tfoot>
-                    </table>
-                </div>
-            `;
+                        <div class="table-responsive">
+                            <table class="table table-sm table-bordered align-middle">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Jenis</th>
+                                        <th>Bahan / Label</th>
+                                        <th>Nilai</th>
+                                        <th>Satuan</th>
+                                        <th>Catatan</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${data.items.map((item, i) => `
+                                        <tr>
+                                            <td>${i + 1}</td>
+                                            <td><span class="badge badge-phoenix badge-phoenix-${item.composition_type === 'chemical' ? 'primary' : 'info'} fs-10">${item.composition_type === 'chemical' ? 'Chemical' : 'Softener Water'}</span></td>
+                                            <td>${item.composition_type === 'chemical' ? this.e(item.chemical_name) + (item.chemical_code ? ` <small class="text-muted">(${this.e(item.chemical_code)})</small>` : '') : this.e(item.custom_label)}</td>
+                                            <td style="text-align: right;"><strong>${this.formatValue(item.percentage)}</strong></td>
+                                            <td>${item.unit ? this.e(item.unit) : '<span class="text-muted fst-italic">—</span>'}</td>
+                                            <td>${item.notes ? this.e(item.notes) : '<span class="text-muted fst-italic">—</span>'}</td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                                <tfoot class="table-light">
+                                    <tr>
+                                        <td colspan="4" class="text-end fw-bold">Total</td>
+                                        <td><strong>${this.formatValue(data.items.reduce((sum, item) => sum + parseFloat(item.percentage || 0), 0))}</strong></td>
+                                        <td></td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    `;
                 } else {
                     itemsHtml = '<div class="text-center text-muted py-3">Tidak ada komposisi</div>';
                 }
 
                 body.innerHTML = `
-            <div class="card mb-3">
-                <div class="card-body">
-                    <div class="row g-3">
-                        <div class="col-md-4">
-                            <small class="text-muted d-block">Kode</small>
-                            <strong>${this.e(data.formulation.formulation_code)}</strong>
+                    <div class="card mb-3">
+                        <div class="card-body">
+                            <div class="row g-3">
+                                <div class="col-md-4">
+                                    <small class="text-muted d-block">Kode</small>
+                                    <strong>${this.e(data.formulation.formulation_code)}</strong>
+                                </div>
+                                <div class="col-md-4">
+                                    <small class="text-muted d-block">Proses</small>
+                                    <span class="badge badge-phoenix badge-phoenix-secondary fs-10">${this.e(data.formulation.process_type)}</span>
+                                    ${data.formulation.process_sub_type ? `<span class="badge badge-phoenix badge-phoenix-secondary fs-10 ms-1">${this.e(data.formulation.process_sub_type)}</span>` : ''}
+                                </div>
+                                <div class="col-md-4">
+                                    <small class="text-muted d-block">Group</small>
+                                    ${data.formulation.group_name ? this.e(data.formulation.group_name) : '<span class="text-muted fst-italic">—</span>'}
+                                </div>
+                                ${data.formulation.description ? `<div class="col-12"><small class="text-muted d-block">Deskripsi</small><p class="mb-0">${this.e(data.formulation.description)}</p></div>` : ''}
+                            </div>
                         </div>
-                        <div class="col-md-4">
-                            <small class="text-muted d-block">Proses</small>
-                            <span class="badge badge-phoenix badge-phoenix-secondary fs-10">${this.e(data.formulation.process_type)}</span>
-                            ${data.formulation.process_sub_type ? `<span class="badge badge-phoenix badge-phoenix-secondary fs-10 ms-1">${this.e(data.formulation.process_sub_type)}</span>` : ''}
-                        </div>
-                        <div class="col-md-4">
-                            <small class="text-muted d-block">Group</small>
-                            ${data.formulation.group_name ? this.e(data.formulation.group_name) : '<span class="text-muted fst-italic">—</span>'}
-                        </div>
-                        ${data.formulation.description ? `<div class="col-12"><small class="text-muted d-block">Deskripsi</small><p class="mb-0">${this.e(data.formulation.description)}</p></div>` : ''}
                     </div>
-                </div>
-            </div>
-            <h6 class="fw-bold mb-3">Komposisi</h6>
-            ${itemsHtml}
-            <div class="text-muted small mt-3">Dibuat: ${data.version.created_at ? new Date(data.version.created_at).toLocaleString('id-ID') : '-'} · ${data.version.created_by_name ? `Oleh: ${this.e(data.version.created_by_name)}` : ''}</div>
-        `;
+                    <h6 class="fw-bold mb-3">Komposisi</h6>
+                    ${itemsHtml}
+                    <div class="barcode-row">
+                        <img src="${barcode}" alt="Barcode" onerror="this.style.display='none'">
+                        <div class="barcode-text">${this.e(data.formulation.formulation_code)}</div>
+                    </div>
+                    <div class="text-muted small mt-3">Dibuat: ${data.version.created_at ? new Date(data.version.created_at).toLocaleString('id-ID') : '-'} · ${data.version.created_by_name ? `Oleh: ${this.e(data.version.created_by_name)}` : ''}</div>
+                `;
 
-                // Print handler - update dengan satuan
+                // Print handler
                 const logoPath = '<?= base_url('assets/img/app/logo-regency-footer.png') ?>';
                 document.getElementById('btn-print-preview').onclick = () => {
-                    const printWindow = window.open('', '_blank', 'width=800,height=600');
+                    const printWindow = window.open('', '_blank', 'width=400,height=650');
                     const printItems = data.items || [];
-                    const totalPercentage = printItems.reduce((sum, item) => sum + parseFloat(item.percentage || 0), 0);
+                    const totalValue = printItems.reduce((sum, item) => sum + parseFloat(item.percentage || 0), 0);
 
-                    const chunkSize = Math.ceil(printItems.length / 4);
-                    const columns = [];
-                    for (let i = 0; i < printItems.length; i += chunkSize) {
-                        columns.push(printItems.slice(i, i + chunkSize));
-                    }
-
-                    let columnsHtml = '';
-                    columns.forEach((col, idx) => {
-                        columnsHtml += `
-                    <div class="print-col">
-                        <table class="print-table">
-                            <thead>
-                                <tr>
-                                    <th>#</th>
-                                    <th>Bahan</th>
-                                    <th>Satuan</th>
-                                    <th>%</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                ${col.map((item, i) => `
-                                    <tr>
-                                        <td>${idx * chunkSize + i + 1}</td>
-                                        <td>${item.composition_type === 'chemical' ? (item.chemical_name || '-') : (item.custom_label || '-')}</td>
-                                        <td>${item.unit ? this.e(item.unit) : '—'}</td>
-                                        <td>${this.formatPercentage(item.percentage)}</td>
-                                    </tr>
-                                `).join('')}
-                            </tbody>
-                        </table>
-                    </div>
-                `;
-                    });
+                    const itemRows = printItems.map((item, i) => {
+                        const label = item.composition_type === 'chemical' ? (item.chemical_name || '-') : (item.custom_label || '-');
+                        const unit = item.unit ? this.e(item.unit) : '';
+                        return `
+                            <tr>
+                                <td class="col-no">${i + 1}</td>
+                                <td class="col-name">${this.e(label)}</td>
+                                <td class="col-pct">${this.formatValue(item.percentage)}${unit ? `<span class="unit"> ${unit}</span>` : ''}</td>
+                            </tr>
+                        `;
+                    }).join('');
 
                     printWindow.document.write(`
-                <html>
-                <head>
-                    <title>Preview Versi</title>
-                    <style>
-                        @page {
-                            size: F4 landscape;
-                            margin: 1cm;
-                        }
-                        * { box-sizing: border-box; }
-                        body { 
-                            font-family: Arial, sans-serif; 
-                            padding: 0;
-                            margin: 0;
-                            font-size: 10pt;
-                            background: white;
-                        }
-                        .print-container {
-                            width: 100%;
-                            padding: 0;
-                        }
-                        .header {
-                            display: flex;
-                            align-items: center;
-                            justify-content: space-between;
-                            border-bottom: 2px solid #1a1a2e;
-                            padding-bottom: 8px;
-                            margin-bottom: 12px;
-                        }
-                        .header-left {
-                            display: flex;
-                            align-items: center;
-                            gap: 10px;
-                        }
-                        .header-left img {
-                            height: 35px;
-                            max-height: 35px;
-                        }
-                        .header-left .company-name {
-                            font-weight: bold;
-                            font-size: 14pt;
-                            color: #1a1a2e;
-                        }
-                        .header-right {
-                            text-align: right;
-                        }
-                        .header-right .title {
-                            font-weight: bold;
-                            font-size: 12pt;
-                            color: #1a1a2e;
-                        }
-                        .header-right .date {
-                            font-size: 8pt;
-                            color: #666;
-                        }
-                        
-                        .formulation-title {
-                            font-size: 14pt;
-                            font-weight: bold;
-                            color: #1a1a2e;
-                            margin-bottom: 2px;
-                        }
-                        .formulation-sub {
-                            font-size: 9pt;
-                            color: #666;
-                            margin-bottom: 10px;
-                        }
-                        
-                        .info-grid {
-                            display: grid;
-                            grid-template-columns: 1fr 1fr 1fr 1fr;
-                            gap: 8px;
-                            margin-bottom: 12px;
-                        }
-                        .info-item {
-                            border: 1px solid #ddd;
-                            border-radius: 4px;
-                            padding: 6px 8px;
-                            background: #f8f9fa;
-                        }
-                        .info-item .label {
-                            font-size: 6pt;
-                            color: #999;
-                            text-transform: uppercase;
-                            font-weight: bold;
-                            letter-spacing: 0.05em;
-                        }
-                        .info-item .value {
-                            font-size: 10pt;
-                            font-weight: 600;
-                            color: #1a1a2e;
-                        }
-                        .info-item .value .badge {
-                            display: inline-block;
-                            padding: 1px 8px;
-                            border-radius: 3px;
-                            font-size: 8pt;
-                            font-weight: bold;
-                        }
-                        .badge-success { background: #d4edda; color: #155724; }
-                        .badge-warning { background: #fff3cd; color: #856404; }
-                        .badge-secondary { background: #e2e3e5; color: #383d41; }
-                        
-                        .print-columns {
-                            display: grid;
-                            grid-template-columns: 1fr 1fr 1fr 1fr;
-                            gap: 10px;
-                            margin-top: 10px;
-                        }
-                        .print-col {
-                            border: 1px solid #ddd;
-                            border-radius: 4px;
-                            overflow: hidden;
-                        }
-                        .print-table {
-                            width: 100%;
-                            border-collapse: collapse;
-                            font-size: 7pt;
-                        }
-                        .print-table th {
-                            background: #f5f5f5;
-                            padding: 2px 4px;
-                            text-align: left;
-                            font-size: 6pt;
-                            text-transform: uppercase;
-                            font-weight: bold;
-                            border-bottom: 1px solid #ddd;
-                        }
-                        .print-table td {
-                            padding: 2px 4px;
-                            border-bottom: 1px solid #eee;
-                        }
-                        .print-table tr:last-child td {
-                            border-bottom: none;
-                        }
-                        .print-table .total-row {
-                            background: #f5f5f5;
-                            font-weight: bold;
-                        }
-                        .text-center { text-align: center; }
-                        .text-muted { color: #999; }
-                        .text-right { text-align: right; }
-                        
-                        .footer {
-                            margin-top: 15px;
-                            padding-top: 8px;
-                            border-top: 1px solid #ddd;
-                            font-size: 7pt;
-                            color: #999;
-                            text-align: center;
-                        }
-                    </style>
-                </head>
-                <body>
-                    <div class="print-container">
-                        <div class="header">
-                            <div class="header-left">
-                                <img src="${logoPath}" alt="Logo" onerror="this.style.display='none'">
-                                <span class="company-name">PT. Regency</span>
+                        <!DOCTYPE html>
+                        <html>
+                        <head>
+                            <title>Dokumen Formulasi</title>
+                            <style>
+                                @page { size: 7.75cm 19cm; margin: 0.5cm; }
+                                body { margin: 0; padding: 0; background: white; font-family: 'Courier New', Courier, monospace; font-size: 6.3pt; width: 6.75cm; height: 18cm; }
+                                .card { border: 1px solid #000; width: 100%; height: 100%; padding: 2mm; box-sizing: border-box; overflow: hidden; display: flex; flex-direction: column; }
+                                .dashed { border-top: 1px dashed #000; margin: 3px 0; }
+                                .center { text-align: center; }
+                                .header-logo { display: block; margin: 0 auto 2px; max-height: 22px; max-width: 70%; }
+                                .company-name { font-weight: bold; font-size: 8pt; letter-spacing: 0.03em; text-transform: uppercase; }
+                                .company-sub { font-size: 6.8pt; font-weight: bold; letter-spacing: 0.08em; text-transform: uppercase; }
+                                .formulation-name { font-weight: bold; font-size: 7pt; text-transform: uppercase; margin-top: 3px; word-break: break-word; }
+                                .meta-row { display: flex; justify-content: space-between; font-size: 6pt; }
+                                .meta-row span:last-child { text-align: right; }
+                                table.items { width: 100%; border-collapse: collapse; margin-top: 2px; }
+                                table.items th { text-align: left; font-size: 5.6pt; text-transform: uppercase; border-bottom: 1px dashed #000; padding: 1px 0; }
+                                table.items td { padding: 1px 0; vertical-align: top; font-size: 6.2pt; }
+                                .col-no { width: 10%; }
+                                .col-name { width: 62%; word-break: break-word; }
+                                .col-pct { width: 28%; text-align: right; }
+                                .unit { font-size: 5.4pt; }
+                                .total-row { display: flex; justify-content: space-between; font-weight: bold; font-size: 6.8pt; margin-top: 3px; }
+                                .footer { margin-top: 4px; font-size: 5.2pt; text-align: center; }
+                                .status-tag { display: inline-block; border: 1px solid #000; padding: 0 3px; font-size: 5.6pt; font-weight: bold; }
+                                .barcode-row { text-align: center; margin-top: 3px; padding-top: 3px; border-top: 1px dashed #000; }
+                                .barcode-row img { max-width: 100%; max-height: 30px; }
+                                .barcode-text { font-size: 5pt; font-family: 'Courier New', monospace; letter-spacing: 0.1em; margin-top: 2px; }
+                            </style>
+                        </head>
+                        <body>
+                            <div class="card">
+                                <div class="center">
+                                    <img class="header-logo" src="${logoPath}" alt="Logo" onerror="this.style.display='none'">
+                                    <div class="company-name">PT. SINAR CONTINENTAL</div>
+                                    <div class="company-sub">DOKUMEN FORMULASI</div>
+                                </div>
+                                <div class="dashed"></div>
+                                <div class="formulation-name">${this.e(data.formulation.formulation_name)}</div>
+                                <div class="meta-row"><span>Kode: ${this.e(data.formulation.formulation_code)}</span><span>Versi #${data.version.version_no}</span></div>
+                                <div class="meta-row">
+                                    <span>${this.e(data.formulation.process_type)}${data.formulation.process_sub_type ? '/' + this.e(data.formulation.process_sub_type) : ''}</span>
+                                    <span class="status-tag">${this.e(data.version.status)}</span>
+                                </div>
+                                ${data.formulation.group_name ? `<div class="meta-row"><span>Group: ${this.e(data.formulation.group_name)}</span><span></span></div>` : ''}
+                                <div class="dashed"></div>
+                                ${printItems.length > 0 ? `
+                                <table class="items">
+                                    <thead><tr><th class="col-no">#</th><th class="col-name">Bahan</th><th class="col-pct">Nilai</th></tr></thead>
+                                    <tbody>${itemRows}</tbody>
+                                </table>
+                                ` : '<div class="center">Tidak ada komposisi</div>'}
+                                <div class="dashed"></div>
+                                <div class="total-row"><span>TOTAL</span><span>${this.formatValue(totalValue)}</span></div>
+                                <div class="barcode-row">
+                                    <img src="${this.generateBarcode(data.formulation.formulation_code)}" alt="Barcode" onerror="this.style.display='none'">
+                                    <div class="barcode-text">${this.e(data.formulation.formulation_code)}</div>
+                                </div>
+                                <div class="dashed"></div>
+                                <div class="footer">
+                                    Dicetak: ${new Date().toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' })} ${new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}<br>
+                                    PT. Sinar Continental
+                                </div>
                             </div>
-                            <div class="header-right">
-                                <div class="title">Detail Formulasi</div>
-                                <div class="date">${new Date().toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' })}</div>
-                            </div>
-                        </div>
-                        
-                        <div class="formulation-title">${this.e(data.formulation.formulation_name)}</div>
-                        <div class="formulation-sub">Kode: ${this.e(data.formulation.formulation_code)} · Versi: #${data.version.version_no}</div>
-                        
-                        <div class="info-grid">
-                            <div class="info-item">
-                                <div class="label">Status</div>
-                                <div class="value"><span class="badge badge-${data.version.status === 'Active' ? 'success' : data.version.status === 'Draft' ? 'warning' : 'secondary'}">${data.version.status}</span></div>
-                            </div>
-                            <div class="info-item">
-                                <div class="label">Proses</div>
-                                <div class="value">${this.e(data.formulation.process_type)}${data.formulation.process_sub_type ? ` (${this.e(data.formulation.process_sub_type)})` : ''}</div>
-                            </div>
-                            <div class="info-item">
-                                <div class="label">Total Persentase</div>
-                                <div class="value">${this.formatPercentage(data.version.output_percentage)}</div>
-                            </div>
-                            <div class="info-item">
-                                <div class="label">Group</div>
-                                <div class="value">${data.formulation.group_name ? this.e(data.formulation.group_name) : '—'}</div>
-                            </div>
-                            ${data.formulation.description ? `
-                            <div class="info-item" style="grid-column: span 2;">
-                                <div class="label">Deskripsi</div>
-                                <div class="value" style="font-weight:400;">${this.e(data.formulation.description)}</div>
-                            </div>
-                            ` : ''}
-                            <div class="info-item">
-                                <div class="label">Dibuat</div>
-                                <div class="value" style="font-weight:400;font-size:9pt;">${data.version.created_at ? new Date(data.version.created_at).toLocaleString('id-ID') : '-'}</div>
-                            </div>
-                            <div class="info-item">
-                                <div class="label">Dibuat Oleh</div>
-                                <div class="value" style="font-weight:400;font-size:9pt;">${data.version.created_by_name ? this.e(data.version.created_by_name) : '—'}</div>
-                            </div>
-                        </div>
-                        
-                        <div style="margin-top:10px;">
-                            <div style="font-size:10pt;font-weight:bold;margin-bottom:6px;">Komposisi</div>
-                            ${printItems.length > 0 ? `
-                            <div class="print-columns">
-                                ${columnsHtml}
-                            </div>
-                            <div style="margin-top:6px;text-align:right;font-weight:bold;font-size:9pt;">
-                                Total: ${this.formatPercentage(totalPercentage)}
-                            </div>
-                            ` : '<div style="text-align:center;color:#999;padding:20px;">Tidak ada komposisi</div>'}
-                        </div>
-                        
-                        <div class="footer">PT. Regency · Sistem Manajemen Formulasi · ERP Textile</div>
-                    </div>
-                </body>
-                </html>
-            `);
+                        </body>
+                        </html>
+                    `);
                     printWindow.document.close();
-                    printWindow.print();
+                    printWindow.onload = () => {
+                        printWindow.focus();
+                        printWindow.print();
+                    };
                 };
             } catch (e) {
                 body.innerHTML = `<div class="text-center text-danger py-4">Gagal memuat data</div>`;
-            }
-        },
-
-        // ============================================================
-        // ACTIVATE VERSION
-        // ============================================================
-
-        async activateVersion(formulationId, versionId) {
-            const result = await Swal.fire({
-                title: 'Aktifkan Versi?',
-                text: 'Versi ini akan menjadi versi aktif untuk formulasi ini.',
-                icon: 'question',
-                showCancelButton: true,
-                confirmButtonText: 'Ya, Aktifkan',
-                cancelButtonText: 'Batal'
-            });
-            if (!result.isConfirmed) return;
-
-            try {
-                const res = await this.post(this.BASE + `warehouse/formulations/${formulationId}/versions/${versionId}/activate`, new FormData());
-                if (res.status === 'success') {
-                    this.toast('success', res.message);
-                    const modal = bootstrap.Modal.getInstance(document.getElementById('versionsModal'));
-                    if (modal) {
-                        const subtitle = document.getElementById('versions-modal-subtitle').textContent;
-                        modal.hide();
-                        setTimeout(() => {
-                            const btn = document.querySelector('.btn-versions');
-                            if (btn) this.openVersions(btn.dataset.id, subtitle);
-                        }, 300);
-                    }
-                    this.dt.ajax.reload(null, false);
-                } else {
-                    this.toast('error', res.message || 'Gagal mengaktifkan versi');
-                }
-            } catch (e) {
-                this.toast('error', e.message);
             }
         },
 
@@ -1551,14 +1442,15 @@
             this.compareCounter = 0;
             this.compareData = [];
             this.isComparing = false;
+            this.lastCompareResults = null;
             document.getElementById('compare-result').innerHTML = '';
+            document.getElementById('btn-print-compare').style.display = 'none';
 
             const container = document.getElementById('compare-repeater');
             container.innerHTML = '';
             this.addCompareItem();
 
-            // Gunakan ID yang benar
-            new bootstrap.Modal(document.getElementById('compareModalFormulation')).show();
+            bootstrap.Modal.getOrCreateInstance(document.getElementById('compareModalFormulation')).show();
 
             setTimeout(() => {
                 this.initCompareSelects();
@@ -1574,28 +1466,27 @@
             div.dataset.index = index;
 
             div.innerHTML = `
-        <div class="col-md-5">
-            <label class="form-label fw-semibold fs-9 text-uppercase text-muted">Formulasi</label>
-            <select class="form-select form-select-sm compare-formulation-select" style="width:100%" data-index="${index}">
-                <option value=""></option>
-            </select>
-        </div>
-        <div class="col-md-5">
-            <label class="form-label fw-semibold fs-9 text-uppercase text-muted">Versi</label>
-            <select class="form-select form-select-sm compare-version-select" style="width:100%" data-index="${index}" disabled>
-                <option value=""></option>
-            </select>
-        </div>
-        <div class="col-md-2 d-flex align-items-end">
-            <button type="button" class="btn btn-subtle-danger btn-sm btn-remove-compare" data-index="${index}" ${container.children.length <= 1 ? 'style="display:none;"' : ''}>
-                <span class="fas fa-times"></span>
-            </button>
-        </div>
-    `;
+                <div class="col-md-5">
+                    <label class="form-label fw-semibold fs-9 text-uppercase text-muted">Formulasi</label>
+                    <select class="form-select form-select-sm compare-formulation-select" style="width:100%" data-index="${index}">
+                        <option value=""></option>
+                    </select>
+                </div>
+                <div class="col-md-5">
+                    <label class="form-label fw-semibold fs-9 text-uppercase text-muted">Versi</label>
+                    <select class="form-select form-select-sm compare-version-select" style="width:100%" data-index="${index}" disabled>
+                        <option value=""></option>
+                    </select>
+                </div>
+                <div class="col-md-2 d-flex align-items-end">
+                    <button type="button" class="btn btn-subtle-danger btn-sm btn-remove-compare" data-index="${index}" ${container.children.length <= 1 ? 'style="display:none;"' : ''}>
+                        <span class="fas fa-times"></span>
+                    </button>
+                </div>
+            `;
 
             container.appendChild(div);
 
-            // Initialize select2 for formulation - gunakan dropdownParent yang benar
             const $formSelect = $(div).find('.compare-formulation-select');
             $formSelect.select2({
                 theme: 'bootstrap-5',
@@ -1621,7 +1512,6 @@
                 },
             });
 
-            // Event: when formulation selected, load versions
             $formSelect.on('change', function() {
                 const formulationId = $(this).val();
                 const $versionSelect = $(div).find('.compare-version-select');
@@ -1629,7 +1519,6 @@
                 if (formulationId) {
                     $versionSelect.prop('disabled', false);
                     $versionSelect.empty().append('<option value="">Memuat versi...</option>');
-                    // Panggil dengan benar
                     Formulation.getVersionsForCompare(formulationId, $versionSelect);
                 } else {
                     $versionSelect.prop('disabled', true);
@@ -1637,7 +1526,6 @@
                 }
             });
 
-            // Remove button
             div.querySelector('.btn-remove-compare').addEventListener('click', () => {
                 const idx = parseInt(div.dataset.index);
                 this.compareData = this.compareData.filter(d => d.index !== idx);
@@ -1792,6 +1680,7 @@
                     return;
                 }
 
+                this.lastCompareResults = results;
                 this.renderCompareResults(results, resultDiv);
             } catch (e) {
                 console.error('Compare error:', e);
@@ -1810,52 +1699,38 @@
                 const version = r.version?.version_no || '?';
                 const status = r.version?.status || 'Draft';
                 const statusClass = status === 'Active' ? 'success' : status === 'Draft' ? 'warning' : 'secondary';
-                const totalPercent = this.formatPercentage(r.version?.output_percentage);
+                const totalValue = this.formatValue(r.version?.output_percentage);
                 const itemCount = (r.items || []).length;
 
+                const units = (r.items || []).map(i => i.unit).filter(Boolean);
+                const unitList = [...new Set(units)].join(', ') || '—';
+
                 cardsHtml += `
-            <div class="col-md-${Math.floor(12 / results.length)} mb-3">
-                <div class="card compare-card h-100">
-                    <div class="card-header bg-light">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <h6 class="mb-0 fw-bold">${this.e(name)}</h6>
-                                <small class="text-muted">${this.e(code)}</small>
+                    <div class="col-md-${Math.floor(12 / results.length)} mb-3">
+                        <div class="card compare-card h-100">
+                            <div class="card-header bg-light">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h6 class="mb-0 fw-bold">${this.e(name)}</h6>
+                                        <small class="text-muted">${this.e(code)}</small>
+                                    </div>
+                                    <span class="badge badge-phoenix badge-phoenix-${statusClass} fs-10">${status}</span>
+                                </div>
                             </div>
-                            <span class="badge badge-phoenix badge-phoenix-${statusClass} fs-10">${status}</span>
-                        </div>
-                    </div>
-                    <div class="card-body">
-                        <div class="row g-2">
-                            <div class="col-6">
-                                <small class="text-muted d-block">Versi</small>
-                                <span class="fw-semibold">#${version}</span>
-                            </div>
-                            <div class="col-6">
-                                <small class="text-muted d-block">Total %</small>
-                                <span class="fw-semibold">${totalPercent}</span>
-                            </div>
-                            <div class="col-6">
-                                <small class="text-muted d-block">Proses</small>
-                                <span class="badge badge-phoenix badge-phoenix-secondary fs-10">${this.e(r.formulation?.process_type || '-')}</span>
-                            </div>
-                            <div class="col-6">
-                                <small class="text-muted d-block">Sub Proses</small>
-                                <span class="badge badge-phoenix badge-phoenix-info fs-10">${this.e(r.formulation?.process_sub_type || '-')}</span>
-                            </div>
-                            <div class="col-12">
-                                <small class="text-muted d-block">Group</small>
-                                <span>${r.formulation?.group_name ? this.e(r.formulation.group_name) : '<span class="text-muted fst-italic">—</span>'}</span>
-                            </div>
-                            <div class="col-12">
-                                <small class="text-muted d-block">Jumlah Item</small>
-                                <span class="fw-semibold">${itemCount} item</span>
+                            <div class="card-body">
+                                <div class="row g-2">
+                                    <div class="col-6"><small class="text-muted d-block">Versi</small><span class="fw-semibold">#${version}</span></div>
+                                    <div class="col-6"><small class="text-muted d-block">Nilai</small><span class="fw-semibold">${totalValue}</span></div>
+                                    <div class="col-6"><small class="text-muted d-block">Proses</small><span class="badge badge-phoenix badge-phoenix-secondary fs-10">${this.e(r.formulation?.process_type || '-')}</span></div>
+                                    <div class="col-6"><small class="text-muted d-block">Sub Proses</small><span class="badge badge-phoenix badge-phoenix-info fs-10">${this.e(r.formulation?.process_sub_type || '-')}</span></div>
+                                    <div class="col-12"><small class="text-muted d-block">Group</small><span>${r.formulation?.group_name ? this.e(r.formulation.group_name) : '<span class="text-muted fst-italic">—</span>'}</span></div>
+                                    <div class="col-12"><small class="text-muted d-block">Jumlah Item</small><span class="fw-semibold">${itemCount} item</span></div>
+                                    <div class="col-12"><small class="text-muted d-block">Satuan</small><span class="fw-semibold">${unitList}</span></div>
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
-            </div>
-        `;
+                `;
             });
 
             // Build comparison table
@@ -1868,6 +1743,7 @@
                             type: item.composition_type,
                             label: item.composition_type === 'chemical' ? (item.chemical_name || 'Unknown') : (item.custom_label || 'Unknown'),
                             code: item.chemical_code || null,
+                            unit: item.unit || null,
                             values: {}
                         });
                     }
@@ -1876,24 +1752,18 @@
                 });
             });
 
-            // Table header
-            let tableHeader = '<tr><th style="width:30%;">Bahan Kimia</th>';
+            let tableHeader = '<tr><th style="width:22%;">Bahan Kimia</th><th style="width:8%;">Satuan</th>';
             results.forEach((r, idx) => {
                 const name = r.formulation?.formulation_name || 'Formulasi ' + (idx + 1);
                 const version = r.version?.version_no || '?';
                 tableHeader += `<th class="text-center" style="width:${70 / results.length}%;">
-            <div class="d-flex flex-column">
-                <span class="fw-bold">${this.e(name)}</span>
-                <small class="text-muted">Versi #${version}</small>
-            </div>
-        </th>`;
+                    <div class="d-flex flex-column"><span class="fw-bold">${this.e(name)}</span><small class="text-muted">Versi #${version}</small></div>
+                </th>`;
             });
             tableHeader += '</tr>';
 
-            // Table rows
             let tableRows = '';
 
-            // Info rows
             const infoRows = [{
                     label: 'Proses',
                     value: r => `${r.formulation?.process_type || '-'}${r.formulation?.process_sub_type ? ` (${r.formulation.process_sub_type})` : ''}`
@@ -1903,9 +1773,16 @@
                     value: r => r.formulation?.group_name || '—'
                 },
                 {
-                    label: 'Total %',
-                    value: r => this.formatPercentage(r.version?.output_percentage),
+                    label: 'Nilai',
+                    value: r => this.formatValue(r.version?.output_percentage),
                     bold: true
+                },
+                {
+                    label: 'Satuan',
+                    value: r => {
+                        const units = (r.items || []).map(i => i.unit).filter(Boolean);
+                        return [...new Set(units)].join(', ') || '—';
+                    }
                 },
                 {
                     label: 'Status',
@@ -1922,8 +1799,7 @@
             ];
 
             infoRows.forEach(info => {
-                tableRows += `<tr class="table-light">
-            <td><strong>${info.label}</strong></td>`;
+                tableRows += `<tr class="table-light"><td colspan="2"><strong>${info.label}</strong></td>`;
                 results.forEach(r => {
                     const val = info.value(r);
                     tableRows += `<td class="text-center">${val}</td>`;
@@ -1931,10 +1807,8 @@
                 tableRows += '</tr>';
             });
 
-            // Separator
-            tableRows += `<tr><td colspan="${results.length + 1}" class="bg-light fw-bold">Komposisi Bahan</td></tr>`;
+            tableRows += `<tr><td colspan="${results.length + 2}" class="bg-light fw-bold">Komposisi Bahan</td></tr>`;
 
-            // Material rows
             allItems.forEach((chem, key) => {
                 const badgeClass = chem.type === 'chemical' ? 'primary' : 'info';
                 const badgeText = chem.type === 'chemical' ? 'Chemical' : 'Softener';
@@ -1942,67 +1816,218 @@
                 const avg = allValues.reduce((a, b) => a + b, 0) / allValues.length;
 
                 tableRows += `<tr>
-            <td>
-                <span class="badge badge-phoenix badge-phoenix-${badgeClass} fs-10 me-1">${badgeText}</span>
-                ${chem.label}
-                ${chem.code ? `<small class="text-muted">(${chem.code})</small>` : ''}
-            </td>`;
-
+                    <td><span class="badge badge-phoenix badge-phoenix-${badgeClass} fs-10 me-1">${badgeText}</span> ${chem.label}${chem.code ? `<small class="text-muted">(${chem.code})</small>` : ''}</td>
+                    <td class="text-center">${chem.unit ? this.e(chem.unit) : '—'}</td>`;
                 results.forEach((r, idx) => {
                     const val = chem.values[idx];
                     const diff = Math.abs((val || 0) - avg);
                     const isHighlight = diff > 5 && val !== undefined;
-
                     tableRows += `<td class="text-center ${isHighlight ? 'compare-highlight' : ''}">
-                ${val !== undefined ? `<strong>${this.formatPercentage(val)}</strong>` : '<span class="text-muted">—</span>'}
-                ${isHighlight ? '<br><small class="text-warning">⬆ berbeda</small>' : ''}
-            </td>`;
+                        ${val !== undefined ? `<strong>${this.formatValue(val)}</strong>` : '<span class="text-muted">—</span>'}
+                        ${isHighlight ? '<br><small class="text-warning">⬆ berbeda</small>' : ''}
+                    </td>`;
                 });
                 tableRows += '</tr>';
             });
 
-            // Total row
-            tableRows += `<tr class="table-light fw-bold">
-        <td>TOTAL</td>`;
+            tableRows += `<tr class="table-light fw-bold"><td colspan="2">TOTAL</td>`;
             results.forEach(r => {
                 const total = (r.items || []).reduce((sum, item) => sum + parseFloat(item.percentage || 0), 0);
-                tableRows += `<td class="text-center">${this.formatPercentage(total)}</td>`;
+                tableRows += `<td class="text-center">${this.formatValue(total)}</td>`;
             });
             tableRows += '</tr>';
 
-            // Render
             resultDiv.innerHTML = `
-        <div class="alert alert-subtle-info mb-3">
-            <div class="d-flex align-items-center gap-3 flex-wrap">
-                <span class="fas fa-code-compare fa-2x text-primary"></span>
-                <div>
-                    <h6 class="mb-0 fw-bold">Komparasi ${results.length} Formulasi</h6>
-                    <small class="text-muted">${results.map((r, i) => `${i+1}. ${r.formulation?.formulation_name || 'Formulasi'} (v${r.version?.version_no || '?'})`).join(' | ')}</small>
+                <div class="alert alert-subtle-info mb-3">
+                    <div class="d-flex align-items-center gap-3 flex-wrap">
+                        <span class="fas fa-code-compare fa-2x text-primary"></span>
+                        <div><h6 class="mb-0 fw-bold">Komparasi ${results.length} Formulasi</h6>
+                        <small class="text-muted">${results.map((r, i) => `${i+1}. ${r.formulation?.formulation_name || 'Formulasi'} (v${r.version?.version_no || '?'})`).join(' | ')}</small></div>
+                        <span class="badge bg-primary ms-auto">${results.length} item</span>
+                    </div>
                 </div>
-                <span class="badge bg-primary ms-auto">${results.length} item</span>
+                <div class="row mb-4">${cardsHtml}</div>
+                <div class="table-responsive">
+                    <table class="table table-sm table-bordered align-middle compare-table">
+                        <thead class="table-dark">${tableHeader}</thead>
+                        <tbody>${tableRows}</tbody>
+                    </table>
+                </div>
+                <div class="mt-3 text-muted small">
+                    <span class="fas fa-info-circle me-1"></span>
+                    <span class="badge bg-warning bg-opacity-10 text-warning me-1">⬆</span> Menandakan perbedaan signifikan (>5%) antar formulasi
+                </div>
+            `;
+
+            document.getElementById('btn-print-compare').style.display = 'inline-block';
+        },
+
+        // ============================================================
+        // PRINT COMPARE REPORT
+        // ============================================================
+
+        printCompareReport() {
+            const results = this.lastCompareResults;
+            if (!results || results.length < 2) {
+                this.toast('error', 'Belum ada hasil komparasi untuk dicetak');
+                return;
+            }
+
+            const allItems = new Map();
+            results.forEach((r, idx) => {
+                (r.items || []).forEach(item => {
+                    const key = item.composition_type === 'chemical' ? `chem_${item.chemical_id}` : `soft_${item.custom_label}`;
+                    if (!allItems.has(key)) {
+                        allItems.set(key, {
+                            type: item.composition_type,
+                            label: item.composition_type === 'chemical' ? (item.chemical_name || 'Unknown') : (item.custom_label || 'Unknown'),
+                            code: item.chemical_code || null,
+                            unit: item.unit || null,
+                            values: {}
+                        });
+                    }
+                    allItems.get(key).values[idx] = item.percentage || 0;
+                });
+            });
+
+            const logoPath = '<?= base_url('assets/img/app/logo-regency-footer.png') ?>';
+
+            // HEADER untuk Informasi Formulasi - TANPA kolom Satuan
+            let infoTheadCols = '<th>Informasi</th>';
+            results.forEach((r, idx) => {
+                const name = r.formulation?.formulation_name || 'Formulasi ' + (idx + 1);
+                const version = r.version?.version_no || '?';
+                infoTheadCols += `<th class="text-center">${this.e(name)}<br><small>Versi #${version}</small></th>`;
+            });
+
+            // HEADER untuk Komposisi Bahan - DENGAN kolom Satuan
+            let compTheadCols = '<th style="width:18%;">Bahan Kimia</th><th style="width:8%;">Satuan</th>';
+            results.forEach((r, idx) => {
+                const name = r.formulation?.formulation_name || 'Formulasi ' + (idx + 1);
+                const version = r.version?.version_no || '?';
+                compTheadCols += `<th class="text-center">${this.e(name)}<br><small>Versi #${version}</small></th>`;
+            });
+
+            // Rows Informasi - TANPA Satuan
+            let infoRows = '';
+            const infoDefs = [{
+                    label: 'Kode',
+                    value: r => r.formulation?.formulation_code || '-'
+                },
+                {
+                    label: 'Proses',
+                    value: r => `${r.formulation?.process_type || '-'}${r.formulation?.process_sub_type ? ` (${r.formulation.process_sub_type})` : ''}`
+                },
+                {
+                    label: 'Group',
+                    value: r => r.formulation?.group_name || '—'
+                },
+                {
+                    label: 'Status',
+                    value: r => r.version?.status || 'Draft'
+                },
+                {
+                    label: 'Nilai',
+                    value: r => this.formatValue(r.version?.output_percentage)
+                },
+            ];
+            infoDefs.forEach(def => {
+                infoRows += `<tr class="info-row"><td><strong>${def.label}</strong></td>`;
+                results.forEach(r => {
+                    infoRows += `<td class="text-center">${this.e(String(def.value(r)))}</td>`;
+                });
+                infoRows += '</tr>';
+            });
+
+            // Material rows - DENGAN Satuan
+            let materialRows = '';
+            allItems.forEach(chem => {
+                const allValues = results.map((_, i) => chem.values[i] || 0);
+                const avg = allValues.reduce((a, b) => a + b, 0) / allValues.length;
+                materialRows += `<tr>
+            <td>${this.e(chem.label)}${chem.code ? ` <span class="muted">(${this.e(chem.code)})</span>` : ''}</td>
+            <td class="text-center">${chem.unit ? this.e(chem.unit) : '—'}</td>`;
+                results.forEach((r, idx) => {
+                    const val = chem.values[idx];
+                    const diff = Math.abs((val || 0) - avg);
+                    const isHighlight = diff > 5 && val !== undefined;
+                    materialRows += `<td class="text-center ${isHighlight ? 'highlight' : ''}">${val !== undefined ? this.formatValue(val) : '—'}</td>`;
+                });
+                materialRows += '</tr>';
+            });
+
+            // Total row
+            let totalRow = '<tr class="total-row"><td colspan="2">TOTAL</td>';
+            results.forEach(r => {
+                const total = (r.items || []).reduce((sum, item) => sum + parseFloat(item.percentage || 0), 0);
+                totalRow += `<td class="text-center">${this.formatValue(total)}</td>`;
+            });
+            totalRow += '</tr>';
+
+            const printWindow = window.open('', '_blank', 'width=1100,height=750');
+            printWindow.document.write(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Laporan Komparasi Formulasi</title>
+            <style>
+                @page { size: A4 landscape; margin: 1.2cm; }
+                * { box-sizing: border-box; }
+                body { font-family: Arial, sans-serif; margin: 0; padding: 0; font-size: 9.5pt; color: #1a1a2e; }
+                .header { display: flex; align-items: center; justify-content: space-between; border-bottom: 2px solid #1a1a2e; padding-bottom: 10px; margin-bottom: 14px; }
+                .header-left { display: flex; align-items: center; gap: 12px; }
+                .header-left img { height: 40px; max-height: 40px; }
+                .header-left .company-name { font-weight: bold; font-size: 15pt; }
+                .header-left .company-sub { font-size: 10pt; color: #555; }
+                .header-right { text-align: right; }
+                .header-right .title { font-weight: bold; font-size: 12pt; }
+                .header-right .date { font-size: 8pt; color: #666; }
+                table { width: 100%; border-collapse: collapse; margin-bottom: 6px; }
+                th, td { border: 1px solid #ccc; padding: 5px 8px; }
+                thead th { background: #1a1a2e; color: #fff; font-size: 8.5pt; text-transform: uppercase; letter-spacing: 0.03em; }
+                .info-row td { background: #f5f6fa; font-size: 8.5pt; }
+                .muted { color: #888; font-size: 8pt; }
+                .highlight { background: #fff3cd; font-weight: bold; color: #856404; }
+                .total-row td { background: #eceef5; font-weight: bold; }
+                .section-title { font-weight: bold; font-size: 10pt; margin: 10px 0 4px; }
+                .footer { margin-top: 14px; padding-top: 6px; border-top: 1px solid #ddd; font-size: 7.5pt; color: #999; text-align: center; }
+            </style>
+        </head>
+        <body>
+            <div class="header">
+                <div class="header-left">
+                    <img src="${logoPath}" alt="Logo" onerror="this.style.display='none'">
+                    <div><div class="company-name">PT. SINAR CONTINENTAL</div><div class="company-sub">DOKUMEN FORMULASI</div></div>
+                </div>
+                <div class="header-right">
+                    <div class="title">Laporan Komparasi Formulasi</div>
+                    <div class="date">${new Date().toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</div>
+                </div>
             </div>
-        </div>
 
-        <div class="row mb-4">
-            ${cardsHtml}
-        </div>
-
-        <div class="table-responsive">
-            <table class="table table-sm table-bordered align-middle compare-table">
-                <thead class="table-dark">
-                    ${tableHeader}
-                </thead>
-                <tbody>
-                    ${tableRows}
-                </tbody>
+            <!-- Informasi Formulasi - TANPA kolom Satuan -->
+            <div class="section-title">Informasi Formulasi</div>
+            <table>
+                <thead><tr>${infoTheadCols}</tr></thead>
+                <tbody>${infoRows}</tbody>
             </table>
-        </div>
 
-        <div class="mt-3 text-muted small">
-            <span class="fas fa-info-circle me-1"></span>
-            <span class="badge bg-warning bg-opacity-10 text-warning me-1">⬆</span> Menandakan perbedaan signifikan (>5%) antar formulasi
-        </div>
-    `;
+            <!-- Komposisi Bahan - DENGAN kolom Satuan -->
+            <div class="section-title">Komposisi Bahan</div>
+            <table>
+                <thead><tr>${compTheadCols}</tr></thead>
+                <tbody>${materialRows}${totalRow}</tbody>
+            </table>
+
+            <div class="footer">PT. Sinar Continental &middot; Sistem Manajemen Formulasi &middot; Dicetak otomatis dari aplikasi</div>
+        </body>
+        </html>
+    `);
+            printWindow.document.close();
+            printWindow.onload = () => {
+                printWindow.focus();
+                printWindow.print();
+            };
         },
 
         // ============================================================
@@ -2042,12 +2067,7 @@
 
         e(s) {
             if (s === null || s === undefined) return '';
-            return String(s)
-                .replace(/&/g, '&amp;')
-                .replace(/</g, '&lt;')
-                .replace(/>/g, '&gt;')
-                .replace(/"/g, '&quot;')
-                .replace(/'/g, '&#39;');
+            return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
         },
 
         fmtDate(d) {
@@ -2082,8 +2102,7 @@
             return `<span class="badge badge-phoenix badge-phoenix-primary rounded-pill fs-10 p-2 px-3"
                  title="Karyawan: ${this.e(employeeName)}&#013;Username: ${this.e(name)}"
                  style="cursor:help;border-radius:50px;display:inline-flex;align-items:center;gap:0.3rem;">
-                <span class="fas fa-user me-1"></span>
-                ${this.e(employeeName)}
+                <span class="fas fa-user me-1"></span>${this.e(employeeName)}
             </span>`;
         },
 
@@ -2124,6 +2143,10 @@
 
             document.getElementById('btn-do-compare')?.addEventListener('click', () => {
                 this.doCompare();
+            });
+
+            document.getElementById('btn-print-compare')?.addEventListener('click', () => {
+                this.printCompareReport();
             });
 
             $(document).on('click', '.btn-delete', e => {

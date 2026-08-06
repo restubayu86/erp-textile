@@ -601,7 +601,7 @@
                                 <div class="process-select-container">
                                     <select class="form-select form-select-sm" id="f-process-sub-type" style="width:100%">
                                         <?php
-                                        $subOptions = ['Dyeing', 'Dipping', 'Dipping 1', 'Dipping 2', 'Coating', 'Spray', 'Coating Foam', 'Finishing', 'Other'];
+                                        $subOptions = ['Dyeing', 'Dipping', 'Dipping 1', 'Dipping 2', 'Dip+Coat', 'Coating', 'Spray', 'Coating Foam', 'Finishing', 'Other'];
                                         $selectedSub = $formulation['process_sub_type'] ?? 'Dyeing';
                                         ?>
                                         <option value=""></option>
@@ -691,7 +691,7 @@
                                         <th style="width:15%">Jenis</th>
                                         <th style="width:25%">Bahan / Label</th>
                                         <th style="width:10%">Satuan</th>
-                                        <th style="width:16%">Persentase</th>
+                                        <th style="width:16%">Nilai</th>
                                         <th style="width:25%">Catatan</th>
                                         <th style="width:6%" class="text-end"></th>
                                     </tr>
@@ -799,9 +799,9 @@
                         <?php endif; ?>
                         <!-- Actions -->
                         <div class="d-grid gap-2">
-                            <button type="submit" class="btn btn-primary">
+                            <button type="submit" id="btn-submit-formulation" class="btn btn-primary">
                                 <span class="fas fa-save me-1"></span>
-                                <?= !empty($formulation['id']) ? 'Simpan sebagai Versi Baru' : 'Simpan Formulasi' ?>
+                                <span id="btn-submit-text"><?= !empty($formulation['id']) ? 'Simpan sebagai Versi Baru' : 'Simpan Formulasi' ?></span>
                             </button>
                             <a href="<?= site_url('warehouse/formulations') ?>" class="btn btn-subtle-secondary">
                                 <span class="fas fa-times me-1"></span>Batal
@@ -831,7 +831,8 @@
         </td>
         <td>
             <select class="form-select form-select-sm item-unit item-unit-select">
-                <option value="owf">owf %</option>
+                <option value="owf">owf</option>
+                <option value="percent">%</option>
                 <option value="gpl">gpl</option>
             </select>
         </td>
@@ -869,7 +870,7 @@
                         <thead>
                             <tr>
                                 <th>Versi</th>
-                                <th>Status</th>
+                                <th>Aktif</th>
                                 <th>Total %</th>
                                 <th>Tanggal</th>
                                 <th></th>
@@ -881,6 +882,10 @@
                             </tr>
                         </tbody>
                     </table>
+                </div>
+                <div class="form-text mt-2" style="font-size:0.75rem;">
+                    <span class="fas fa-circle-info me-1"></span>
+                    Versi dengan nomor terbesar yang berstatus <strong>Aktif</strong> akan menjadi formula utama dan tampil di halaman daftar.
                 </div>
             </div>
             <div class="modal-footer border-top bg-body-tertiary">
@@ -907,6 +912,11 @@
             this.initCharCounter();
             this.initNameValidation();
 
+            const outputEl = document.getElementById('f-output-percentage');
+            if (outputEl && outputEl.value !== '') {
+                outputEl.value = this.formatDecimal(outputEl.value);
+            }
+
             if (this.existingItems.length) {
                 this.existingItems.forEach(item => this.addRow(item));
             } else {
@@ -915,12 +925,32 @@
             this.toggleEmptyMsg();
             this.updateCompositionSummary();
 
-            // Auto generate code if empty
             if (!document.getElementById('f-code').value) {
                 this.generateCode();
             }
         },
 
+        // ─── FORMATTER ──────────────────────────────────────────────
+        // Rapikan angka desimal: buang trailing zero (3.000 -> "3", 3.010 -> "3.01").
+        // Dipakai untuk mengisi <input type="number">, jadi separator tetap titik (bukan koma).
+        formatDecimal(value, decimals = 3) {
+            if (value === null || value === undefined || value === '') return '';
+            const num = parseFloat(value);
+            if (isNaN(num)) return '';
+            let str = num.toFixed(decimals);
+            if (str.includes('.')) {
+                str = str.replace(/0+$/, '').replace(/\.$/, '');
+            }
+            return str;
+        },
+
+        // Versi tampilan (teks, bukan input) dengan koma sebagai pemisah desimal ala Indonesia.
+        formatDecimalDisplay(value, decimals = 3) {
+            const formatted = this.formatDecimal(value, decimals);
+            return formatted === '' ? '' : formatted.replace('.', ',');
+        },
+
+        // ─── CSRF & AJAX ────────────────────────────────────────────
         csrfName: () => document.querySelector('meta[name="csrf-name"]')?.content ?? '',
         csrfToken: () => document.querySelector('meta[name="csrf-token"]')?.content ?? '',
 
@@ -944,8 +974,8 @@
             return d;
         },
 
+        // ─── SELECT2 ────────────────────────────────────────────────
         initSelect2() {
-            // Process Type - Single Select with Tags
             $('#f-process-type').select2({
                 theme: 'bootstrap-5',
                 placeholder: 'Pilih atau ketik proses...',
@@ -961,7 +991,6 @@
                 }
             });
 
-            // Sub Process Type - Single Select with Tags
             $('#f-process-sub-type').select2({
                 theme: 'bootstrap-5',
                 placeholder: 'Pilih atau ketik sub proses...',
@@ -977,7 +1006,6 @@
                 }
             });
 
-            // Handle change events for code generation
             $('#f-process-type, #f-process-sub-type').on('change', () => {
                 if (!document.getElementById('f-id').value) {
                     this.generateCode();
@@ -1011,6 +1039,8 @@
         },
 
         initChemicalSelect($select) {
+            if (!$select || !$select.length) return;
+
             $select.select2({
                 theme: 'bootstrap-5',
                 placeholder: '— Pilih Bahan Kimia —',
@@ -1040,7 +1070,6 @@
         formatChemicalResult(data) {
             if (data.loading) return data.text;
             if (!data.code) return data.text;
-
             return $(`
                 <div class="chemical-select-result">
                     <span class="chemical-name">${data.name}</span>
@@ -1057,12 +1086,15 @@
             `);
         },
 
+        // ─── HELPERS ────────────────────────────────────────────────
         initCharCounter() {
             const desc = document.getElementById('f-description');
             const counter = document.getElementById('char-count');
-            desc?.addEventListener('input', () => {
-                counter.textContent = desc.value.length;
-            });
+            if (desc && counter) {
+                desc.addEventListener('input', () => {
+                    counter.textContent = desc.value.length;
+                });
+            }
         },
 
         initNameValidation() {
@@ -1071,43 +1103,42 @@
             const validIcon = document.getElementById('name-valid');
             const invalidIcon = document.getElementById('name-invalid');
             const errorEl = document.getElementById('err-formulation_name');
+            if (!nameInput) return;
 
             let timeoutId = null;
 
-            nameInput?.addEventListener('input', () => {
+            nameInput.addEventListener('input', () => {
                 clearTimeout(timeoutId);
                 const name = nameInput.value.trim();
-
                 if (!name) {
-                    statusEl.style.display = 'none';
+                    if (statusEl) statusEl.style.display = 'none';
                     nameInput.classList.remove('is-valid', 'is-invalid');
-                    errorEl.classList.remove('show');
+                    if (errorEl) errorEl.classList.remove('show');
                     return;
                 }
-
                 timeoutId = setTimeout(async () => {
                     try {
                         const fd = new FormData();
                         fd.set('name', name);
                         fd.set('exclude_id', document.getElementById('f-id').value || '0');
-
                         const res = await this.post(this.BASE + 'warehouse/formulations/check-name', fd);
-
                         if (res.status === 'success' && res.available) {
                             nameInput.classList.remove('is-invalid');
                             nameInput.classList.add('is-valid');
-                            validIcon.style.display = 'inline';
-                            invalidIcon.style.display = 'none';
-                            statusEl.style.display = 'flex';
-                            errorEl.classList.remove('show');
+                            if (validIcon) validIcon.style.display = 'inline';
+                            if (invalidIcon) invalidIcon.style.display = 'none';
+                            if (statusEl) statusEl.style.display = 'flex';
+                            if (errorEl) errorEl.classList.remove('show');
                         } else {
                             nameInput.classList.remove('is-valid');
                             nameInput.classList.add('is-invalid');
-                            validIcon.style.display = 'none';
-                            invalidIcon.style.display = 'inline';
-                            statusEl.style.display = 'flex';
-                            errorEl.textContent = res.message || 'Nama formulasi sudah digunakan';
-                            errorEl.classList.add('show');
+                            if (validIcon) validIcon.style.display = 'none';
+                            if (invalidIcon) invalidIcon.style.display = 'inline';
+                            if (statusEl) statusEl.style.display = 'flex';
+                            if (errorEl) {
+                                errorEl.textContent = res.message || 'Nama formulasi sudah digunakan';
+                                errorEl.classList.add('show');
+                            }
                         }
                     } catch (e) {
                         console.warn('Name validation error:', e);
@@ -1119,21 +1150,32 @@
         async generateCode() {
             try {
                 const res = await this.post(this.BASE + 'warehouse/formulations/generate-code-suggestion', new FormData());
-                if (res.status === 'success' && res.code) {
-                    document.getElementById('f-code').value = res.code;
+                const codeEl = document.getElementById('f-code');
+                if (res.status === 'success' && res.code && codeEl) {
+                    codeEl.value = res.code;
                 }
             } catch (e) {
                 console.warn('Generate code error:', e);
             }
         },
 
+        // ─── ITEM ROWS ──────────────────────────────────────────────
         addRow(item = null) {
             const tpl = document.getElementById('item-row-template');
-            const row = tpl.content.cloneNode(true).querySelector('tr');
-            document.getElementById('item-rows').appendChild(row);
+            if (!tpl) return;
 
+            const row = tpl.content.cloneNode(true).querySelector('tr');
+            if (!row) return;
+
+            const container = document.getElementById('item-rows');
+            if (!container) return;
+            container.appendChild(row);
+
+            // Cari semua elemen dengan aman
             const $select = $(row).find('.item-chemical');
-            this.initChemicalSelect($select);
+            if ($select.length) {
+                this.initChemicalSelect($select);
+            }
 
             const $typeSelect = $(row).find('.item-type');
             const $labelInput = $(row).find('.item-label');
@@ -1141,109 +1183,139 @@
             const $unitSelect = $(row).find('.item-unit');
             const $unitLabel = $(row).find('#unit-label');
 
-            // Unit change - update label
-            $unitSelect.on('change', () => {
-                const unit = $unitSelect.val();
-                $unitLabel.text(unit === 'owf' ? '%' : 'gpl');
-            });
+            // Unit change
+            if ($unitSelect.length && $unitLabel.length) {
+                $unitSelect.off('change').on('change', function() {
+                    const unit = $(this).val();
+                    if (unit) {
+                        const labels = {
+                            owf: '%',
+                            percent: '%',
+                            gpl: 'gpl'
+                        };
+                        $unitLabel.text(labels[unit] ?? unit);
+                    }
+                });
+            }
 
-            $typeSelect.on('change', () => {
-                const type = $typeSelect.val();
-                row.classList.toggle('type-chemical', type === 'chemical');
-                row.classList.toggle('type-softener_water', type === 'softener_water');
+            // Type change
+            if ($typeSelect.length) {
+                const self = this; // keep component ref without rebinding `this` (which jQuery needs to stay the <select>)
+                $typeSelect.off('change').on('change', function() {
+                    const type = $(this).val();
+                    if (!type) return;
 
-                if (type === 'chemical') {
-                    $chemicalSelect.prop('required', true);
-                    $labelInput.prop('required', false);
-                    $labelInput.val('');
-                    $labelInput.prop('readonly', false);
-                    $labelInput.attr('placeholder', 'Nama softener...');
-                } else {
-                    $chemicalSelect.prop('required', false);
-                    $chemicalSelect.val(null).trigger('change');
-                    $labelInput.prop('required', true);
-                    $labelInput.val('Softener Water');
-                    $labelInput.prop('readonly', true);
-                    $labelInput.attr('placeholder', 'Softener Water (readonly)');
-                }
-                this.updateCompositionSummary();
-            });
+                    row.classList.toggle('type-chemical', type === 'chemical');
+                    row.classList.toggle('type-softener_water', type === 'softener_water');
 
-            // Auto update summary on percentage change
+                    if (type === 'chemical') {
+                        if ($chemicalSelect.length) {
+                            $chemicalSelect.prop('required', true);
+                        }
+                        if ($labelInput.length) {
+                            $labelInput.prop('required', false);
+                            $labelInput.val('');
+                            $labelInput.prop('readonly', false);
+                            $labelInput.attr('placeholder', 'Nama softener...');
+                        }
+                        if ($unitSelect.length) {
+                            $unitSelect.val('owf').trigger('change');
+                        }
+                    } else {
+                        if ($chemicalSelect.length) {
+                            $chemicalSelect.prop('required', false);
+                            $chemicalSelect.val(null).trigger('change');
+                        }
+                        if ($labelInput.length) {
+                            $labelInput.prop('required', true);
+                            $labelInput.val('Softener Water');
+                            $labelInput.prop('readonly', true);
+                            $labelInput.attr('placeholder', 'Softener Water (readonly)');
+                        }
+                        if ($unitSelect.length) {
+                            $unitSelect.val('gpl').trigger('change');
+                        }
+                    }
+                    self.updateCompositionSummary();
+                });
+            }
+
+            // Percentage change
             const $percentage = $(row).find('.item-percentage');
-            $percentage.on('input', () => {
-                this.updateCompositionSummary();
-            });
+            if ($percentage.length) {
+                $percentage.off('input').on('input', function() {
+                    this.updateCompositionSummary();
+                }.bind(this));
+            }
 
+            // Jika ada data item (edit)
             if (item) {
                 const type = item.composition_type || 'chemical';
-                $typeSelect.val(type).trigger('change');
+                if ($typeSelect.length) {
+                    $typeSelect.val(type).trigger('change');
+                }
 
                 if (type === 'chemical' && item.chemical_id) {
-                    const opt = new Option(
-                        `${item.chemical_name} (${item.chemical_code})`,
-                        item.chemical_id,
-                        true,
-                        true
-                    );
-                    $select.append(opt).trigger('change');
+                    if ($select.length) {
+                        const opt = new Option(
+                            `${item.chemical_name} (${item.chemical_code})`,
+                            item.chemical_id,
+                            true,
+                            true
+                        );
+                        $select.append(opt).trigger('change');
+                    }
                 } else {
-                    $labelInput.val(item.custom_label || 'Softener Water');
-                    $labelInput.prop('readonly', true);
+                    if ($labelInput.length) {
+                        $labelInput.val(item.custom_label || 'Softener Water');
+                        $labelInput.prop('readonly', true);
+                    }
                 }
-                row.querySelector('.item-percentage').value = item.percentage ?? '';
-                row.querySelector('.item-notes').value = item.notes ?? '';
-                if (item.unit) {
-                    $unitSelect.val(item.unit).trigger('change');
+
+                if ($percentage.length) {
+                    $percentage.val(this.formatDecimal(item.percentage ?? ''));
+                }
+
+                const $notes = $(row).find('.item-notes');
+                if ($notes.length) {
+                    $notes.val(item.notes ?? '');
+                }
+
+                if ($unitSelect.length) {
+                    if (item.unit) {
+                        $unitSelect.val(item.unit).trigger('change');
+                    } else {
+                        $unitSelect.val(type === 'chemical' ? 'owf' : 'gpl').trigger('change');
+                    }
+                }
+            } else {
+                // default untuk baris baru
+                if ($unitSelect.length) {
+                    $unitSelect.val('owf').trigger('change');
                 }
             }
 
-            row.querySelector('.item-remove-btn').addEventListener('click', () => {
-                row.remove();
-                this.toggleEmptyMsg();
-                this.updateCompositionSummary();
-            });
+            // Remove button
+            const removeBtn = row.querySelector('.item-remove-btn');
+            if (removeBtn) {
+                removeBtn.addEventListener('click', function() {
+                    row.remove();
+                    this.toggleEmptyMsg();
+                    this.updateCompositionSummary();
+                }.bind(this));
+            }
 
             this.toggleEmptyMsg();
             this.updateCompositionSummary();
         },
 
-        collectItems() {
-            const rows = document.querySelectorAll('#item-rows .item-row');
-            const items = [];
-            rows.forEach(row => {
-                const type = row.querySelector('.item-type').value;
-                const percentage = row.querySelector('.item-percentage').value;
-                if (!percentage) return;
-
-                if (type === 'chemical') {
-                    const chemicalId = $(row).find('.item-chemical').val();
-                    if (!chemicalId) return;
-                    items.push({
-                        composition_type: 'chemical',
-                        chemical_id: chemicalId,
-                        percentage,
-                        unit: row.querySelector('.item-unit').value, // Tambahkan unit
-                        notes: row.querySelector('.item-notes').value,
-                    });
-                } else {
-                    const label = row.querySelector('.item-label').value.trim();
-                    if (!label) return;
-                    items.push({
-                        composition_type: 'softener_water',
-                        custom_label: label,
-                        percentage,
-                        unit: row.querySelector('.item-unit').value, // Tambahkan unit
-                        notes: row.querySelector('.item-notes').value,
-                    });
-                }
-            });
-            return items;
-        },
-
         toggleEmptyMsg() {
-            const has = document.getElementById('item-rows').children.length > 0;
-            document.getElementById('item-empty-msg').classList.toggle('d-none', has);
+            const container = document.getElementById('item-rows');
+            const emptyMsg = document.getElementById('item-empty-msg');
+            if (container && emptyMsg) {
+                const has = container.children.length > 0;
+                emptyMsg.classList.toggle('d-none', has);
+            }
         },
 
         updateCompositionSummary() {
@@ -1252,13 +1324,18 @@
             let sum = 0;
 
             rows.forEach(row => {
-                const val = parseFloat(row.querySelector('.item-percentage').value);
-                if (!isNaN(val)) sum += val;
+                const input = row.querySelector('.item-percentage');
+                if (input) {
+                    const val = parseFloat(input.value);
+                    if (!isNaN(val)) sum += val;
+                }
             });
 
             const summary = document.getElementById('composition-summary');
             const totalEl = document.getElementById('total-percentage');
             const countEl = document.getElementById('item-count');
+
+            if (!summary || !totalEl || !countEl) return;
 
             if (total === 0) {
                 summary.style.display = 'none';
@@ -1268,11 +1345,8 @@
             summary.style.display = 'flex';
             countEl.textContent = `${total} item`;
 
-            // Format dengan 2 desimal
-            const formatted = sum.toFixed(2);
-            totalEl.textContent = `${formatted}%`;
+            totalEl.textContent = `${this.formatDecimal(sum, 2)}%`;
 
-            // Warna berdasarkan total
             totalEl.className = 'total-value';
             if (sum === 0) {
                 totalEl.classList.add('total-warning');
@@ -1285,83 +1359,61 @@
             }
         },
 
+        // ─── COLLECT ITEMS ──────────────────────────────────────────
         collectItems() {
             const rows = document.querySelectorAll('#item-rows .item-row');
             const items = [];
+
             rows.forEach(row => {
-                const type = row.querySelector('.item-type').value;
-                const percentage = row.querySelector('.item-percentage').value;
+                const typeSelect = row.querySelector('.item-type');
+                const percentageInput = row.querySelector('.item-percentage');
+
+                if (!typeSelect || !percentageInput) return;
+
+                const type = typeSelect.value;
+                const percentage = percentageInput.value;
                 if (!percentage) return;
 
+                const unitSelect = row.querySelector('.item-unit');
+                const unit = unitSelect ? unitSelect.value : null;
+
                 if (type === 'chemical') {
-                    const chemicalId = $(row).find('.item-chemical').val();
+                    const chemicalSelect = $(row).find('.item-chemical');
+                    if (!chemicalSelect.length) return;
+
+                    const chemicalId = chemicalSelect.val();
                     if (!chemicalId) return;
+
+                    const notesInput = row.querySelector('.item-notes');
                     items.push({
                         composition_type: 'chemical',
                         chemical_id: chemicalId,
-                        percentage,
-                        unit: row.querySelector('.item-unit').value,
-                        notes: row.querySelector('.item-notes').value,
+                        percentage: percentage,
+                        unit: unit,
+                        notes: notesInput ? notesInput.value : '',
                     });
                 } else {
-                    const label = row.querySelector('.item-label').value.trim();
+                    const labelInput = row.querySelector('.item-label');
+                    if (!labelInput) return;
+
+                    const label = labelInput.value.trim();
                     if (!label) return;
+
+                    const notesInput = row.querySelector('.item-notes');
                     items.push({
                         composition_type: 'softener_water',
                         custom_label: label,
-                        percentage,
-                        unit: row.querySelector('.item-unit').value,
-                        notes: row.querySelector('.item-notes').value,
+                        percentage: percentage,
+                        unit: unit,
+                        notes: notesInput ? notesInput.value : '',
                     });
                 }
             });
+
             return items;
         },
 
-        clearErrors() {
-            document.querySelectorAll('.invalid-feedback').forEach(e => {
-                e.textContent = '';
-                e.classList.remove('show');
-            });
-            document.querySelectorAll('.is-invalid').forEach(e => e.classList.remove('is-invalid'));
-            document.querySelectorAll('.is-valid').forEach(e => e.classList.remove('is-valid'));
-            $('.select2-container--bootstrap-5').removeClass('is-invalid');
-
-            // Hide name status
-            document.getElementById('name-status').style.display = 'none';
-        },
-
-        showErrors(errors) {
-            const map = {
-                formulation_code: 'f-code',
-                formulation_name: 'f-name',
-                process_type: 'f-process-type',
-                process_sub_type: 'f-process-sub-type',
-                output_percentage: 'f-output-percentage',
-            };
-
-            Object.entries(errors ?? {}).forEach(([key, msg]) => {
-                const fieldId = map[key];
-                if (fieldId) {
-                    const el = document.getElementById(fieldId);
-                    if (el) {
-                        if (el.tagName === 'SELECT' && $(el).hasClass('select2-hidden-accessible')) {
-                            $(el).next('.select2-container').addClass('is-invalid');
-                        } else {
-                            el.classList.add('is-invalid');
-                        }
-                    }
-                    const errEl = document.getElementById('err-' + key);
-                    if (errEl) {
-                        errEl.textContent = Array.isArray(msg) ? msg[0] : msg;
-                        errEl.classList.add('show');
-                    }
-                } else {
-                    this.toast('error', msg);
-                }
-            });
-        },
-
+        // ─── SUBMIT ──────────────────────────────────────────────────
         async submit(e) {
             e.preventDefault();
             this.clearErrors();
@@ -1372,37 +1424,43 @@
                 return;
             }
 
-            // Get process from Select2
             const processVal = $('#f-process-type').val();
             const subProcessVal = $('#f-process-sub-type').val();
 
             if (!processVal || processVal === '') {
                 $('#f-process-type').next('.select2-container').addClass('is-invalid');
-                document.getElementById('err-process_type').textContent = 'Jenis Proses harus dipilih';
-                document.getElementById('err-process_type').classList.add('show');
+                const errEl = document.getElementById('err-process_type');
+                if (errEl) {
+                    errEl.textContent = 'Jenis Proses harus dipilih';
+                    errEl.classList.add('show');
+                }
                 this.toast('error', 'Jenis Proses harus dipilih');
                 return;
             }
 
             if (!subProcessVal || subProcessVal === '') {
                 $('#f-process-sub-type').next('.select2-container').addClass('is-invalid');
-                document.getElementById('err-process_sub_type').textContent = 'Sub Proses harus dipilih';
-                document.getElementById('err-process_sub_type').classList.add('show');
+                const errEl = document.getElementById('err-process_sub_type');
+                if (errEl) {
+                    errEl.textContent = 'Sub Proses harus dipilih';
+                    errEl.classList.add('show');
+                }
                 this.toast('error', 'Sub Proses harus dipilih');
                 return;
             }
 
-            // Validate name
             const nameInput = document.getElementById('f-name');
-            if (!nameInput.value.trim()) {
-                nameInput.classList.add('is-invalid');
-                document.getElementById('err-formulation_name').textContent = 'Nama formulasi wajib diisi';
-                document.getElementById('err-formulation_name').classList.add('show');
+            if (!nameInput || !nameInput.value.trim()) {
+                if (nameInput) nameInput.classList.add('is-invalid');
+                const errEl = document.getElementById('err-formulation_name');
+                if (errEl) {
+                    errEl.textContent = 'Nama formulasi wajib diisi';
+                    errEl.classList.add('show');
+                }
                 this.toast('error', 'Nama formulasi wajib diisi');
                 return;
             }
 
-            // Check name validation status
             if (nameInput.classList.contains('is-invalid')) {
                 this.toast('error', 'Nama formulasi sudah digunakan');
                 return;
@@ -1410,27 +1468,33 @@
 
             const groupVal = $('#f-group').val();
             const fd = new FormData();
-            const id = document.getElementById('f-id').value;
+            const id = document.getElementById('f-id')?.value || '';
 
             if (id) fd.set('id', id);
-            fd.set('formulation_code', document.getElementById('f-code').value.trim());
+
+            const codeEl = document.getElementById('f-code');
+            fd.set('formulation_code', codeEl ? codeEl.value.trim() : '');
             fd.set('formulation_name', nameInput.value.trim());
             fd.set('process_type', processVal);
             fd.set('process_sub_type', subProcessVal);
 
-            // Handle output_percentage - hanya kirim jika ada nilai
             const outputEl = document.getElementById('f-output-percentage');
-            const outputVal = outputEl.value.trim();
+            const outputVal = outputEl ? outputEl.value.trim() : '';
             if (outputVal !== '' && outputVal !== null) {
                 fd.set('output_percentage', outputVal);
             }
 
-            fd.set('description', document.getElementById('f-description').value.trim());
-            fd.set('version_status', document.getElementById('f-status').value);
-            fd.set('version_notes', document.getElementById('f-version-notes').value.trim());
+            const descEl = document.getElementById('f-description');
+            fd.set('description', descEl ? descEl.value.trim() : '');
+
+            const statusEl = document.getElementById('f-status');
+            fd.set('version_status', statusEl ? statusEl.value : 'Draft');
+
+            const notesEl = document.getElementById('f-version-notes');
+            fd.set('version_notes', notesEl ? notesEl.value.trim() : '');
+
             fd.set('items', JSON.stringify(items));
 
-            // Parameter create_new_version (hanya untuk edit mode)
             const toggle = document.getElementById('create-new-version');
             if (toggle) {
                 fd.set('create_new_version', toggle.checked ? '1' : '0');
@@ -1459,7 +1523,50 @@
             }
         },
 
-        // Di bagian showHistory()
+        // ─── ERROR HANDLING ─────────────────────────────────────────
+        clearErrors() {
+            document.querySelectorAll('.invalid-feedback').forEach(e => {
+                e.textContent = '';
+                e.classList.remove('show');
+            });
+            document.querySelectorAll('.is-invalid').forEach(e => e.classList.remove('is-invalid'));
+            document.querySelectorAll('.is-valid').forEach(e => e.classList.remove('is-valid'));
+            $('.select2-container--bootstrap-5').removeClass('is-invalid');
+            const statusEl = document.getElementById('name-status');
+            if (statusEl) statusEl.style.display = 'none';
+        },
+
+        showErrors(errors) {
+            const map = {
+                formulation_code: 'f-code',
+                formulation_name: 'f-name',
+                process_type: 'f-process-type',
+                process_sub_type: 'f-process-sub-type',
+                output_percentage: 'f-output-percentage',
+            };
+            Object.entries(errors ?? {}).forEach(([key, msg]) => {
+                const fieldId = map[key];
+                if (fieldId) {
+                    const el = document.getElementById(fieldId);
+                    if (el) {
+                        if (el.tagName === 'SELECT' && $(el).hasClass('select2-hidden-accessible')) {
+                            $(el).next('.select2-container').addClass('is-invalid');
+                        } else {
+                            el.classList.add('is-invalid');
+                        }
+                    }
+                    const errEl = document.getElementById('err-' + key);
+                    if (errEl) {
+                        errEl.textContent = Array.isArray(msg) ? msg[0] : msg;
+                        errEl.classList.add('show');
+                    }
+                } else {
+                    this.toast('error', msg);
+                }
+            });
+        },
+
+        // ─── HISTORY ─────────────────────────────────────────────────
         async showHistory() {
             if (!this.formulationId) return;
             try {
@@ -1470,74 +1577,116 @@
                 });
                 const d = await r.json();
                 const tbody = document.getElementById('history-rows');
+                if (!tbody) return;
+
                 tbody.innerHTML = '';
-                (d.data ?? []).forEach(v => {
-                    const tr = document.createElement('tr');
-                    const statusClass = v.status === 'Active' ? 'success' : v.status === 'Draft' ? 'warning' : 'secondary';
-                    const outputDisplay = v.output_percentage !== null && v.output_percentage !== '-' ? `${v.output_percentage}%` : '<span class="text-muted">—</span>';
-                    tr.innerHTML = `
-                <td><strong>#${v.version_no}</strong></td>
-                <td><span class="badge badge-phoenix badge-phoenix-${statusClass} fs-10">${v.status}</span></td>
-                <td>${outputDisplay}</td>
-                <td style="font-size:0.8rem;">${v.created_at ? new Date(v.created_at).toLocaleString('id-ID') : '-'}</td>
-                <td>
-                    ${v.status !== 'Active' ? `<button class="btn btn-sm btn-subtle-primary btn-activate" data-id="${v.id}">Aktifkan</button>` : ''}
-                </td>
-            `;
-                    tbody.appendChild(tr);
-                });
-                if (!d.data?.length) {
+                if (d.data && d.data.length) {
+                    d.data.forEach(v => {
+                        const tr = document.createElement('tr');
+                        const isActive = v.status === 'Active';
+                        const outputDisplay = v.output_percentage !== null && v.output_percentage !== '-' ? `${this.formatDecimalDisplay(v.output_percentage)}%` : '<span class="text-muted">—</span>';
+                        tr.innerHTML = `
+                            <td><strong>#${v.version_no}</strong></td>
+                            <td>
+                                <div class="form-check form-switch mb-0">
+                                    <input class="form-check-input version-active-toggle" type="checkbox"
+                                        role="switch" data-id="${v.id}" ${isActive ? 'checked' : ''}>
+                                </div>
+                            </td>
+                            <td>${outputDisplay}</td>
+                            <td style="font-size:0.8rem;">${v.created_at ? new Date(v.created_at).toLocaleString('id-ID') : '-'}</td>
+                            <td>
+                                <button type="button" class="btn btn-sm btn-subtle-secondary btn-load-version" data-id="${v.id}">
+                                    <span class="fas fa-arrow-up-right-from-square me-1"></span>Muat ke Form
+                                </button>
+                            </td>
+                        `;
+                        tbody.appendChild(tr);
+                    });
+                } else {
                     tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted py-3">Belum ada versi</td></tr>';
                 }
-                tbody.querySelectorAll('.btn-activate').forEach(btn => {
-                    btn.addEventListener('click', () => this.activateVersion(btn.dataset.id));
+
+                tbody.querySelectorAll('.version-active-toggle').forEach(el => {
+                    el.addEventListener('change', () => this.toggleVersionActive(el.dataset.id, el.checked, el));
                 });
-                new bootstrap.Modal(document.getElementById('modal-history')).show();
-            } catch {
-                document.getElementById('history-rows').innerHTML =
-                    '<tr><td colspan="5" class="text-center text-danger py-3">Gagal memuat riwayat</td></tr>';
+                tbody.querySelectorAll('.btn-load-version').forEach(btn => {
+                    btn.addEventListener('click', () => this.loadVersion(btn.dataset.id));
+                });
+                bootstrap.Modal.getOrCreateInstance(document.getElementById('modal-history')).show();
+            } catch (e) {
+                const tbody = document.getElementById('history-rows');
+                if (tbody) {
+                    tbody.innerHTML = '<tr><td colspan="5" class="text-center text-danger py-3">Gagal memuat riwayat</td></tr>';
+                }
             }
         },
 
-        async activateVersion(versionId) {
+        // Toggle status aktif per versi (independen, bisa lebih dari 1 versi aktif)
+        async toggleVersionActive(versionId, active, checkboxEl) {
             try {
+                const fd = new FormData();
+                fd.set('active', active ? '1' : '0');
                 const res = await this.post(
-                    this.BASE + `warehouse/formulations/${this.formulationId}/versions/${versionId}/activate`,
-                    new FormData()
+                    this.BASE + `warehouse/formulations/${this.formulationId}/versions/${versionId}/toggle-active`,
+                    fd
                 );
                 if (res.status === 'success') {
-                    this.toast('success', res.message);
-                    setTimeout(() => window.location.reload(), 900);
+                    this.toast('success', res.message ?? (active ? 'Versi diaktifkan' : 'Versi dinonaktifkan'));
                 } else {
-                    this.toast('error', res.message ?? 'Gagal mengaktifkan versi');
+                    if (checkboxEl) checkboxEl.checked = !active; // revert on failure
+                    this.toast('error', res.message ?? 'Gagal mengubah status versi');
                 }
+            } catch (e) {
+                if (checkboxEl) checkboxEl.checked = !active;
+                this.toast('error', e.message);
+            }
+        },
+
+        // Muat data versi tertentu ke dalam form tanpa mengubah data tersimpan
+        async loadVersion(versionId) {
+            try {
+                const r = await fetch(
+                    this.BASE + `warehouse/formulations/${this.formulationId}/versions/${versionId}/detail`, {
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest'
+                        }
+                    }
+                );
+                const d = await r.json();
+                if (!d.data) {
+                    this.toast('error', d.message ?? 'Gagal memuat versi');
+                    return;
+                }
+                const {
+                    formulation,
+                    version,
+                    items
+                } = d.data;
+
+                if (formulation?.process_type) $('#f-process-type').val(formulation.process_type).trigger('change');
+                if (formulation?.process_sub_type) $('#f-process-sub-type').val(formulation.process_sub_type).trigger('change');
+
+                const outputEl = document.getElementById('f-output-percentage');
+                if (outputEl) outputEl.value = this.formatDecimal(version.output_percentage ?? '');
+
+                const notesEl = document.getElementById('f-version-notes');
+                if (notesEl) notesEl.value = version.notes ?? '';
+
+                const container = document.getElementById('item-rows');
+                if (container) container.innerHTML = '';
+                (items ?? []).forEach(item => this.addRow(item));
+                this.toggleEmptyMsg();
+                this.updateCompositionSummary();
+
+                bootstrap.Modal.getInstance(document.getElementById('modal-history'))?.hide();
+                this.toast('success', `Versi #${version.version_no} dimuat ke form. Data belum tersimpan.`);
             } catch (e) {
                 this.toast('error', e.message);
             }
         },
 
-        initEvents() {
-            document.getElementById('btn-add-item')?.addEventListener('click', () => this.addRow());
-            document.getElementById('btn-generate-code')?.addEventListener('click', () => this.generateCode());
-            document.getElementById('formulation-form')?.addEventListener('submit', e => this.submit(e));
-            document.getElementById('btn-show-history')?.addEventListener('click', () => this.showHistory());
-
-            // Toggle create new version
-            const toggle = document.getElementById('create-new-version');
-            if (toggle) {
-                toggle.addEventListener('change', () => {
-                    const text = document.getElementById('version-toggle-text');
-                    if (toggle.checked) {
-                        text.textContent = 'Aktif: menyimpan akan membuat versi baru';
-                        document.getElementById('version-toggle-hint').className = 'form-text mt-1';
-                    } else {
-                        text.textContent = 'Nonaktif: update data tanpa membuat versi baru (overwrite versi saat ini)';
-                        document.getElementById('version-toggle-hint').className = 'form-text mt-1 text-warning';
-                    }
-                });
-            }
-        },
-
+        // ─── TOAST ───────────────────────────────────────────────────
         toast(type, msg) {
             Swal.fire({
                 toast: true,
@@ -1548,6 +1697,42 @@
                 timer: type === 'success' ? 2000 : 3500,
                 timerProgressBar: true
             });
+        },
+
+        // ─── INIT EVENTS ─────────────────────────────────────────────
+        initEvents() {
+            const addBtn = document.getElementById('btn-add-item');
+            if (addBtn) addBtn.addEventListener('click', () => this.addRow());
+
+            const genBtn = document.getElementById('btn-generate-code');
+            if (genBtn) genBtn.addEventListener('click', () => this.generateCode());
+
+            const form = document.getElementById('formulation-form');
+            if (form) form.addEventListener('submit', e => this.submit(e));
+
+            const historyBtn = document.getElementById('btn-show-history');
+            if (historyBtn) historyBtn.addEventListener('click', () => this.showHistory());
+
+            const toggle = document.getElementById('create-new-version');
+            if (toggle) {
+                toggle.addEventListener('change', () => {
+                    const text = document.getElementById('version-toggle-text');
+                    const hint = document.getElementById('version-toggle-hint');
+                    const btnText = document.getElementById('btn-submit-text');
+                    if (text) {
+                        if (toggle.checked) {
+                            text.textContent = 'Aktif: menyimpan akan membuat versi baru';
+                            if (hint) hint.className = 'form-text mt-1';
+                        } else {
+                            text.textContent = 'Nonaktif: update data tanpa membuat versi baru (overwrite versi saat ini)';
+                            if (hint) hint.className = 'form-text mt-1 text-warning';
+                        }
+                    }
+                    if (btnText) {
+                        btnText.textContent = toggle.checked ? 'Simpan sebagai Versi Baru' : 'Simpan Perubahan';
+                    }
+                });
+            }
         },
     };
 
