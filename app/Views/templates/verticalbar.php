@@ -24,17 +24,19 @@
 $uri        = service('uri');
 $segment1   = $uri->getSegment(1); // hrm | production | warehouse | access
 $segment2   = $uri->getSegment(2); // employees | departments | dll
+$segment3   = $uri->getTotalSegments() >= 3 ? $uri->getSegment(3) : ''; // opening | formulation-opening | dll
 
 /**
  * Helper inline: cek apakah link aktif
  * Mengembalikan class 'active' jika segment cocok
  */
-function navActive(string $seg1, string $seg2 = ''): string
+function navActive(string $seg1, string $seg2 = '', string $seg3 = ''): string
 {
     $uri = service('uri');
     $match1 = $uri->getSegment(1) === $seg1;
     $match2 = $seg2 === '' || $uri->getSegment(2) === $seg2;
-    return ($match1 && $match2) ? ' active' : '';
+    $match3 = $seg3 === '' || ($uri->getTotalSegments() >= 3 && $uri->getSegment(3) === $seg3);
+    return ($match1 && $match2 && $match3) ? ' active' : '';
 }
 ?>
 
@@ -313,7 +315,7 @@ function navActive(string $seg1, string $seg2 = ''): string
                                 <a class="nav-link dropdown-indicator label-1"
                                     href="#nv-wh-stock"
                                     data-bs-toggle="collapse"
-                                    aria-expanded="<?= ($segment1 === 'warehouse' && $segment2 === 'stocks') ? 'true' : 'false' ?>"
+                                    aria-expanded="<?= ($segment1 === 'warehouse' && $segment2 === 'stocks' && $segment3 === 'opening') ? 'true' : 'false' ?>"
                                     aria-controls="nv-wh-stock">
                                     <div class="d-flex align-items-center">
                                         <div class="dropdown-indicator-icon-wrapper">
@@ -324,7 +326,7 @@ function navActive(string $seg1, string $seg2 = ''): string
                                     </div>
                                 </a>
                                 <div class="parent-wrapper label-1">
-                                    <ul class="nav collapse parent <?= ($segment1 === 'warehouse' && $segment2 === 'stocks') ? 'show' : '' ?>"
+                                    <ul class="nav collapse parent <?= ($segment1 === 'warehouse' && $segment2 === 'stocks' && $segment3 === 'opening') ? 'show' : '' ?>"
                                         data-bs-parent="#navbarVerticalCollapse"
                                         id="nv-wh-stock">
                                         <li class="collapsed-nav-item-title d-none">Stok Kimia</li>
@@ -332,7 +334,7 @@ function navActive(string $seg1, string $seg2 = ''): string
                                         <!-- Stok Awal Periode (ChemicalStockOpeningController — sudah jadi) -->
                                         <?php if (canDo('warehouse.stock_opening.view')): ?>
                                             <li class="nav-item">
-                                                <a class="nav-link<?= navActive('warehouse', 'stocks') ?>" href="<?= base_url('warehouse/stocks/opening') ?>">
+                                                <a class="nav-link<?= navActive('warehouse', 'stocks', 'opening') ?>" href="<?= base_url('warehouse/stocks/opening') ?>">
                                                     <div class="d-flex align-items-center">
                                                         <span class="nav-link-text">Stok Awal Periode</span>
                                                     </div>
@@ -419,7 +421,7 @@ function navActive(string $seg1, string $seg2 = ''): string
                                                     <li class="nav-item">
                                                         <a class="nav-link disabled" href="#" aria-disabled="true" tabindex="-1">
                                                             <div class="d-flex align-items-center">
-                                                                <span class="nav-link-text">Kartu Stok (Available/Allocated/Pemakaian)</span>
+                                                                <span class="nav-link-text">Kartu Stok</span>
                                                                 <span class="badge ms-2 badge-phoenix badge-phoenix-warning nav-link-badge">Segera</span>
                                                             </div>
                                                         </a>
@@ -442,18 +444,92 @@ function navActive(string $seg1, string $seg2 = ''): string
                         <?php endif; ?>
 
                         <!-- Stok Formulasi (Premix) -->
-                        <!-- CATATAN: belum ada tabel/controller — placeholder sampai dibangun -->
-                        <?php if (canDo('warehouse.formulations.view')): ?>
+                        <?php if (canDo('warehouse.formulation_stock_opening.view') || canDo('warehouse.formulations.view')): ?>
                             <div class="nav-item-wrapper">
-                                <a class="nav-link disabled label-1" href="#" aria-disabled="true" tabindex="-1">
+                                <a class="nav-link dropdown-indicator label-1"
+                                    href="#nv-wh-stock-formulasi"
+                                    data-bs-toggle="collapse"
+                                    aria-expanded="<?= ($segment1 === 'warehouse' && $segment2 === 'stocks' && $segment3 === 'formulation-opening') ? 'true' : 'false' ?>"
+                                    aria-controls="nv-wh-stock-formulasi">
                                     <div class="d-flex align-items-center">
+                                        <div class="dropdown-indicator-icon-wrapper">
+                                            <span class="fas fa-caret-right dropdown-indicator-icon"></span>
+                                        </div>
                                         <span class="nav-link-icon"><span data-feather="package"></span></span>
-                                        <span class="nav-link-text-wrapper">
-                                            <span class="nav-link-text">Stok Formulasi (Premix)</span>
-                                            <span class="badge ms-2 badge-phoenix badge-phoenix-warning nav-link-badge">Segera</span>
-                                        </span>
+                                        <span class="nav-link-text">Stok Formulasi (Premix)</span>
                                     </div>
                                 </a>
+                                <div class="parent-wrapper label-1">
+                                    <ul class="nav collapse parent <?= ($segment1 === 'warehouse' && $segment2 === 'stocks' && $segment3 === 'formulation-opening') ? 'show' : '' ?>"
+                                        data-bs-parent="#navbarVerticalCollapse"
+                                        id="nv-wh-stock-formulasi">
+                                        <li class="collapsed-nav-item-title d-none">Stok Formulasi (Premix)</li>
+
+                                        <!-- Stok Awal Periode (FormulationStockOpeningController — sudah jadi) -->
+                                        <?php if (canDo('warehouse.formulation_stock_opening.view')): ?>
+                                            <li class="nav-item">
+                                                <a class="nav-link<?= navActive('warehouse', 'stocks', 'formulation-opening') ?>" href="<?= base_url('warehouse/stocks/formulation-opening') ?>">
+                                                    <div class="d-flex align-items-center">
+                                                        <span class="nav-link-text">Stok Awal Periode</span>
+                                                    </div>
+                                                </a>
+                                            </li>
+                                        <?php endif; ?>
+
+                                        <!-- Transaksi -->
+                                        <!-- CATATAN: mixing, aplikasi ke produksi, transfer & adjustment formulasi belum dibangun -->
+                                        <li class="nav-item">
+                                            <a class="nav-link dropdown-indicator"
+                                                href="#nv-wh-stock-formulasi-transaksi"
+                                                data-bs-toggle="collapse" aria-expanded="false"
+                                                aria-controls="nv-wh-stock-formulasi-transaksi">
+                                                <div class="d-flex align-items-center">
+                                                    <div class="dropdown-indicator-icon-wrapper">
+                                                        <span class="fas fa-caret-right dropdown-indicator-icon"></span>
+                                                    </div>
+                                                    <span class="nav-link-text">Transaksi</span>
+                                                </div>
+                                            </a>
+                                            <div class="parent-wrapper">
+                                                <ul class="nav collapse parent" id="nv-wh-stock-formulasi-transaksi">
+                                                    <li class="nav-item">
+                                                        <a class="nav-link disabled" href="#" aria-disabled="true" tabindex="-1">
+                                                            <div class="d-flex align-items-center">
+                                                                <span class="nav-link-text">Mixing (Kimia → Formulasi)</span>
+                                                                <span class="badge ms-2 badge-phoenix badge-phoenix-warning nav-link-badge">Segera</span>
+                                                            </div>
+                                                        </a>
+                                                    </li>
+                                                    <li class="nav-item">
+                                                        <a class="nav-link disabled" href="#" aria-disabled="true" tabindex="-1">
+                                                            <div class="d-flex align-items-center">
+                                                                <span class="nav-link-text">Aplikasi ke Produksi</span>
+                                                                <span class="badge ms-2 badge-phoenix badge-phoenix-warning nav-link-badge">Segera</span>
+                                                            </div>
+                                                        </a>
+                                                    </li>
+                                                    <li class="nav-item">
+                                                        <a class="nav-link disabled" href="#" aria-disabled="true" tabindex="-1">
+                                                            <div class="d-flex align-items-center">
+                                                                <span class="nav-link-text">Transfer Stok</span>
+                                                                <span class="badge ms-2 badge-phoenix badge-phoenix-warning nav-link-badge">Segera</span>
+                                                            </div>
+                                                        </a>
+                                                    </li>
+                                                    <li class="nav-item">
+                                                        <a class="nav-link disabled" href="#" aria-disabled="true" tabindex="-1">
+                                                            <div class="d-flex align-items-center">
+                                                                <span class="nav-link-text">Penyesuaian (Adjustment)</span>
+                                                                <span class="badge ms-2 badge-phoenix badge-phoenix-warning nav-link-badge">Segera</span>
+                                                            </div>
+                                                        </a>
+                                                    </li>
+                                                </ul>
+                                            </div>
+                                        </li>
+
+                                    </ul>
+                                </div>
                             </div>
                         <?php endif; ?>
 

@@ -87,28 +87,28 @@
         display: block;
     }
 
-    #so-stock-table_wrapper,
-    #so-stock-table-combined_wrapper {
+    #fso-stock-table_wrapper,
+    #fso-stock-table-combined_wrapper {
         max-width: 100%;
     }
 
-    #so-stock-table_wrapper .top,
-    #so-stock-table-combined_wrapper .top {
+    #fso-stock-table_wrapper .top,
+    #fso-stock-table-combined_wrapper .top {
         display: flex;
         justify-content: center;
         margin-bottom: 1rem;
     }
 
-    #so-stock-table_wrapper .top input,
-    #so-stock-table-combined_wrapper .top input {
+    #fso-stock-table_wrapper .top input,
+    #fso-stock-table-combined_wrapper .top input {
         width: 300px;
         border-radius: 20px;
         padding: 0.375rem 1rem;
         text-align: center;
     }
 
-    #so-stock-table_wrapper .bottom,
-    #so-stock-table-combined_wrapper .bottom {
+    #fso-stock-table_wrapper .bottom,
+    #fso-stock-table-combined_wrapper .bottom {
         display: flex;
         justify-content: space-between;
         align-items: center;
@@ -117,67 +117,67 @@
         gap: 1rem;
     }
 
-    #so-stock-table_wrapper .bottom .dataTables_length,
-    #so-stock-table-combined_wrapper .bottom .dataTables_length {
+    #fso-stock-table_wrapper .bottom .dataTables_length,
+    #fso-stock-table-combined_wrapper .bottom .dataTables_length {
         flex: 1;
         text-align: left;
         order: 1;
     }
 
-    #so-stock-table_wrapper .bottom .dataTables_paginate,
-    #so-stock-table-combined_wrapper .bottom .dataTables_paginate {
+    #fso-stock-table_wrapper .bottom .dataTables_paginate,
+    #fso-stock-table-combined_wrapper .bottom .dataTables_paginate {
         flex: 1;
         text-align: center;
         order: 2;
     }
 
-    #so-stock-table_wrapper .bottom .dataTables_info,
-    #so-stock-table-combined_wrapper .bottom .dataTables_info {
+    #fso-stock-table_wrapper .bottom .dataTables_info,
+    #fso-stock-table-combined_wrapper .bottom .dataTables_info {
         flex: 1;
         text-align: right;
         order: 3;
     }
 
-    #so-stock-table_wrapper .dataTables_filter label,
-    #so-stock-table_wrapper .dataTables_length label,
-    #so-stock-table-combined_wrapper .dataTables_filter label,
-    #so-stock-table-combined_wrapper .dataTables_length label {
+    #fso-stock-table_wrapper .dataTables_filter label,
+    #fso-stock-table_wrapper .dataTables_length label,
+    #fso-stock-table-combined_wrapper .dataTables_filter label,
+    #fso-stock-table-combined_wrapper .dataTables_length label {
         margin-bottom: 0;
     }
 
-    #so-stock-table_wrapper .dataTables_length select,
-    #so-stock-table-combined_wrapper .dataTables_length select {
+    #fso-stock-table_wrapper .dataTables_length select,
+    #fso-stock-table-combined_wrapper .dataTables_length select {
         width: auto;
         display: inline-block;
         margin: 0 0.5rem;
         border-radius: 0.375rem;
     }
 
-    #so-stock-table_wrapper .dataTables_paginate .paginate_button,
-    #so-stock-table-combined_wrapper .dataTables_paginate .paginate_button {
+    #fso-stock-table_wrapper .dataTables_paginate .paginate_button,
+    #fso-stock-table-combined_wrapper .dataTables_paginate .paginate_button {
         padding: 0.375rem 0.75rem;
         margin: 0 0.25rem;
         border-radius: 0.375rem;
     }
 
-    #so-stock-table_wrapper .dataTables_paginate .paginate_button.current,
-    #so-stock-table-combined_wrapper .dataTables_paginate .paginate_button.current {
+    #fso-stock-table_wrapper .dataTables_paginate .paginate_button.current,
+    #fso-stock-table-combined_wrapper .dataTables_paginate .paginate_button.current {
         background: var(--phoenix-primary);
         border-color: var(--phoenix-primary);
         color: white !important;
     }
 
-    #so-stock-table,
-    #so-stock-table-combined {
+    #fso-stock-table,
+    #fso-stock-table-combined {
         width: 100% !important;
     }
 
-    #so-stock-table input.qty-input {
+    #fso-stock-table input.qty-input {
         text-align: right;
         max-width: 140px;
     }
 
-    #so-stock-table tr.row-touched {
+    #fso-stock-table tr.row-touched {
         background-color: rgba(var(--phoenix-warning-rgb), .06);
     }
 
@@ -252,8 +252,8 @@
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
-                            <div class="info-label">Total Bahan Kimia</div>
-                            <div class="info-value text-primary" id="so-stat-total">—</div>
+                            <div class="info-label">Total Formulasi</div>
+                            <div class="info-value text-primary" id="fso-stat-total">—</div>
                         </div>
                         <div class="stat-icon bg-primary bg-opacity-10 text-primary">
                             <span class="fas fa-flask"></span>
@@ -268,7 +268,7 @@
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
                             <div class="info-label">Sudah Diinput</div>
-                            <div class="info-value text-success" id="so-stat-filled">—</div>
+                            <div class="info-value text-success" id="fso-stat-filled">—</div>
                         </div>
                         <div class="stat-icon bg-success bg-opacity-10 text-success">
                             <span class="fas fa-check-circle"></span>
@@ -283,7 +283,7 @@
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
                             <div class="info-label">Belum Diinput</div>
-                            <div class="info-value text-warning" id="so-stat-empty">—</div>
+                            <div class="info-value text-warning" id="fso-stat-empty">—</div>
                         </div>
                         <div class="stat-icon bg-warning bg-opacity-10 text-warning">
                             <span class="fas fa-exclamation-triangle"></span>
@@ -298,10 +298,10 @@
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
                             <div class="info-label">Status Periode</div>
-                            <div class="info-value" id="so-stat-period">—</div>
-                            <div class="period-range-text" id="so-stat-period-range"></div>
+                            <div class="info-value" id="fso-stat-period">—</div>
+                            <div class="period-range-text" id="fso-stat-period-range"></div>
                         </div>
-                        <div class="stat-icon bg-secondary bg-opacity-10 text-secondary" id="so-stat-period-icon">
+                        <div class="stat-icon bg-secondary bg-opacity-10 text-secondary" id="fso-stat-period-icon">
                             <span class="fas fa-calendar-alt"></span>
                         </div>
                     </div>
@@ -311,40 +311,40 @@
     </div>
 
     <!-- Status banner -->
-    <div id="so-status-banner" class="d-none mb-3 no-print"></div>
+    <div id="fso-status-banner" class="d-none mb-3 no-print"></div>
 
     <!-- Toolbar -->
     <div class="d-flex justify-content-between align-items-center mb-3 gap-2 flex-wrap no-print">
         <div class="d-flex gap-2 align-items-center">
-            <span class="badge badge-phoenix badge-phoenix-secondary fs-9 p-2 px-3" id="so-context-badge">
+            <span class="badge badge-phoenix badge-phoenix-secondary fs-9 p-2 px-3" id="fso-context-badge">
                 <span class="fas fa-info-circle me-1"></span>Pilih periode &amp; gudang
             </span>
         </div>
         <div class="d-flex gap-2">
-            <button class="btn btn-subtle-secondary btn-sm" id="so-btn-refresh" type="button">
+            <button class="btn btn-subtle-secondary btn-sm" id="fso-btn-refresh" type="button">
                 <span class="fas fa-sync-alt me-1"></span>Refresh
             </button>
-            <button class="btn btn-subtle-secondary btn-sm d-none" id="so-btn-reset-grid" type="button">
+            <button class="btn btn-subtle-secondary btn-sm d-none" id="fso-btn-reset-grid" type="button">
                 <span class="fas fa-undo me-1"></span>Batalkan Perubahan
             </button>
-            <button class="btn btn-primary btn-sm d-none" id="so-btn-save-grid" type="button">
-                <span class="fas fa-save me-1" id="so-save-icon"></span>
-                <span id="so-save-text">Simpan Stok Awal</span>
+            <button class="btn btn-primary btn-sm d-none" id="fso-btn-save-grid" type="button">
+                <span class="fas fa-save me-1" id="fso-save-icon"></span>
+                <span id="fso-save-text">Simpan Stok Awal</span>
             </button>
         </div>
     </div>
 
     <!-- Print header -->
     <div class="print-header mb-3">
-        <h5 class="fw-bold mb-1">Stok Awal Bahan Kimia</h5>
-        <div class="text-muted small" id="so-print-context"></div>
-        <div class="text-muted small" id="so-print-period-range"></div>
-        <div class="text-muted small">Dicetak: <span id="so-print-date"></span></div>
+        <h5 class="fw-bold mb-1">Stok Awal Formulasi</h5>
+        <div class="text-muted small" id="fso-print-context"></div>
+        <div class="text-muted small" id="fso-print-period-range"></div>
+        <div class="text-muted small">Dicetak: <span id="fso-print-date"></span></div>
         <hr class="my-2">
     </div>
 
     <!-- Empty state -->
-    <div class="mx-n4 px-4 mx-lg-n6 px-lg-6 bg-body-emphasis py-5 border-y" id="so-empty-wrapper">
+    <div class="mx-n4 px-4 mx-lg-n6 px-lg-6 bg-body-emphasis py-5 border-y" id="fso-empty-wrapper">
         <div class="text-center py-5 text-body-tertiary">
             <span class="fas fa-boxes fa-2x mb-2 d-block opacity-50"></span>
             Pilih periode dan gudang terlebih dahulu untuk menampilkan data stok awal.
@@ -352,14 +352,13 @@
     </div>
 
     <!-- Table (editable per gudang) -->
-    <div class="mx-n4 px-4 mx-lg-n6 px-lg-6 bg-body-emphasis py-5 border-y d-none" id="so-editable-wrapper">
-        <table class="table table-hover fs-9 nowrap align-middle" id="so-stock-table">
+    <div class="mx-n4 px-4 mx-lg-n6 px-lg-6 bg-body-emphasis py-5 border-y d-none" id="fso-editable-wrapper">
+        <table class="table table-hover fs-9 nowrap align-middle" id="fso-stock-table">
             <thead>
                 <tr>
                     <th>No</th>
-                    <th>Bahan Kimia</th>
-                    <th>Kategori</th>
-                    <th>Status</th>
+                    <th>Formulasi</th>
+                    <th>Kelompok</th>
                     <th>Stok Awal (kg)</th>
                     <th class="no-print">Catatan</th>
                 </tr>
@@ -368,14 +367,13 @@
     </div>
 
     <!-- Table (combined, semua gudang) -->
-    <div class="mx-n4 px-4 mx-lg-n6 px-lg-6 bg-body-emphasis py-5 border-y d-none" id="so-combined-wrapper">
-        <table class="table table-hover fs-9 nowrap align-middle" id="so-stock-table-combined">
+    <div class="mx-n4 px-4 mx-lg-n6 px-lg-6 bg-body-emphasis py-5 border-y d-none" id="fso-combined-wrapper">
+        <table class="table table-hover fs-9 nowrap align-middle" id="fso-stock-table-combined">
             <thead>
                 <tr>
                     <th>No</th>
-                    <th>Bahan Kimia</th>
-                    <th>Kategori</th>
-                    <th>Status</th>
+                    <th>Formulasi</th>
+                    <th>Kelompok</th>
                     <th>Total Stok Awal (kg)</th>
                     <th>Tersebar di</th>
                     <th class="no-print"></th>
@@ -386,7 +384,7 @@
 </div>
 
 <!-- Filter toggle -->
-<a class="card filter-toggle no-print" href="#so-filter-offcanvas" data-bs-toggle="offcanvas" id="so-filter-toggle">
+<a class="card filter-toggle no-print" href="#fso-filter-offcanvas" data-bs-toggle="offcanvas" id="fso-filter-toggle">
     <div class="card-body">
         <span class="fas fa-filter text-primary"></span>
         <span class="filter-label">Filter</span>
@@ -395,7 +393,7 @@
 </a>
 
 <!-- Filter Offcanvas -->
-<div class="offcanvas offcanvas-end" tabindex="-1" id="so-filter-offcanvas" style="width:320px">
+<div class="offcanvas offcanvas-end" tabindex="-1" id="fso-filter-offcanvas" style="width:320px">
     <div class="offcanvas-header border-bottom">
         <h5 class="offcanvas-title"><span class="fas fa-filter me-2 text-primary"></span>Filter</h5>
         <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
@@ -403,34 +401,34 @@
     <div class="offcanvas-body d-flex flex-column">
         <div class="flex-grow-1">
             <div class="mb-3">
-                <label class="form-label fw-semibold fs-9 text-uppercase text-muted" for="so-filter-period">
+                <label class="form-label fw-semibold fs-9 text-uppercase text-muted" for="fso-filter-period">
                     Periode <span class="text-danger">*</span>
                 </label>
-                <select class="form-select form-select-sm" id="so-filter-period" style="width:100%">
+                <select class="form-select form-select-sm" id="fso-filter-period" style="width:100%">
                     <option value=""></option>
                 </select>
-                <div class="form-text fs-10" id="so-period-status-hint"></div>
+                <div class="form-text fs-10" id="fso-period-status-hint"></div>
             </div>
             <div class="mb-4">
-                <label class="form-label fw-semibold fs-9 text-uppercase text-muted" for="so-filter-warehouse">
+                <label class="form-label fw-semibold fs-9 text-uppercase text-muted" for="fso-filter-warehouse">
                     Gudang <span class="text-danger">*</span>
                 </label>
-                <select class="form-select form-select-sm" id="so-filter-warehouse" style="width:100%">
+                <select class="form-select form-select-sm" id="fso-filter-warehouse" style="width:100%">
                     <option value="__combined__">— Gabungan (Semua Gudang) —</option>
                 </select>
             </div>
         </div>
-        <div id="so-filter-summary" class="mb-3 d-none">
+        <div id="fso-filter-summary" class="mb-3 d-none">
             <div class="alert alert-subtle-info py-2 px-3 mb-0 fs-10">
                 <span class="fas fa-info-circle me-1"></span>
-                <span id="so-filter-summary-text"></span>
+                <span id="fso-filter-summary-text"></span>
             </div>
         </div>
         <div class="d-grid gap-2">
-            <button class="btn btn-primary btn-sm" id="so-btn-apply-filter">
+            <button class="btn btn-primary btn-sm" id="fso-btn-apply-filter">
                 <span class="fas fa-search me-1"></span>Terapkan
             </button>
-            <button class="btn btn-subtle-secondary btn-sm" id="so-btn-reset-filter">
+            <button class="btn btn-subtle-secondary btn-sm" id="fso-btn-reset-filter">
                 <span class="fas fa-times me-1"></span>Reset
             </button>
         </div>
@@ -438,18 +436,18 @@
 </div>
 
 <!-- Modal Rincian per Gudang (mode Gabungan) -->
-<div class="modal fade" id="so-breakdownModal" tabindex="-1" aria-hidden="true">
+<div class="modal fade" id="fso-breakdownModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg rounded-3 overflow-hidden">
             <div class="modal-header border-bottom py-3 px-4">
                 <div>
-                    <h5 class="modal-title fw-bold mb-0" id="so-breakdown-title">Rincian per Gudang</h5>
-                    <p class="text-muted fs-10 mb-0" id="so-breakdown-subtitle"></p>
+                    <h5 class="modal-title fw-bold mb-0" id="fso-breakdown-title">Rincian per Gudang</h5>
+                    <p class="text-muted fs-10 mb-0" id="fso-breakdown-subtitle"></p>
                 </div>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body px-4 py-3">
-                <div id="so-breakdown-body"></div>
+                <div id="fso-breakdown-body"></div>
             </div>
         </div>
     </div>
@@ -460,9 +458,9 @@
 <?= $this->section('scripts') ?>
 
 <script>
-    const CAN_CREATE_OPENING = <?= json_encode(canDo('warehouse.stock_opening.create')) ?>;
+    const CAN_CREATE_FORMULATION_OPENING = <?= json_encode(canDo('warehouse.formulation_stock_opening.create')) ?>;
 
-    const StockOpening = {
+    const FormulationStockOpening = {
         BASE: '<?= base_url() ?>',
         currentPeriodId: null,
         currentPeriodRange: null,
@@ -476,7 +474,7 @@
         init() {
             this.initSelect2();
             this.initEvents();
-            document.getElementById('so-print-date').textContent = new Date().toLocaleDateString('id-ID', {
+            document.getElementById('fso-print-date').textContent = new Date().toLocaleDateString('id-ID', {
                 day: '2-digit',
                 month: 'long',
                 year: 'numeric',
@@ -519,8 +517,8 @@
         },
 
         initSelect2() {
-            $('#so-filter-period').select2({
-                dropdownParent: $('#so-filter-offcanvas'),
+            $('#fso-filter-period').select2({
+                dropdownParent: $('#fso-filter-offcanvas'),
                 width: '100%',
                 theme: 'bootstrap-5',
                 placeholder: '— Pilih Periode —',
@@ -560,8 +558,8 @@
                 },
             });
 
-            $('#so-filter-warehouse').select2({
-                dropdownParent: $('#so-filter-offcanvas'),
+            $('#fso-filter-warehouse').select2({
+                dropdownParent: $('#fso-filter-offcanvas'),
                 width: '100%',
                 theme: 'bootstrap-5',
                 placeholder: '— Pilih Gudang —',
@@ -588,11 +586,11 @@
         },
 
         initEvents() {
-            document.getElementById('so-btn-refresh')?.addEventListener('click', () => this.reload());
-            document.getElementById('so-btn-apply-filter')?.addEventListener('click', () => this.applyFilter());
-            document.getElementById('so-btn-reset-filter')?.addEventListener('click', () => this.resetFilter());
-            document.getElementById('so-btn-save-grid')?.addEventListener('click', () => this.save());
-            document.getElementById('so-btn-reset-grid')?.addEventListener('click', () => this.reload());
+            document.getElementById('fso-btn-refresh')?.addEventListener('click', () => this.reload());
+            document.getElementById('fso-btn-apply-filter')?.addEventListener('click', () => this.applyFilter());
+            document.getElementById('fso-btn-reset-filter')?.addEventListener('click', () => this.resetFilter());
+            document.getElementById('fso-btn-save-grid')?.addEventListener('click', () => this.save());
+            document.getElementById('fso-btn-reset-grid')?.addEventListener('click', () => this.reload());
         },
 
         fmtDateOnly(d) {
@@ -605,18 +603,18 @@
         },
 
         async applyFilter() {
-            const periodData = $('#so-filter-period').select2('data')[0];
-            const warehouseId = $('#so-filter-warehouse').val();
-            const warehouseText = $('#so-filter-warehouse option:selected').text() || $('#so-filter-warehouse').find(':selected').text();
+            const periodData = $('#fso-filter-period').select2('data')[0];
+            const warehouseId = $('#fso-filter-warehouse').val();
+            const warehouseText = $('#fso-filter-warehouse option:selected').text() || $('#fso-filter-warehouse').find(':selected').text();
 
             if (!periodData?.id || !warehouseId) {
                 this.toast('error', 'Periode dan gudang wajib dipilih');
                 return;
             }
 
-            document.getElementById('so-period-status-hint').classList.remove('text-danger');
+            document.getElementById('fso-period-status-hint').classList.remove('text-danger');
             const rangeText = `${this.fmtDateOnly(periodData.start_date)} — ${this.fmtDateOnly(periodData.end_date)}`;
-            document.getElementById('so-period-status-hint').textContent =
+            document.getElementById('fso-period-status-hint').textContent =
                 `${periodData.name} (${periodData.code})${periodData.status === 'Closed' ? ' — Ditutup' : ''} · ${rangeText}`;
 
             this.currentPeriodId = periodData.id;
@@ -628,20 +626,20 @@
                 (this.dtFromSelect2Text(warehouseId) ?? warehouseText);
 
             this.updateFilterUI(periodData.text, this.currentWarehouseText);
-            bootstrap.Offcanvas.getInstance(document.getElementById('so-filter-offcanvas'))?.hide();
+            bootstrap.Offcanvas.getInstance(document.getElementById('fso-filter-offcanvas'))?.hide();
             this.reload();
         },
 
         dtFromSelect2Text(id) {
-            const data = $('#so-filter-warehouse').select2('data');
+            const data = $('#fso-filter-warehouse').select2('data');
             const found = (data ?? []).find(x => String(x.id) === String(id));
             return found?.text ?? null;
         },
 
         resetFilter() {
-            $('#so-filter-period').val(null).trigger('change');
-            $('#so-filter-warehouse').val('__combined__').trigger('change');
-            document.getElementById('so-period-status-hint').textContent = '';
+            $('#fso-filter-period').val(null).trigger('change');
+            $('#fso-filter-warehouse').val('__combined__').trigger('change');
+            document.getElementById('fso-period-status-hint').textContent = '';
             this.currentPeriodId = null;
             this.currentPeriodRange = null;
             this.currentPeriodStatus = null;
@@ -655,19 +653,19 @@
             if (periodLabel) labels.push(`Periode: ${periodLabel}`);
             if (warehouseText) labels.push(`Gudang: ${warehouseText}`);
 
-            document.getElementById('so-filter-toggle').classList.toggle('has-filter', labels.length > 0);
-            document.getElementById('so-filter-summary-text').textContent = labels.join(' · ');
-            document.getElementById('so-filter-summary').classList.toggle('d-none', labels.length === 0);
+            document.getElementById('fso-filter-toggle').classList.toggle('has-filter', labels.length > 0);
+            document.getElementById('fso-filter-summary-text').textContent = labels.join(' · ');
+            document.getElementById('fso-filter-summary').classList.toggle('d-none', labels.length === 0);
 
-            const badge = document.getElementById('so-context-badge');
+            const badge = document.getElementById('fso-context-badge');
             if (labels.length) {
                 badge.innerHTML = `<span class="fas fa-check-circle me-1"></span>${labels.join(' · ')}`;
             } else {
                 badge.innerHTML = `<span class="fas fa-info-circle me-1"></span>Pilih periode &amp; gudang`;
             }
-            document.getElementById('so-print-context').textContent = labels.join(' · ');
-            document.getElementById('so-print-period-range').textContent = this.currentPeriodRange ? `Rentang: ${this.currentPeriodRange}` : '';
-            document.getElementById('so-stat-period-range').textContent = this.currentPeriodRange ?? '';
+            document.getElementById('fso-print-context').textContent = labels.join(' · ');
+            document.getElementById('fso-print-period-range').textContent = this.currentPeriodRange ? `Rentang: ${this.currentPeriodRange}` : '';
+            document.getElementById('fso-stat-period-range').textContent = this.currentPeriodRange ?? '';
         },
 
         async reload() {
@@ -686,7 +684,7 @@
             this.showLoading();
             try {
                 const d = await this.get(this.BASE +
-                    `warehouse/stocks/opening/grid?period_id=${this.currentPeriodId}&warehouse_id=${this.currentWarehouseId}`);
+                    `warehouse/stocks/formulation-opening/grid?period_id=${this.currentPeriodId}&warehouse_id=${this.currentWarehouseId}`);
                 if (d.status !== 'success') {
                     this.toast('error', d.message ?? 'Gagal memuat data');
                     this.renderEmpty();
@@ -705,7 +703,7 @@
         async loadCombined() {
             this.showLoading();
             try {
-                const d = await this.get(this.BASE + `warehouse/stocks/opening/combined?period_id=${this.currentPeriodId}`);
+                const d = await this.get(this.BASE + `warehouse/stocks/formulation-opening/combined?period_id=${this.currentPeriodId}`);
                 if (d.status !== 'success') {
                     this.toast('error', d.message ?? 'Gagal memuat data');
                     this.renderEmpty();
@@ -721,28 +719,28 @@
         },
 
         showWrapper(mode) {
-            document.getElementById('so-empty-wrapper').classList.add('d-none');
-            document.getElementById('so-editable-wrapper').classList.toggle('d-none', mode !== 'editable');
-            document.getElementById('so-combined-wrapper').classList.toggle('d-none', mode !== 'combined');
+            document.getElementById('fso-empty-wrapper').classList.add('d-none');
+            document.getElementById('fso-editable-wrapper').classList.toggle('d-none', mode !== 'editable');
+            document.getElementById('fso-combined-wrapper').classList.toggle('d-none', mode !== 'combined');
         },
 
         showLoading() {
-            document.getElementById('so-empty-wrapper').classList.remove('d-none');
-            document.getElementById('so-empty-wrapper').innerHTML = `
+            document.getElementById('fso-empty-wrapper').classList.remove('d-none');
+            document.getElementById('fso-empty-wrapper').innerHTML = `
                 <div class="text-center py-5 text-body-tertiary">
                     <span class="spinner-border spinner-border-sm text-primary me-2"></span>Memuat data...
                 </div>`;
-            document.getElementById('so-editable-wrapper').classList.add('d-none');
-            document.getElementById('so-combined-wrapper').classList.add('d-none');
+            document.getElementById('fso-editable-wrapper').classList.add('d-none');
+            document.getElementById('fso-combined-wrapper').classList.add('d-none');
         },
 
         renderEmpty() {
-            document.getElementById('so-status-banner').classList.add('d-none');
-            document.getElementById('so-btn-save-grid').classList.add('d-none');
-            document.getElementById('so-btn-reset-grid').classList.add('d-none');
-            document.getElementById('so-editable-wrapper').classList.add('d-none');
-            document.getElementById('so-combined-wrapper').classList.add('d-none');
-            const empty = document.getElementById('so-empty-wrapper');
+            document.getElementById('fso-status-banner').classList.add('d-none');
+            document.getElementById('fso-btn-save-grid').classList.add('d-none');
+            document.getElementById('fso-btn-reset-grid').classList.add('d-none');
+            document.getElementById('fso-editable-wrapper').classList.add('d-none');
+            document.getElementById('fso-combined-wrapper').classList.add('d-none');
+            const empty = document.getElementById('fso-empty-wrapper');
             empty.classList.remove('d-none');
             empty.innerHTML = `
                 <div class="text-center py-5 text-body-tertiary">
@@ -757,11 +755,11 @@
          * Warna stat card "Status Periode": hijau=Open, abu=Close. Hanya 2 state.
          */
         setPeriodStatCard(status) {
-            const valueEl = document.getElementById('so-stat-period');
-            const iconEl = document.getElementById('so-stat-period-icon');
+            const valueEl = document.getElementById('fso-stat-period');
+            const iconEl = document.getElementById('fso-stat-period-icon');
 
             if (!valueEl || !iconEl) {
-                console.warn('setPeriodStatCard: elemen so-stat-period / so-stat-period-icon tidak ditemukan di DOM');
+                console.warn('setPeriodStatCard: elemen fso-stat-period / fso-stat-period-icon tidak ditemukan di DOM');
                 return;
             }
 
@@ -794,7 +792,7 @@
         },
 
         renderBanner(isInitialized, periodStatus, isCombined = false) {
-            const banner = document.getElementById('so-status-banner');
+            const banner = document.getElementById('fso-status-banner');
             banner.classList.remove('d-none');
 
             this.setPeriodStatCard(isCombined ? this.currentPeriodStatus : periodStatus);
@@ -805,8 +803,8 @@
                         <span class="fas fa-layer-group me-1"></span>
                         Mode gabungan — total stok awal dari seluruh gudang untuk periode ini. Klik baris untuk lihat rincian per gudang. Mode ini hanya untuk melihat, bukan untuk mengedit.
                     </div>`;
-                document.getElementById('so-btn-save-grid').classList.add('d-none');
-                document.getElementById('so-btn-reset-grid').classList.add('d-none');
+                document.getElementById('fso-btn-save-grid').classList.add('d-none');
+                document.getElementById('fso-btn-reset-grid').classList.add('d-none');
                 return;
             }
 
@@ -816,8 +814,8 @@
                         <span class="fas fa-lock me-1"></span>
                         Periode ini sudah <strong>ditutup</strong>. Stok awal tidak bisa diubah lagi.
                     </div>`;
-                document.getElementById('so-btn-save-grid').classList.add('d-none');
-                document.getElementById('so-btn-reset-grid').classList.add('d-none');
+                document.getElementById('fso-btn-save-grid').classList.add('d-none');
+                document.getElementById('fso-btn-reset-grid').classList.add('d-none');
                 return;
             }
 
@@ -834,24 +832,24 @@
                         Stok awal sudah diinput untuk kombinasi ini. Kamu masih bisa mengubahnya selama periode masih <strong>Open</strong>.
                     </div>`;
             }
-            if (CAN_CREATE_OPENING) {
-                document.getElementById('so-btn-save-grid').classList.remove('d-none');
-                document.getElementById('so-btn-reset-grid').classList.remove('d-none');
+            if (CAN_CREATE_FORMULATION_OPENING) {
+                document.getElementById('fso-btn-save-grid').classList.remove('d-none');
+                document.getElementById('fso-btn-reset-grid').classList.remove('d-none');
             }
         },
 
         setStats(rows) {
             if (!rows) {
-                document.getElementById('so-stat-total').textContent = '—';
-                document.getElementById('so-stat-filled').textContent = '—';
-                document.getElementById('so-stat-empty').textContent = '—';
+                document.getElementById('fso-stat-total').textContent = '—';
+                document.getElementById('fso-stat-filled').textContent = '—';
+                document.getElementById('fso-stat-empty').textContent = '—';
                 return;
             }
             const total = rows.length;
             const filled = rows.filter(r => Number(r.quantity) > 0).length;
-            document.getElementById('so-stat-total').textContent = total;
-            document.getElementById('so-stat-filled').textContent = filled;
-            document.getElementById('so-stat-empty').textContent = total - filled;
+            document.getElementById('fso-stat-total').textContent = total;
+            document.getElementById('fso-stat-filled').textContent = filled;
+            document.getElementById('fso-stat-empty').textContent = total - filled;
         },
 
         // ============================================================
@@ -860,17 +858,17 @@
         buildEditableTable(rows) {
             this.setStats(rows);
 
-            if ($.fn.DataTable.isDataTable('#so-stock-table')) {
+            if ($.fn.DataTable.isDataTable('#fso-stock-table')) {
                 this.dtEditable.destroy();
-                $('#so-stock-table tbody').remove();
+                $('#fso-stock-table tbody').remove();
             }
 
-            const readOnly = this.periodStatus === 'Closed' || !CAN_CREATE_OPENING;
+            const readOnly = this.periodStatus === 'Closed' || !CAN_CREATE_FORMULATION_OPENING;
             const self = this;
 
-            this.dtEditable = $('#so-stock-table').DataTable({
+            this.dtEditable = $('#fso-stock-table').DataTable({
                 data: rows,
-                rowId: 'chemical_id',
+                rowId: 'formulation_id',
                 responsive: true,
                 scrollX: true,
                 pageLength: 25,
@@ -886,9 +884,9 @@
                     extend: 'excelHtml5',
                     text: '<span class="fas fa-file-excel me-1"></span>Export Excel',
                     className: 'btn btn-subtle-success btn-sm',
-                    title: 'Stok Awal Bahan Kimia',
+                    title: 'Stok Awal Formulasi',
                     exportOptions: {
-                        columns: [0, 1, 2, 3, 4],
+                        columns: [0, 1, 2, 3],
                         format: {
                             body: (data) => data.replace(/<[^>]*>/g, '').trim()
                         }
@@ -896,7 +894,7 @@
                 }, ],
                 language: {
                     search: '',
-                    searchPlaceholder: 'Cari bahan kimia...',
+                    searchPlaceholder: 'Cari formulasi...',
                     lengthMenu: '_MENU_ / hal',
                     info: 'Tampil _START_–_END_ dari _TOTAL_',
                     infoEmpty: 'Tidak ada data',
@@ -912,7 +910,7 @@
                     },
                     {
                         targets: 1,
-                        width: '150px'
+                        width: '220px'
                     },
                     {
                         targets: 2,
@@ -920,15 +918,7 @@
                     },
                     {
                         targets: 3,
-                        width: '50px'
-                    },
-                    {
-                        targets: 4,
-                        width: '100px'
-                    },
-                    {
-                        targets: 5,
-                        width: '220px'
+                        width: '150px'
                     },
                 ],
                 columns: [{
@@ -938,26 +928,23 @@
                         render: (d, t, r, meta) => meta.row + 1,
                     },
                     {
-                        data: 'chemical_name',
+                        data: 'formulation_name',
                         render: (data, type, row) => {
                             if (type !== 'display') return data;
                             return `<span class="fw-semibold">${self.e(data)}</span>
-                                    <div class="text-muted small font-monospace">${self.e(row.chemical_code)}</div>`;
+                                    <div class="text-muted small font-monospace">${self.e(row.formulation_code)}</div>`;
                         },
                     },
                     {
-                        data: 'category_name',
-                        render: d => d ?
-                            d.split(', ').map(c => `<span class="badge badge-phoenix badge-phoenix-secondary p-2 fs-10 me-1 mb-1">${self.e(c)}</span>`).join('') : '<span class="text-muted fst-italic">—</span>',
-                    },
-                    {
-                        data: 'chemical_status',
-                        render: d => {
-                            const statusMap = {
-                                Active: '<span class="badge badge-phoenix badge-phoenix-success fs-10">Aktif</span>',
-                                Inactive: '<span class="badge badge-phoenix badge-phoenix-secondary fs-10">Nonaktif</span>',
-                            };
-                            return statusMap[d] ?? `<span class="badge badge-phoenix badge-phoenix-secondary fs-10">${self.e(d)}</span>`;
+                        data: 'group_name',
+                        render: (d, t, row) => {
+                            const groupBadge = d ?
+                                `<span class="badge badge-phoenix badge-phoenix-secondary p-2 fs-10 me-1 mb-1">${self.e(d)}</span>` :
+                                '<span class="text-muted fst-italic">—</span>';
+                            const processBadge = row.process_type ?
+                                `<span class="badge badge-phoenix badge-phoenix-info p-2 fs-10 mb-1">${self.e(row.process_type)}${row.process_sub_type ? ' · ' + self.e(row.process_sub_type) : ''}</span>` :
+                                '';
+                            return `${groupBadge}${processBadge}`;
                         },
                     },
                     {
@@ -984,7 +971,7 @@
             });
 
             if (!readOnly) {
-                $('#so-stock-table tbody').off('input').on('input', '.qty-input, .notes-input', function() {
+                $('#fso-stock-table tbody').off('input').on('input', '.qty-input, .notes-input', function() {
                     const tr = $(this).closest('tr');
                     const rowApi = self.dtEditable.row(tr);
                     const rowData = rowApi.data();
@@ -1004,16 +991,16 @@
         buildCombinedTable(rows) {
             this.setStats(rows);
 
-            if ($.fn.DataTable.isDataTable('#so-stock-table-combined')) {
+            if ($.fn.DataTable.isDataTable('#fso-stock-table-combined')) {
                 this.dtCombined.destroy();
-                $('#so-stock-table-combined tbody').remove();
+                $('#fso-stock-table-combined tbody').remove();
             }
 
             const self = this;
 
-            this.dtCombined = $('#so-stock-table-combined').DataTable({
+            this.dtCombined = $('#fso-stock-table-combined').DataTable({
                 data: rows,
-                rowId: 'chemical_id',
+                rowId: 'formulation_id',
                 responsive: true,
                 scrollX: true,
                 pageLength: 25,
@@ -1029,14 +1016,14 @@
                     extend: 'excelHtml5',
                     text: '<span class="fas fa-file-excel me-1"></span>Export Excel',
                     className: 'btn btn-subtle-success btn-sm',
-                    title: 'Stok Awal Bahan Kimia (Gabungan)',
+                    title: 'Stok Awal Formulasi (Gabungan)',
                     exportOptions: {
                         columns: [0, 1, 2, 3, 4]
                     },
                 }, ],
                 language: {
                     search: '',
-                    searchPlaceholder: 'Cari bahan kimia...',
+                    searchPlaceholder: 'Cari formulasi...',
                     lengthMenu: '_MENU_ / hal',
                     info: 'Tampil _START_–_END_ dari _TOTAL_',
                     infoEmpty: 'Tidak ada data',
@@ -1052,7 +1039,7 @@
                     },
                     {
                         targets: 1,
-                        width: '150px'
+                        width: '220px'
                     },
                     {
                         targets: 2,
@@ -1060,18 +1047,14 @@
                     },
                     {
                         targets: 3,
-                        width: '50px'
+                        width: '160px'
                     },
                     {
                         targets: 4,
-                        width: '100px'
+                        width: '110px'
                     },
                     {
                         targets: 5,
-                        width: '100px'
-                    },
-                    {
-                        targets: 6,
                         width: '30px'
                     },
                 ],
@@ -1082,26 +1065,23 @@
                         render: (d, t, r, meta) => meta.row + 1,
                     },
                     {
-                        data: 'chemical_name',
+                        data: 'formulation_name',
                         render: (data, type, row) => {
                             if (type !== 'display') return data;
                             return `<span class="fw-semibold">${self.e(data)}</span>
-                                    <div class="text-muted small font-monospace">${self.e(row.chemical_code)}</div>`;
+                                    <div class="text-muted small font-monospace">${self.e(row.formulation_code)}</div>`;
                         },
                     },
                     {
-                        data: 'category_name',
-                        render: d => d ?
-                            d.split(', ').map(c => `<span class="badge badge-phoenix badge-phoenix-secondary p-2 fs-10 me-1 mb-1">${self.e(c)}</span>`).join('') : '<span class="text-muted fst-italic">—</span>',
-                    },
-                    {
-                        data: 'chemical_status',
-                        render: d => {
-                            const statusMap = {
-                                Active: '<span class="badge badge-phoenix badge-phoenix-success fs-10">Aktif</span>',
-                                Inactive: '<span class="badge badge-phoenix badge-phoenix-secondary fs-10">Nonaktif</span>',
-                            };
-                            return statusMap[d] ?? `<span class="badge badge-phoenix badge-phoenix-secondary fs-10">${self.e(d)}</span>`;
+                        data: 'group_name',
+                        render: (d, t, row) => {
+                            const groupBadge = d ?
+                                `<span class="badge badge-phoenix badge-phoenix-secondary p-2 fs-10 me-1 mb-1">${self.e(d)}</span>` :
+                                '<span class="text-muted fst-italic">—</span>';
+                            const processBadge = row.process_type ?
+                                `<span class="badge badge-phoenix badge-phoenix-info p-2 fs-10 mb-1">${self.e(row.process_type)}${row.process_sub_type ? ' · ' + self.e(row.process_sub_type) : ''}</span>` :
+                                '';
+                            return `${groupBadge}${processBadge}`;
                         },
                     },
                     {
@@ -1128,26 +1108,26 @@
                 createdRow: tr => tr.classList.add('combined-row'),
             });
 
-            $('#so-stock-table-combined tbody').off('click').on('click', 'tr', function() {
+            $('#fso-stock-table-combined tbody').off('click').on('click', 'tr', function() {
                 const rowData = self.dtCombined.row(this).data();
-                if (rowData) self.openBreakdown(rowData.chemical_id, rowData.chemical_name);
+                if (rowData) self.openBreakdown(rowData.formulation_id, rowData.formulation_name);
             });
         },
 
         // ============================================================
         // BREAKDOWN MODAL
         // ============================================================
-        async openBreakdown(chemicalId, chemicalName) {
-            document.getElementById('so-breakdown-title').textContent = chemicalName;
-            document.getElementById('so-breakdown-subtitle').textContent = 'Rincian stok awal per gudang';
-            document.getElementById('so-breakdown-body').innerHTML = `<div class="text-center py-3"><span class="spinner-border spinner-border-sm text-primary"></span></div>`;
-            new bootstrap.Modal(document.getElementById('so-breakdownModal')).show();
+        async openBreakdown(formulationId, formulationName) {
+            document.getElementById('fso-breakdown-title').textContent = formulationName;
+            document.getElementById('fso-breakdown-subtitle').textContent = 'Rincian stok awal per gudang';
+            document.getElementById('fso-breakdown-body').innerHTML = `<div class="text-center py-3"><span class="spinner-border spinner-border-sm text-primary"></span></div>`;
+            new bootstrap.Modal(document.getElementById('fso-breakdownModal')).show();
 
             try {
                 const d = await this.get(this.BASE +
-                    `warehouse/stocks/opening/breakdown?period_id=${this.currentPeriodId}&chemical_id=${chemicalId}`);
+                    `warehouse/stocks/formulation-opening/breakdown?period_id=${this.currentPeriodId}&formulation_id=${formulationId}`);
                 if (d.status !== 'success' || !d.data.length) {
-                    document.getElementById('so-breakdown-body').innerHTML = `<p class="text-muted text-center mb-0">Belum ada data di gudang manapun.</p>`;
+                    document.getElementById('fso-breakdown-body').innerHTML = `<p class="text-muted text-center mb-0">Belum ada data di gudang manapun.</p>`;
                     return;
                 }
                 const rows = d.data.map(r => `
@@ -1156,13 +1136,13 @@
                         <td class="text-end fw-semibold">${this.fmtNumber(r.quantity)} kg</td>
                     </tr>
                 `).join('');
-                document.getElementById('so-breakdown-body').innerHTML = `
+                document.getElementById('fso-breakdown-body').innerHTML = `
                     <table class="table table-sm fs-9 mb-0">
                         <thead><tr><th>Gudang</th><th class="text-end">Stok Awal</th></tr></thead>
                         <tbody>${rows}</tbody>
                     </table>`;
             } catch {
-                document.getElementById('so-breakdown-body').innerHTML = `<p class="text-danger text-center mb-0">Gagal memuat rincian.</p>`;
+                document.getElementById('fso-breakdown-body').innerHTML = `<p class="text-danger text-center mb-0">Gagal memuat rincian.</p>`;
             }
         },
 
@@ -1176,7 +1156,7 @@
             }
 
             const rows = this.dtEditable.rows().data().toArray().map(r => ({
-                chemical_id: r.chemical_id,
+                formulation_id: r.formulation_id,
                 quantity: r.quantity || 0,
                 notes: r.notes || '',
             }));
@@ -1193,7 +1173,7 @@
                 fd.set('warehouse_id', this.currentWarehouseId);
                 fd.set('rows', JSON.stringify(rows));
 
-                const res = await this.post(this.BASE + 'warehouse/stocks/opening/store', fd);
+                const res = await this.post(this.BASE + 'warehouse/stocks/formulation-opening/store', fd);
                 if (res.status === 'success') {
                     this.toast('success', res.message);
                     this.reload();
@@ -1208,8 +1188,8 @@
         },
 
         setLoading(on) {
-            const btn = document.getElementById('so-btn-save-grid');
-            const ico = document.getElementById('so-save-icon');
+            const btn = document.getElementById('fso-btn-save-grid');
+            const ico = document.getElementById('fso-save-icon');
             if (!btn) return;
             btn.disabled = on;
             ico.className = on ? 'spinner-border spinner-border-sm me-1' : 'fas fa-save me-1';
@@ -1245,6 +1225,6 @@
         },
     };
 
-    $(document).ready(() => StockOpening.init());
+    $(document).ready(() => FormulationStockOpening.init());
 </script>
 <?= $this->endSection() ?>

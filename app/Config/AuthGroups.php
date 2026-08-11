@@ -70,8 +70,11 @@ class AuthGroups extends ShieldAuthGroups
         'warehouse.periods.edit'        => 'Edit periode produksi',
         'warehouse.periods.delete'      => 'Hapus periode produksi',
 
-        'warehouse.stock_opening.view'   => 'Lihat stok awal periode',
-        'warehouse.stock_opening.create' => 'Input/ubah stok awal periode',
+        'warehouse.stock_opening.view'   => 'Lihat stok awal periode (kimia)',
+        'warehouse.stock_opening.create' => 'Input/ubah stok awal periode (kimia)',
+
+        'warehouse.formulation_stock_opening.view'   => 'Lihat stok awal periode (formulasi)',
+        'warehouse.formulation_stock_opening.create' => 'Input/ubah stok awal periode (formulasi)',
 
         'warehouse.formulations.view'   => 'Lihat formulasi',
         'warehouse.formulations.manage' => 'Kelola formulasi',
@@ -105,6 +108,7 @@ class AuthGroups extends ShieldAuthGroups
             'warehouse.warehouses.view',
             'warehouse.periods.view',
             'warehouse.stock_opening.view',
+            'warehouse.formulation_stock_opening.view',
             'warehouse.formulations.view',
             'warehouse.stocks.view',
             'warehouse.stocks.receive',
@@ -124,6 +128,7 @@ class AuthGroups extends ShieldAuthGroups
             'warehouse.warehouses.view',
             'warehouse.periods.view',
             'warehouse.stock_opening.view',
+            'warehouse.formulation_stock_opening.view',
             'warehouse.formulations.view',
             'warehouse.stocks.view',
         ],

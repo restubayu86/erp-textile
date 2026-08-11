@@ -44,14 +44,12 @@ $routes->group('warehouse', [
     // Versioning
     $routes->get('formulations/(:num)/versions',                       'FormulationController::versions/$1');
     $routes->post('formulations/(:num)/versions/(:num)/activate',      'FormulationController::activateVersion/$1/$2');
-    $routes->post('formulations/(:num)/versions/(:num)/toggle-active', 'FormulationController::toggleVersionActive/$1/$2');
     $routes->get('formulations/(:num)/versions/(:num)/detail',         'FormulationController::getVersionDetail/$1/$2');
 
     // Comparison
     $routes->get('formulations/compare-versions',       'FormulationController::compareVersions');
     $routes->get('formulations/compare-formulations',   'FormulationController::compareFormulations');
     $routes->post('formulations/(:num)/mark-used',      'FormulationController::markUsed/$1');
-    $routes->post('formulations/(:num)/versions/(:num)/deactivate', 'FormulationController::deactivateVersion/$1/$2');
 
     // ============================================================
     // Master: Chemical Categories
@@ -111,6 +109,7 @@ $routes->group('warehouse', [
 
     // Periods
     $routes->get('master/periods',                    'PeriodController::index');
+    $routes->get('master/periods/by-month',            'PeriodController::byMonth');
     $routes->get('master/periods/trash',               'PeriodController::trash');
     $routes->get('master/periods/datatables',          'PeriodController::datatables');
     $routes->get('master/periods/trash-datatables',    'PeriodController::trashDatatables');
@@ -126,10 +125,19 @@ $routes->group('warehouse', [
     $routes->post('master/periods/(:num)/close',        'PeriodController::closePeriod/$1');
 
     // Stock Opening
+    // Stock Opening — Kimia
     $routes->get('stocks/opening',               'ChemicalStockOpeningController::index');
     $routes->get('stocks/opening/grid',          'ChemicalStockOpeningController::grid');
     $routes->get('stocks/opening/combined',      'ChemicalStockOpeningController::combinedGrid');
     $routes->get('stocks/opening/breakdown',     'ChemicalStockOpeningController::breakdown');
     $routes->post('stocks/opening/store',        'ChemicalStockOpeningController::store');
     $routes->get('stocks/opening/status',        'ChemicalStockOpeningController::status');
+
+    // Stock Opening — Formulasi
+    $routes->get('stocks/formulation-opening',               'FormulationStockOpeningController::index');
+    $routes->get('stocks/formulation-opening/grid',          'FormulationStockOpeningController::grid');
+    $routes->get('stocks/formulation-opening/combined',      'FormulationStockOpeningController::combinedGrid');
+    $routes->get('stocks/formulation-opening/breakdown',     'FormulationStockOpeningController::breakdown');
+    $routes->post('stocks/formulation-opening/store',        'FormulationStockOpeningController::store');
+    $routes->get('stocks/formulation-opening/status',        'FormulationStockOpeningController::status');
 });
