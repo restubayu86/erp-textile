@@ -100,7 +100,39 @@ class FormulationController extends BaseController
     {
         if (!canDo('warehouse.formulations.view')) return $this->jsonError('Akses ditolak', 403);
 
-        $db      = \Config\Database::connect();
+        $db     = \Config\Database::connect();
+        $status = $this->request->getGet('filter_status');
+        $status = $status !== null ? trim((string) $status) : '';
+
+        // ------------------------------------------------------------
+        // "Versi representatif" per formulasi dihitung via correlated
+        // subquery (bukan JOIN ke f.current_version_id yang gampang basi,
+        // dan bukan pula JOIN ke derived table raw string yang ternyata
+        // rawan gagal di query builder). Semua nilai versi (status,
+        // output_percentage, version_no, item_count) diturunkan dari
+        // version_no target yang sama di bawah ini, supaya konsisten.
+        //
+        // - Filter status eksplisit -> target = version_no terbesar YANG
+        //   BERSTATUS SESUAI FILTER tsb (formulasi tanpa versi berstatus
+        //   itu dikecualikan lewat EXISTS di bawah).
+        // - Tanpa filter ("Semua") -> prioritaskan version_no terbesar
+        //   yang Active; kalau tidak ada versi Active sama sekali,
+        //   fallback ke version_no terbesar apa pun statusnya (termasuk
+        //   yang semua versinya sudah Archived).
+        // ------------------------------------------------------------
+        if ($status !== '') {
+            $targetVersionNoExpr = "(SELECT MAX(vn.version_no) FROM formulation_versions vn "
+                . "WHERE vn.formulation_id = f.id AND vn.status = " . $db->escape($status) . ")";
+        } else {
+            $targetVersionNoExpr = "COALESCE("
+                . "(SELECT MAX(vn.version_no) FROM formulation_versions vn WHERE vn.formulation_id = f.id AND vn.status = 'Active'),"
+                . "(SELECT MAX(vn.version_no) FROM formulation_versions vn WHERE vn.formulation_id = f.id)"
+                . ")";
+        }
+
+        $versionIdExpr = "(SELECT vv.id FROM formulation_versions vv "
+            . "WHERE vv.formulation_id = f.id AND vv.version_no = {$targetVersionNoExpr})";
+
         $builder = $db->table('formulations f')
             ->select([
                 'f.id',
@@ -111,20 +143,28 @@ class FormulationController extends BaseController
                 'f.process_sub_type_label',
                 'f.last_used_at',
                 'g.group_name',
-                'v.output_percentage',
-                'v.status',
-                'v.version_no',
+                "{$targetVersionNoExpr} as version_no",
+                "(SELECT vv.status FROM formulation_versions vv WHERE vv.id = {$versionIdExpr}) as status",
+                "(SELECT vv.output_percentage FROM formulation_versions vv WHERE vv.id = {$versionIdExpr}) as output_percentage",
+                "(SELECT COUNT(*) FROM formulation_items fi WHERE fi.formulation_version_id = {$versionIdExpr}) as item_count",
                 'f.created_at',
                 'f.updated_at',
                 'cu.username as created_by_name',
                 'cu_emp.nickname as created_by_employee',
-                '(SELECT COUNT(*) FROM formulation_items fi WHERE fi.formulation_version_id = f.current_version_id) as item_count',
             ])
             ->join('formulation_groups g', 'g.id = f.group_id', 'left')
-            ->join('formulation_versions v', 'v.id = f.current_version_id', 'left')
             ->join('users cu', 'cu.id = f.created_by', 'left')
             ->join('employees cu_emp', 'cu_emp.id = cu.employee_id', 'left')
             ->where('f.deleted_at', null);
+
+        // Kecualikan formulasi yang tidak punya versi berstatus sesuai filter
+        if ($status !== '') {
+            $builder->where(
+                "EXISTS (SELECT 1 FROM formulation_versions fv3 WHERE fv3.formulation_id = f.id AND fv3.status = " . $db->escape($status) . ")",
+                null,
+                false
+            );
+        }
 
         if ($name = trim($this->request->getGet('filter_name') ?? '')) {
             $builder->groupStart()
@@ -145,10 +185,6 @@ class FormulationController extends BaseController
             $builder->where('f.group_id', $groupId);
         }
 
-        if ($status = $this->request->getGet('filter_status')) {
-            $builder->where('v.status', $status);
-        }
-
         return DataTable::of($builder)
             ->addNumbering('no')
             ->setSearchableColumns(['f.formulation_name', 'f.formulation_code', 'g.group_name'])
@@ -166,8 +202,11 @@ class FormulationController extends BaseController
                 'f.formulation_code',
                 'f.formulation_name',
                 'f.process_type',
+                'f.process_sub_type',
+                'f.current_version_id',  // ← KOLOM INI PENTING!
                 'g.group_name',
                 'v.status',
+                'v.version_no',
                 'f.deleted_at',
                 'du.username as deleted_by_name',
                 'du_emp.nickname as deleted_by_employee',
@@ -217,6 +256,9 @@ class FormulationController extends BaseController
             $itemsRaw = $this->request->getPost('items');
             $items    = is_string($itemsRaw) ? json_decode($itemsRaw, true) : $itemsRaw;
             $items    = is_array($items) ? $items : [];
+
+            // Debug: log items yang diterima
+            log_message('debug', 'Items received in controller: ' . json_encode($items));
 
             $userId = auth()->id();
 
@@ -349,6 +391,17 @@ class FormulationController extends BaseController
         return $this->jsonResponse($result, $result['status'] === 'success' ? 200 : 422);
     }
 
+    // Toggle status aktif per versi (independen, bisa lebih dari 1 versi aktif)
+    public function toggleVersionActive(int $id, int $versionId)
+    {
+        if (!$this->request->isAJAX()) return $this->jsonError('Method not allowed', 405);
+        if (!canDo('warehouse.formulations.manage')) return $this->jsonError('Akses ditolak', 403);
+
+        $active = $this->request->getPost('active') === '1';
+        $result = $this->model->toggleVersionActive($id, $versionId, $active);
+        return $this->jsonResponse($result, $result['status'] === 'success' ? 200 : 422);
+    }
+
     // ============================================================
     // VERSION DETAIL & PREVIEW
     // ============================================================
@@ -357,12 +410,21 @@ class FormulationController extends BaseController
     {
         if (!canDo('warehouse.formulations.view')) return $this->jsonError('Akses ditolak', 403);
 
-        $formulation = $this->model->find($formulationId);
+        // Gunakan query builder langsung agar bisa mengambil data yang sudah di-soft-delete
+        $db = \Config\Database::connect();
+
+        // Ambil data formulasi (termasuk yang sudah dihapus/trash)
+        $formulation = $db->table('formulations f')
+            ->select('f.*, g.group_name')
+            ->join('formulation_groups g', 'g.id = f.group_id', 'left')
+            ->where('f.id', $formulationId)
+            ->get()->getRowArray();
+
         if (!$formulation) {
             return $this->jsonError('Formulasi tidak ditemukan', 404);
         }
 
-        $db = \Config\Database::connect();
+        // Ambil data versi
         $version = $db->table('formulation_versions v')
             ->select('v.*, u.username as created_by_name')
             ->join('users u', 'u.id = v.created_by', 'left')
@@ -374,6 +436,7 @@ class FormulationController extends BaseController
             return $this->jsonError('Versi tidak ditemukan', 404);
         }
 
+        // Ambil items menggunakan model (tidak masalah karena items tidak di-soft-delete)
         $items = $this->model->getItems($versionId);
 
         // Format items
@@ -628,6 +691,14 @@ class FormulationController extends BaseController
             'available' => !$exists,
             'message' => $exists ? 'Nama formulasi sudah digunakan' : 'Nama tersedia'
         ]);
+    }
+
+    public function deactivateVersion(int $id, int $versionId)
+    {
+        if (!$this->request->isAJAX()) return $this->jsonError('Method not allowed', 405);
+        if (!canDo('warehouse.formulations.manage')) return $this->jsonError('Akses ditolak', 403);
+
+        return $this->toggleVersionActive($id, $versionId, false);
     }
 
     // ============================================================

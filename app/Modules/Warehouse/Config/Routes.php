@@ -44,12 +44,14 @@ $routes->group('warehouse', [
     // Versioning
     $routes->get('formulations/(:num)/versions',                       'FormulationController::versions/$1');
     $routes->post('formulations/(:num)/versions/(:num)/activate',      'FormulationController::activateVersion/$1/$2');
+    $routes->post('formulations/(:num)/versions/(:num)/toggle-active', 'FormulationController::toggleVersionActive/$1/$2');
     $routes->get('formulations/(:num)/versions/(:num)/detail',         'FormulationController::getVersionDetail/$1/$2');
 
     // Comparison
     $routes->get('formulations/compare-versions',       'FormulationController::compareVersions');
     $routes->get('formulations/compare-formulations',   'FormulationController::compareFormulations');
     $routes->post('formulations/(:num)/mark-used',      'FormulationController::markUsed/$1');
+    $routes->post('formulations/(:num)/versions/(:num)/deactivate', 'FormulationController::deactivateVersion/$1/$2');
 
     // ============================================================
     // Master: Chemical Categories

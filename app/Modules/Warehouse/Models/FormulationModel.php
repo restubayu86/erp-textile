@@ -290,11 +290,35 @@ class FormulationModel extends Model
 
         $this->saveItems($versionId, $items);
 
-        $this->db->table('formulations')->where('id', $formulationId)->update([
-            'current_version_id' => $versionId,
-        ]);
+        // Sinkronkan pointer versi utama sesuai prioritas (Active terbaru,
+        // fallback ke versi terbaru) - bukan selalu menunjuk versi baru ini,
+        // supaya versi Draft yang baru dibuat tidak menggantikan versi
+        // Active yang masih berlaku.
+        $this->refreshCurrentVersionPointer($formulationId);
 
         return $versionId;
+    }
+
+    /**
+     * Sinkronkan ulang f.current_version_id agar selalu konsisten dengan
+     * aturan prioritas: versi Active dengan version_no terbesar; kalau
+     * tidak ada versi Active sama sekali, fallback ke version_no terbesar
+     * apa pun statusnya. Dipanggil setiap kali status versi berubah supaya
+     * pointer ini tidak basi (lihat juga FormulationController::datatables
+     * yang menghitung ulang versi representatif secara dinamis untuk daftar).
+     */
+    private function refreshCurrentVersionPointer(int $formulationId): void
+    {
+        $row = $this->db->table('formulation_versions')
+            ->select('id')
+            ->where('formulation_id', $formulationId)
+            ->orderBy("status = 'Active'", 'DESC', false)
+            ->orderBy('version_no', 'DESC')
+            ->get(1)->getRowArray();
+
+        $this->db->table('formulations')
+            ->where('id', $formulationId)
+            ->update(['current_version_id' => $row['id'] ?? null]);
     }
 
     public function activateVersion(int $formulationId, int $versionId): array
@@ -311,7 +335,7 @@ class FormulationModel extends Model
         // Versi aktif boleh lebih dari 1 - tidak ada auto archive
 
         $this->db->table('formulation_versions')->where('id', $versionId)->update(['status' => 'Active']);
-        $this->db->table('formulations')->where('id', $formulationId)->update(['current_version_id' => $versionId]);
+        $this->refreshCurrentVersionPointer($formulationId);
 
         $this->db->transComplete();
 
@@ -320,6 +344,39 @@ class FormulationModel extends Model
         }
 
         return ['status' => 'success', 'message' => "Versi #{$version['version_no']} berhasil diaktifkan"];
+    }
+
+    public function toggleVersionActive(int $formulationId, int $versionId, bool $active): array
+    {
+        $version = $this->db->table('formulation_versions')
+            ->where('id', $versionId)
+            ->where('formulation_id', $formulationId)
+            ->get()->getRowArray();
+
+        if (!$version) return ['status' => 'error', 'message' => 'Versi tidak ditemukan'];
+
+        $newStatus = $active ? 'Active' : 'Archived';
+
+        $this->db->transStart();
+
+        $this->db->table('formulation_versions')->where('id', $versionId)->update(['status' => $newStatus]);
+
+        // Selalu sinkronkan ulang pointer, baik saat diaktifkan maupun
+        // dinonaktifkan, supaya current_version_id tidak pernah menunjuk
+        // ke versi yang sudah Archived selama masih ada versi Active lain.
+        $this->refreshCurrentVersionPointer($formulationId);
+
+        $this->db->transComplete();
+
+        if ($this->db->transStatus() === false) {
+            return ['status' => 'error', 'message' => 'Gagal mengubah status versi'];
+        }
+
+        $message = $active
+            ? "Versi #{$version['version_no']} diaktifkan"
+            : "Versi #{$version['version_no']} dinonaktifkan";
+
+        return ['status' => 'success', 'message' => $message];
     }
 
     public function getData(int $id): array
@@ -370,18 +427,6 @@ class FormulationModel extends Model
         return $versions;
     }
 
-    public function getItems(int $formulationVersionId): array
-    {
-        return $this->db->table('formulation_items fi')
-            ->select('fi.*, c.chemical_code, c.chemical_name, cv.variant_name, cv.packaging')
-            ->join('chemicals c', 'c.id = fi.chemical_id', 'left')
-            ->join('chemical_variants cv', 'cv.id = fi.variant_id', 'left')
-            ->where('fi.formulation_version_id', $formulationVersionId)
-            ->orderBy('fi.sort_order', 'ASC')
-            ->orderBy('fi.id', 'ASC')
-            ->get()->getResultArray();
-    }
-
     public function saveItems(int $formulationVersionId, array $items): void
     {
         if (empty($items)) return;
@@ -390,6 +435,9 @@ class FormulationModel extends Model
         foreach ($items as $i => $item) {
             $type = ($item['composition_type'] ?? 'chemical') === 'softener_water' ? 'softener_water' : 'chemical';
 
+            // Debug: log untuk memastikan unit ada
+            log_message('debug', 'Saving item - unit: ' . ($item['unit'] ?? 'null'));
+
             $rows[] = [
                 'formulation_version_id' => $formulationVersionId,
                 'composition_type'       => $type,
@@ -397,7 +445,7 @@ class FormulationModel extends Model
                 'variant_id'             => !empty($item['variant_id']) ? (int) $item['variant_id'] : null,
                 'custom_label'           => $type === 'softener_water' ? trim($item['custom_label'] ?? '') : null,
                 'percentage'             => is_numeric($item['percentage'] ?? '') ? $item['percentage'] : 0,
-                'unit'                   => $item['unit'] ?? null, // Tambahkan unit
+                'unit'                   => $item['unit'] ?? null, // Pastikan ini ada
                 'notes'                  => trim($item['notes'] ?? '') ?: null,
                 'sort_order'             => $i,
                 'created_at'             => date('Y-m-d H:i:s'),
@@ -406,8 +454,27 @@ class FormulationModel extends Model
         }
 
         if (!empty($rows)) {
+            // Debug: log rows yang akan diinsert
+            log_message('debug', 'Inserting rows: ' . json_encode($rows));
             $this->db->table('formulation_items')->insertBatch($rows);
         }
+    }
+
+    public function getItems(int $formulationVersionId): array
+    {
+        $items = $this->db->table('formulation_items fi')
+            ->select('fi.*, c.chemical_code, c.chemical_name, cv.variant_name, cv.packaging')
+            ->join('chemicals c', 'c.id = fi.chemical_id', 'left')
+            ->join('chemical_variants cv', 'cv.id = fi.variant_id', 'left')
+            ->where('fi.formulation_version_id', $formulationVersionId)
+            ->orderBy('fi.sort_order', 'ASC')
+            ->orderBy('fi.id', 'ASC')
+            ->get()->getResultArray();
+
+        // Debug: log items yang diambil
+        log_message('debug', 'Retrieved items: ' . json_encode($items));
+
+        return $items;
     }
 
     public function deleteData(int $id, int $userId): array
