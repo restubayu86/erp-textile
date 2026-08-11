@@ -11,7 +11,7 @@
  Target Server Version : 100432 (10.4.32-MariaDB)
  File Encoding         : 65001
 
- Date: 05/08/2026 17:01:50
+ Date: 06/08/2026 17:16:31
 */
 
 SET NAMES utf8mb4;
@@ -63,7 +63,7 @@ CREATE TABLE `auth_identities`  (
 -- ----------------------------
 -- Records of auth_identities
 -- ----------------------------
-INSERT INTO `auth_identities` VALUES (1, 1, 'email_password', NULL, 'admin@erp-textile.local', '$2y$12$3Td6Ec/unlo443/o1xGsceLJgHKZMCQoOct0kowDANV83/SGrijXO', NULL, NULL, 0, '2026-08-05 07:31:53', '2026-06-08 06:04:01', '2026-08-05 07:31:53');
+INSERT INTO `auth_identities` VALUES (1, 1, 'email_password', NULL, 'admin@erp-textile.local', '$2y$12$3Td6Ec/unlo443/o1xGsceLJgHKZMCQoOct0kowDANV83/SGrijXO', NULL, NULL, 0, '2026-08-06 07:28:51', '2026-06-08 06:04:01', '2026-08-06 07:28:51');
 INSERT INTO `auth_identities` VALUES (2, 2, 'email_password', NULL, 'mbcregency.3a@gmail.com', '$2y$12$0cDSVrs6.10gdjFf1TVIUOMAc/g2vRG0cPB.Lv27Do/yCcQXIlPmG', NULL, NULL, 0, '2026-07-08 07:21:57', '2026-06-16 09:09:51', '2026-07-08 07:21:57');
 
 -- ----------------------------
@@ -82,7 +82,7 @@ CREATE TABLE `auth_logins`  (
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `id_type_identifier`(`id_type` ASC, `identifier` ASC) USING BTREE,
   INDEX `user_id`(`user_id` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 33 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 34 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of auth_logins
@@ -119,6 +119,7 @@ INSERT INTO `auth_logins` VALUES (29, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win6
 INSERT INTO `auth_logins` VALUES (30, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36', 'username', 'superadmin', 1, '2026-08-04 04:12:27', 1);
 INSERT INTO `auth_logins` VALUES (31, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36', 'username', 'superadmin', 1, '2026-08-05 06:48:12', 1);
 INSERT INTO `auth_logins` VALUES (32, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36', 'username', 'superadmin', 1, '2026-08-05 07:31:53', 1);
+INSERT INTO `auth_logins` VALUES (33, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36', 'username', 'superadmin', 1, '2026-08-06 07:28:51', 1);
 
 -- ----------------------------
 -- Table structure for auth_permissions_users
@@ -626,7 +627,7 @@ CREATE TABLE `formulation_items`  (
   CONSTRAINT `formulation_items_chemical_id_foreign` FOREIGN KEY (`chemical_id`) REFERENCES `chemicals` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT `formulation_items_formulation_version_id_foreign` FOREIGN KEY (`formulation_version_id`) REFERENCES `formulation_versions` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT `formulation_items_variant_id_foreign` FOREIGN KEY (`variant_id`) REFERENCES `chemical_variants` (`id`) ON DELETE SET NULL ON UPDATE CASCADE
-) ENGINE = InnoDB AUTO_INCREMENT = 7 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 14 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of formulation_items
@@ -637,6 +638,13 @@ INSERT INTO `formulation_items` VALUES (3, 2, NULL, 'softener_water', NULL, 'Sof
 INSERT INTO `formulation_items` VALUES (4, 2, 29, 'chemical', NULL, NULL, 3.000, NULL, NULL, 1, '2026-08-05 09:59:45', '2026-08-05 09:59:45');
 INSERT INTO `formulation_items` VALUES (5, 3, NULL, 'softener_water', NULL, 'Softener Water', 97.000, NULL, NULL, 0, '2026-08-05 10:00:34', '2026-08-05 10:00:34');
 INSERT INTO `formulation_items` VALUES (6, 3, 29, 'chemical', NULL, NULL, 3.000, NULL, NULL, 1, '2026-08-05 10:00:34', '2026-08-05 10:00:34');
+INSERT INTO `formulation_items` VALUES (7, 4, NULL, 'softener_water', NULL, 'Softener Water', 98.000, NULL, NULL, 0, '2026-08-06 08:03:54', '2026-08-06 08:03:54');
+INSERT INTO `formulation_items` VALUES (8, 4, 1, 'chemical', NULL, NULL, 2.000, NULL, NULL, 1, '2026-08-06 08:03:54', '2026-08-06 08:03:54');
+INSERT INTO `formulation_items` VALUES (9, 5, NULL, 'softener_water', NULL, 'Softener Water', 97.000, NULL, NULL, 0, '2026-08-06 08:05:59', '2026-08-06 08:05:59');
+INSERT INTO `formulation_items` VALUES (10, 5, 29, 'chemical', NULL, NULL, 3.000, NULL, NULL, 1, '2026-08-06 08:05:59', '2026-08-06 08:05:59');
+INSERT INTO `formulation_items` VALUES (11, 6, NULL, 'softener_water', NULL, 'Softener Water', 95.000, NULL, NULL, 0, '2026-08-06 08:18:41', '2026-08-06 08:18:41');
+INSERT INTO `formulation_items` VALUES (12, 6, 29, 'chemical', NULL, NULL, 3.000, NULL, NULL, 1, '2026-08-06 08:18:41', '2026-08-06 08:18:41');
+INSERT INTO `formulation_items` VALUES (13, 6, 73, 'chemical', NULL, NULL, 2.000, NULL, NULL, 2, '2026-08-06 08:18:41', '2026-08-06 08:18:41');
 
 -- ----------------------------
 -- Table structure for formulation_versions
@@ -647,7 +655,7 @@ CREATE TABLE `formulation_versions`  (
   `formulation_id` int UNSIGNED NOT NULL,
   `version_no` int UNSIGNED NOT NULL COMMENT 'Nomor urut versi per formulasi: 1, 2, 3, dst',
   `status` enum('Active','Draft','Archived') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'Draft',
-  `output_percentage` decimal(8, 3) NOT NULL DEFAULT 100.000 COMMENT 'Hasil/batch dalam %, tidak dibatasi harus 100 (boleh > 100%)',
+  `output_percentage` decimal(8, 3) NULL DEFAULT 100.000 COMMENT 'Hasil/batch dalam %, tidak dibatasi harus 100 (boleh > 100%)',
   `notes` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL COMMENT 'Catatan perubahan pada versi ini (changelog)',
   `created_by` int UNSIGNED NULL DEFAULT NULL,
   `created_at` datetime NULL DEFAULT NULL,
@@ -659,14 +667,17 @@ CREATE TABLE `formulation_versions`  (
   INDEX `status`(`status` ASC) USING BTREE,
   CONSTRAINT `formulation_versions_created_by_foreign` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
   CONSTRAINT `formulation_versions_formulation_id_foreign` FOREIGN KEY (`formulation_id`) REFERENCES `formulations` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE = InnoDB AUTO_INCREMENT = 4 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 7 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of formulation_versions
 -- ----------------------------
 INSERT INTO `formulation_versions` VALUES (1, 1, 1, 'Active', 100.000, NULL, 1, '2026-08-05 09:57:19', '2026-08-05 09:57:19');
 INSERT INTO `formulation_versions` VALUES (2, 2, 1, 'Archived', 100.000, NULL, 1, '2026-08-05 09:59:45', '2026-08-05 09:59:45');
-INSERT INTO `formulation_versions` VALUES (3, 2, 2, 'Active', 100.000, NULL, 1, '2026-08-05 10:00:34', '2026-08-05 10:00:34');
+INSERT INTO `formulation_versions` VALUES (3, 2, 2, 'Archived', 100.000, NULL, 1, '2026-08-05 10:00:34', '2026-08-05 10:00:34');
+INSERT INTO `formulation_versions` VALUES (4, 3, 1, 'Active', 100.000, NULL, 1, '2026-08-06 08:03:54', '2026-08-06 08:03:54');
+INSERT INTO `formulation_versions` VALUES (5, 2, 3, 'Archived', 100.000, NULL, 1, '2026-08-06 08:05:59', '2026-08-06 08:05:59');
+INSERT INTO `formulation_versions` VALUES (6, 2, 4, 'Active', 100.000, NULL, 1, '2026-08-06 08:18:41', '2026-08-06 08:18:41');
 
 -- ----------------------------
 -- Table structure for formulations
@@ -682,6 +693,7 @@ CREATE TABLE `formulations`  (
   `process_sub_type_label` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL COMMENT 'Label custom untuk sub proses jika diperlukan',
   `current_version_id` int UNSIGNED NULL DEFAULT NULL COMMENT 'ID versi terakhir/aktif yang sedang dipakai',
   `description` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL,
+  `last_used_at` datetime NULL DEFAULT NULL COMMENT 'Tanggal terakhir formulasi digunakan dalam produksi',
   `created_by` int UNSIGNED NULL DEFAULT NULL,
   `updated_by` int UNSIGNED NULL DEFAULT NULL,
   `deleted_by` int UNSIGNED NULL DEFAULT NULL,
@@ -703,13 +715,14 @@ CREATE TABLE `formulations`  (
   CONSTRAINT `formulations_deleted_by_foreign` FOREIGN KEY (`deleted_by`) REFERENCES `users` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
   CONSTRAINT `formulations_group_id_foreign` FOREIGN KEY (`group_id`) REFERENCES `formulation_groups` (`id`) ON DELETE CASCADE ON UPDATE SET NULL,
   CONSTRAINT `formulations_updated_by_foreign` FOREIGN KEY (`updated_by`) REFERENCES `users` (`id`) ON DELETE SET NULL ON UPDATE CASCADE
-) ENGINE = InnoDB AUTO_INCREMENT = 3 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 4 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of formulations
 -- ----------------------------
-INSERT INTO `formulations` VALUES (1, 'F08260001', 'D-ARCO', NULL, 'Finishing', 'Dipping', NULL, 1, NULL, 1, NULL, NULL, '2026-08-05 09:57:19', '2026-08-05 09:57:19', NULL);
-INSERT INTO `formulations` VALUES (2, 'F08260002', 'D-ARCO', NULL, 'Finishing', 'Dipping', NULL, 3, NULL, 1, 1, NULL, '2026-08-05 09:59:45', '2026-08-05 10:00:34', NULL);
+INSERT INTO `formulations` VALUES (1, 'F08260001', 'D-ARCO', NULL, 'Finishing', 'Dipping', NULL, 1, NULL, NULL, 1, NULL, NULL, '2026-08-05 09:57:19', '2026-08-05 09:57:19', NULL);
+INSERT INTO `formulations` VALUES (2, 'F08260002', 'D-ARCO', NULL, 'Finishing', 'Dipping', NULL, 6, NULL, NULL, 1, 1, NULL, '2026-08-05 09:59:45', '2026-08-06 08:18:41', NULL);
+INSERT INTO `formulations` VALUES (3, 'F08260003', 'D-ARCO TA', NULL, 'Finishing', 'Dipping', NULL, 4, NULL, NULL, 1, NULL, NULL, '2026-08-06 08:03:54', '2026-08-06 08:03:54', NULL);
 
 -- ----------------------------
 -- Table structure for machines
@@ -757,7 +770,7 @@ CREATE TABLE `migrations`  (
   `time` int NOT NULL,
   `batch` int UNSIGNED NOT NULL,
   PRIMARY KEY (`id`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 39 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 40 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of migrations
@@ -800,6 +813,7 @@ INSERT INTO `migrations` VALUES (35, '2026-08-05-000009', 'App\\Modules\\Warehou
 INSERT INTO `migrations` VALUES (36, '2026-08-05-000010', 'App\\Modules\\Warehouse\\Database\\Migrations\\CreateFormulationVersionsTable', 'default', 'App\\Modules\\Warehouse', 1785920362, 14);
 INSERT INTO `migrations` VALUES (37, '2026-08-05-000011', 'App\\Modules\\Warehouse\\Database\\Migrations\\CreateFormulationItemsTable', 'default', 'App\\Modules\\Warehouse', 1785920362, 14);
 INSERT INTO `migrations` VALUES (38, '2026-08-05-000012', 'App\\Modules\\Warehouse\\Database\\Migrations\\AddForeignKeyCurrentVersion', 'default', 'App\\Modules\\Warehouse', 1785920362, 14);
+INSERT INTO `migrations` VALUES (39, '2026-08-06-000002', 'App\\Modules\\Warehouse\\Database\\Migrations\\AddLastUsedToFormulations', 'default', 'App\\Modules\\Warehouse', 1786004775, 15);
 
 -- ----------------------------
 -- Table structure for periods
@@ -920,7 +934,7 @@ CREATE TABLE `users`  (
 -- ----------------------------
 -- Records of users
 -- ----------------------------
-INSERT INTO `users` VALUES (1, 'superadmin', 3, NULL, NULL, 1, '2026-08-05 10:01:10', '2026-06-08 06:04:01', '2026-06-16 06:51:56', NULL);
+INSERT INTO `users` VALUES (1, 'superadmin', 3, NULL, NULL, 1, '2026-08-06 10:15:11', '2026-06-08 06:04:01', '2026-06-16 06:51:56', NULL);
 INSERT INTO `users` VALUES (2, 'Alex', 9, NULL, NULL, 1, '2026-07-08 07:21:58', '2026-06-16 09:09:51', '2026-06-18 09:01:38', NULL);
 
 -- ----------------------------
