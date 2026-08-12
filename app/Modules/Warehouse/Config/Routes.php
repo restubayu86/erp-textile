@@ -9,7 +9,11 @@ $routes->group('warehouse', [
     // Stocks
     $routes->get('stocks/view',              'StockController::index');
     $routes->get('stocks/stock-card',        'StockController::stockCard');
+    $routes->get('stocks/stock-card/data',   'StockController::stockCardData');
     $routes->get('stocks/position',          'StockController::position');
+    $routes->get('stocks/position/grid',     'StockController::positionGrid');
+    $routes->get('stocks/position/combined', 'StockController::positionCombinedGrid');
+    $routes->get('stocks/position/breakdown', 'StockController::positionBreakdown');
     $routes->get('stocks/receipt',           'StockController::receipt');
     $routes->post('stocks/receipt/store',    'StockController::storeReceipt');
     $routes->get('stocks/issue',             'StockController::issue');

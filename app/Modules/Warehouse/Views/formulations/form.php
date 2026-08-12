@@ -831,8 +831,8 @@
         </td>
         <td>
             <select class="form-select form-select-sm item-unit item-unit-select">
-                <option value="owf">owf</option>
                 <option value="percent">%</option>
+                <option value="owf">owf</option>
                 <option value="gpl">gpl</option>
             </select>
         </td>
@@ -1285,13 +1285,14 @@
                     if (item.unit) {
                         $unitSelect.val(item.unit).trigger('change');
                     } else {
-                        $unitSelect.val(type === 'chemical' ? 'owf' : 'gpl').trigger('change');
+                        // Data lama sebelum fitur satuan ada — default ke % (satuan dasar dosis kimia)
+                        $unitSelect.val('percent').trigger('change');
                     }
                 }
             } else {
-                // default untuk baris baru
+                // default untuk baris baru — % (satuan dasar dosis kimia)
                 if ($unitSelect.length) {
-                    $unitSelect.val('owf').trigger('change');
+                    $unitSelect.val('percent').trigger('change');
                 }
             }
 

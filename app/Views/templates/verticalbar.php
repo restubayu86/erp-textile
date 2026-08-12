@@ -407,7 +407,8 @@ function navActive(string $seg1, string $seg2 = '', string $seg3 = ''): string
                                         <li class="nav-item">
                                             <a class="nav-link dropdown-indicator"
                                                 href="#nv-wh-stock-laporan"
-                                                data-bs-toggle="collapse" aria-expanded="false"
+                                                data-bs-toggle="collapse"
+                                                aria-expanded="<?= ($segment1 === 'warehouse' && $segment2 === 'stocks' && in_array($segment3, ['position', 'stock-card', 'view'])) ? 'true' : 'false' ?>"
                                                 aria-controls="nv-wh-stock-laporan">
                                                 <div class="d-flex align-items-center">
                                                     <div class="dropdown-indicator-icon-wrapper">
@@ -417,23 +418,23 @@ function navActive(string $seg1, string $seg2 = '', string $seg3 = ''): string
                                                 </div>
                                             </a>
                                             <div class="parent-wrapper">
-                                                <ul class="nav collapse parent" id="nv-wh-stock-laporan">
-                                                    <li class="nav-item">
-                                                        <a class="nav-link disabled" href="#" aria-disabled="true" tabindex="-1">
-                                                            <div class="d-flex align-items-center">
-                                                                <span class="nav-link-text">Kartu Stok</span>
-                                                                <span class="badge ms-2 badge-phoenix badge-phoenix-warning nav-link-badge">Segera</span>
-                                                            </div>
-                                                        </a>
-                                                    </li>
-                                                    <li class="nav-item">
-                                                        <a class="nav-link disabled" href="#" aria-disabled="true" tabindex="-1">
-                                                            <div class="d-flex align-items-center">
-                                                                <span class="nav-link-text">Posisi Stok</span>
-                                                                <span class="badge ms-2 badge-phoenix badge-phoenix-warning nav-link-badge">Segera</span>
-                                                            </div>
-                                                        </a>
-                                                    </li>
+                                                <ul class="nav collapse parent <?= ($segment1 === 'warehouse' && $segment2 === 'stocks' && in_array($segment3, ['position', 'stock-card', 'view'])) ? 'show' : '' ?>" id="nv-wh-stock-laporan">
+                                                    <?php if (canDo('warehouse.stocks.view')): ?>
+                                                        <li class="nav-item">
+                                                            <a class="nav-link<?= navActive('warehouse', 'stocks', 'stock-card') ?>" href="<?= base_url('warehouse/stocks/stock-card') ?>">
+                                                                <div class="d-flex align-items-center">
+                                                                    <span class="nav-link-text">Kartu Stok</span>
+                                                                </div>
+                                                            </a>
+                                                        </li>
+                                                        <li class="nav-item">
+                                                            <a class="nav-link<?= navActive('warehouse', 'stocks', 'position') ?>" href="<?= base_url('warehouse/stocks/position') ?>">
+                                                                <div class="d-flex align-items-center">
+                                                                    <span class="nav-link-text">Posisi Stok</span>
+                                                                </div>
+                                                            </a>
+                                                        </li>
+                                                    <?php endif; ?>
                                                 </ul>
                                             </div>
                                         </li>

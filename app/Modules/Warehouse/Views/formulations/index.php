@@ -771,6 +771,15 @@
             return this.formatNumber(num);
         },
 
+        unitLabel(unit) {
+            const labels = {
+                owf: 'owf %',
+                percent: '%',
+                gpl: 'gpl'
+            };
+            return labels[unit] ?? unit ?? '';
+        },
+
         // ============================================================
         // INIT
         // ============================================================
@@ -1286,7 +1295,7 @@
                                             <td><span class="badge badge-phoenix badge-phoenix-${item.composition_type === 'chemical' ? 'primary' : 'info'} fs-10">${item.composition_type === 'chemical' ? 'Chemical' : 'Softener Water'}</span></td>
                                             <td>${item.composition_type === 'chemical' ? this.e(item.chemical_name) + (item.chemical_code ? ` <small class="text-muted">(${this.e(item.chemical_code)})</small>` : '') : this.e(item.custom_label)}</td>
                                             <td style="text-align: right;"><strong>${this.formatValue(item.percentage)}</strong></td>
-                                            <td>${item.unit ? this.e(item.unit) : '<span class="text-muted fst-italic">—</span>'}</td>
+                                            <td>${item.unit ? this.e(this.unitLabel(item.unit)) : '<span class="text-muted fst-italic">—</span>'}</td>
                                             <td>${item.notes ? this.e(item.notes) : '<span class="text-muted fst-italic">—</span>'}</td>
                                         </tr>
                                     `).join('')}
@@ -1335,24 +1344,38 @@
                     <div class="text-muted small mt-3">Dibuat: ${data.version.created_at ? new Date(data.version.created_at).toLocaleString('id-ID') : '-'} · ${data.version.created_by_name ? `Oleh: ${this.e(data.version.created_by_name)}` : ''}</div>
                 `;
 
-                // Print handler
+                // Print handler - F4 Landscape, 1 kartu + garis panduan potong
                 const logoPath = '<?= base_url('assets/img/app/logo-regency-footer.png') ?>';
                 document.getElementById('btn-print-preview').onclick = () => {
-                    const printWindow = window.open('', '_blank', 'width=400,height=650');
+                    const printWindow = window.open('', '_blank', 'width=1100,height=800');
                     const printItems = data.items || [];
                     const totalValue = printItems.reduce((sum, item) => sum + parseFloat(item.percentage || 0), 0);
 
-                    const itemRows = printItems.map((item, i) => {
-                        const label = item.composition_type === 'chemical' ? (item.chemical_name || '-') : (item.custom_label || '-');
-                        const unit = item.unit ? this.e(item.unit) : '';
+                    const renderItems = (items) => {
+                        return items.map((item, idx) => {
+                            const label = item.composition_type === 'chemical' ? (item.chemical_name || '-') : (item.custom_label || '-');
+                            const unit = item.unit ? this.e(this.unitLabel(item.unit)) : '';
+                            const num = idx + 1;
+                            return `
+                                <tr>
+                                    <td class="col-no">${num}</td>
+                                    <td class="col-name">${this.e(label)}</td>
+                                    <td class="col-pct">${this.formatValue(item.percentage)}</td>
+                                    <td class="col-unit">${unit ? `<span class="unit"> ${unit}</span>` : ''}</td>
+                                </tr>
+                            `;
+                        }).join('');
+                    };
+
+                    const renderTotal = (items) => {
+                        const total = items.reduce((sum, item) => sum + parseFloat(item.percentage || 0), 0);
                         return `
-                            <tr>
-                                <td class="col-no">${i + 1}</td>
-                                <td class="col-name">${this.e(label)}</td>
-                                <td class="col-pct">${this.formatValue(item.percentage)}${unit ? `<span class="unit"> ${unit}</span>` : ''}</td>
+                            <tr class="total-row">
+                                <td colspan="2" style="text-align:right;font-weight:bold;">TOTAL</td>
+                                <td style="text-align:right;font-weight:bold;">${this.formatValue(total)}</td>
                             </tr>
                         `;
-                    }).join('');
+                    };
 
                     printWindow.document.write(`
                         <!DOCTYPE html>
@@ -1360,65 +1383,196 @@
                         <head>
                             <title>Dokumen Formulasi</title>
                             <style>
-                                @page { size: 7.75cm 19cm; margin: 0.5cm; }
-                                body { margin: 0; padding: 0; background: white; font-family: 'Courier New', Courier, monospace; font-size: 6.3pt; width: 6.75cm; height: 18cm; }
-                                .card { border: 1px solid #000; width: 100%; height: 100%; padding: 2mm; box-sizing: border-box; overflow: hidden; display: flex; flex-direction: column; }
-                                .dashed { border-top: 1px dashed #000; margin: 3px 0; }
-                                .center { text-align: center; }
-                                .header-logo { display: block; margin: 0 auto 2px; max-height: 22px; max-width: 70%; }
-                                .company-name { font-weight: bold; font-size: 8pt; letter-spacing: 0.03em; text-transform: uppercase; }
-                                .company-sub { font-size: 6.8pt; font-weight: bold; letter-spacing: 0.08em; text-transform: uppercase; }
-                                .formulation-name { font-weight: bold; font-size: 7pt; text-transform: uppercase; margin-top: 3px; word-break: break-word; }
-                                .meta-row { display: flex; justify-content: space-between; font-size: 6pt; }
-                                .meta-row span:last-child { text-align: right; }
-                                table.items { width: 100%; border-collapse: collapse; margin-top: 2px; }
-                                table.items th { text-align: left; font-size: 5.6pt; text-transform: uppercase; border-bottom: 1px dashed #000; padding: 1px 0; }
-                                table.items td { padding: 1px 0; vertical-align: top; font-size: 6.2pt; }
-                                .col-no { width: 10%; }
-                                .col-name { width: 62%; word-break: break-word; }
-                                .col-pct { width: 28%; text-align: right; }
-                                .unit { font-size: 5.4pt; }
-                                .total-row { display: flex; justify-content: space-between; font-weight: bold; font-size: 6.8pt; margin-top: 3px; }
-                                .footer { margin-top: 4px; font-size: 5.2pt; text-align: center; }
-                                .status-tag { display: inline-block; border: 1px solid #000; padding: 0 3px; font-size: 5.6pt; font-weight: bold; }
-                                .barcode-row { text-align: center; margin-top: 3px; padding-top: 3px; border-top: 1px dashed #000; }
-                                .barcode-row img { max-width: 100%; max-height: 30px; }
-                                .barcode-text { font-size: 5pt; font-family: 'Courier New', monospace; letter-spacing: 0.1em; margin-top: 2px; }
+                                @page {
+                                    size: F4 landscape;
+                                    margin: 0.5cm;
+                                }
+                                body {
+                                    margin: 0;
+                                    padding: 0;
+                                    background: white;
+                                    font-family: 'Courier New', Courier, monospace;
+                                    font-size: 12pt;
+                                    width: 100%;
+                                    height: 100%;
+                                }
+                                .container {
+                                    display: flex;
+                                    align-items: stretch;
+                                    width: 100%;
+                                    min-height: 100vh;
+                                }
+                                .card {
+                                    border: 1px solid #000;
+                                    width: 95mm;
+                                    max-width: 95mm;
+                                    flex: 0 0 auto;
+                                    padding: 2mm;
+                                    box-sizing: border-box;
+                                    display: flex;
+                                    flex-direction: column;
+                                    page-break-inside: avoid;
+                                }
+                                .cut-guide {
+                                    flex: 0 0 auto;
+                                    width: 6mm;
+                                    margin: 0 4mm;
+                                    border-left: 1px dashed #000;
+                                }
+                                .dashed {
+                                    border-top: 1px dashed #000;
+                                    margin: 3px 0;
+                                }
+                                .center {
+                                    text-align: center;
+                                }
+                                .header-logo {
+                                    display: block;
+                                    margin: 0 auto 2px;
+                                    max-height: 20px;
+                                    max-width: 80%;
+                                }
+                                .company-name {
+                                    font-weight: bold;
+                                    font-size: 12pt;
+                                    letter-spacing: 0.03em;
+                                    text-transform: uppercase;
+                                }
+                                .company-sub {
+                                    font-size: 10pt;
+                                    font-weight: bold;
+                                    letter-spacing: 0.08em;
+                                    text-transform: uppercase;
+                                }
+                                .formulation-name {
+                                    font-weight: bold;
+                                    font-size: 10pt;
+                                    text-transform: uppercase;
+                                    margin-top: 3px;
+                                    word-break: break-word;
+                                }
+                                .meta-row {
+                                    display: flex;
+                                    justify-content: space-between;
+                                    font-size: 10pt;
+                                }
+                                .meta-row span:last-child {
+                                    text-align: right;
+                                }
+                                table.items {
+                                    width: 100%;
+                                    border-collapse: collapse;
+                                    margin-top: 2px;
+                                    font-size: 9pt;
+                                }
+                                table.items th {
+                                    text-align: left;
+                                    font-size: 9pt;
+                                    text-transform: uppercase;
+                                    border-bottom: 1px dashed #000;
+                                    padding: 1px 0;
+                                }
+                                table.items td {
+                                    padding: 1px 0;
+                                    vertical-align: top;
+                                    font-size: 9pt;
+                                }
+                                .col-no {
+                                    width: 12%;
+                                }
+                                .col-name {
+                                    width: 55%;
+                                    word-break: break-word;
+                                }
+                                .col-pct {
+                                    width: 15%;
+                                    text-align: center;
+                                }
+                                .col-unit {
+                                    width: 10%;
+                                    text-align: center;
+                                }
+                                .unit {
+                                    font-size: 9pt;
+                                }
+                                .total-row {
+                                    font-weight: bold;
+                                    font-size: 9pt;
+                                    border-top: 1px dashed #000;
+                                }
+                                .footer {
+                                    margin-top: 4px;
+                                    font-size: 8pt;
+                                    text-align: center;
+                                }
+                                .status-tag {
+                                    display: inline-block;
+                                    border: 1px solid #000;
+                                    padding: 0 3px;
+                                    font-size: 5.2pt;
+                                    font-weight: bold;
+                                }
+                                .barcode-row {
+                                    text-align: center;
+                                    margin-top: 3px;
+                                    padding-top: 3px;
+                                    border-top: 1px dashed #000;
+                                }
+                                .barcode-row img {
+                                    max-width: 100%;
+                                    max-height: 25px;
+                                }
+                                .barcode-text {
+                                    font-size: 8pt;
+                                    font-family: 'Courier New', monospace;
+                                    letter-spacing: 0.1em;
+                                    margin-top: 2px;
+                                }
+
+                                @media print {
+                                    body { margin: 0; padding: 0; }
+                                    .card { border: 1px solid #000; page-break-inside: avoid; }
+                                    .cut-guide { border-left: 1px dashed #000; }
+                                }
                             </style>
                         </head>
                         <body>
-                            <div class="card">
-                                <div class="center">
-                                    <img class="header-logo" src="${logoPath}" alt="Logo" onerror="this.style.display='none'">
-                                    <div class="company-name">PT. SINAR CONTINENTAL</div>
-                                    <div class="company-sub">DOKUMEN FORMULASI</div>
+                            <div class="container">
+                                <div class="card">
+                                    <div class="center">
+                                        <img class="header-logo" src="${logoPath}" alt="Logo" onerror="this.style.display='none'">
+                                        <div class="company-name">PT. SINAR CONTINENTAL</div>
+                                        <div class="company-sub">DOKUMEN FORMULASI</div>
+                                    </div>
+                                    <div class="dashed"></div>
+                                    <div class="formulation-name">${this.e(data.formulation.formulation_name)}</div>
+                                    <div class="meta-row"><span>Kode: ${this.e(data.formulation.formulation_code)}</span><span>Versi #${data.version.version_no}</span></div>
+                                    <div class="meta-row">
+                                        <span>${this.e(data.formulation.process_type)}${data.formulation.process_sub_type ? '/' + this.e(data.formulation.process_sub_type) : ''}</span>
+                                        <span class="status-tag">${this.e(data.version.status)}</span>
+                                    </div>
+                                    ${data.formulation.group_name ? `<div class="meta-row"><span>Group: ${this.e(data.formulation.group_name)}</span><span></span></div>` : ''}
+                                    <div class="dashed"></div>
+                                    ${printItems.length > 0 ? `
+                                    <table class="items">
+                                        <thead><tr><th class="col-no">#</th><th class="col-name">Bahan</th><th class="col-pct">Nilai</th><th class="col-unit">Unit</th></tr></thead>
+                                        <tbody>
+                                            ${renderItems(printItems)}
+                                            ${renderTotal(printItems)}
+                                        </tbody>
+                                    </table>
+                                    ` : '<div class="center" style="padding:8px 0;">Tidak ada komposisi</div>'}
+                                    <div class="barcode-row">
+                                        <img src="${this.generateBarcode(data.formulation.formulation_code)}" alt="Barcode" onerror="this.style.display='none'">
+                                        <div class="barcode-text">${this.e(data.formulation.formulation_code)}</div>
+                                    </div>
+                                    <div class="dashed"></div>
+                                    <div class="footer">
+                                        Dicetak: ${new Date().toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' })} ${new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}<br>
+                                        DIVISI 3A
+                                    </div>
                                 </div>
-                                <div class="dashed"></div>
-                                <div class="formulation-name">${this.e(data.formulation.formulation_name)}</div>
-                                <div class="meta-row"><span>Kode: ${this.e(data.formulation.formulation_code)}</span><span>Versi #${data.version.version_no}</span></div>
-                                <div class="meta-row">
-                                    <span>${this.e(data.formulation.process_type)}${data.formulation.process_sub_type ? '/' + this.e(data.formulation.process_sub_type) : ''}</span>
-                                    <span class="status-tag">${this.e(data.version.status)}</span>
-                                </div>
-                                ${data.formulation.group_name ? `<div class="meta-row"><span>Group: ${this.e(data.formulation.group_name)}</span><span></span></div>` : ''}
-                                <div class="dashed"></div>
-                                ${printItems.length > 0 ? `
-                                <table class="items">
-                                    <thead><tr><th class="col-no">#</th><th class="col-name">Bahan</th><th class="col-pct">Nilai</th></tr></thead>
-                                    <tbody>${itemRows}</tbody>
-                                </table>
-                                ` : '<div class="center">Tidak ada komposisi</div>'}
-                                <div class="dashed"></div>
-                                <div class="total-row"><span>TOTAL</span><span>${this.formatValue(totalValue)}</span></div>
-                                <div class="barcode-row">
-                                    <img src="${this.generateBarcode(data.formulation.formulation_code)}" alt="Barcode" onerror="this.style.display='none'">
-                                    <div class="barcode-text">${this.e(data.formulation.formulation_code)}</div>
-                                </div>
-                                <div class="dashed"></div>
-                                <div class="footer">
-                                    Dicetak: ${new Date().toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' })} ${new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}<br>
-                                    PT. Sinar Continental
-                                </div>
+                                <div class="cut-guide"></div>
                             </div>
                         </body>
                         </html>
@@ -1752,11 +1906,11 @@
                 });
             });
 
-            let tableHeader = '<tr><th style="width:22%;">Bahan Kimia</th><th style="width:8%;">Satuan</th>';
+            let tableHeader = '<tr><th style="width:30%;">Bahan Kimia</th><th style="width:8%;">Satuan</th>';
             results.forEach((r, idx) => {
                 const name = r.formulation?.formulation_name || 'Formulasi ' + (idx + 1);
                 const version = r.version?.version_no || '?';
-                tableHeader += `<th class="text-center" style="width:${70 / results.length}%;">
+                tableHeader += `<th class="text-center" style="width:${62 / results.length}%;">
                     <div class="d-flex flex-column"><span class="fw-bold">${this.e(name)}</span><small class="text-muted">Versi #${version}</small></div>
                 </th>`;
             });
@@ -1901,7 +2055,7 @@
             });
 
             // HEADER untuk Komposisi Bahan - DENGAN kolom Satuan
-            let compTheadCols = '<th style="width:18%;">Bahan Kimia</th><th style="width:8%;">Satuan</th>';
+            let compTheadCols = '<th style="width:30%;">Bahan Kimia</th><th style="width:8%;">Satuan</th>';
             results.forEach((r, idx) => {
                 const name = r.formulation?.formulation_name || 'Formulasi ' + (idx + 1);
                 const version = r.version?.version_no || '?';
