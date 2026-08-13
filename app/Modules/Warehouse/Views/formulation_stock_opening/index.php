@@ -324,6 +324,9 @@
             <button class="btn btn-subtle-secondary btn-sm" id="fso-btn-refresh" type="button">
                 <span class="fas fa-sync-alt me-1"></span>Refresh
             </button>
+            <button class="btn btn-subtle-info btn-sm d-none" id="fso-btn-pull-previous" type="button">
+                <span class="fas fa-cloud-download-alt me-1"></span>Tarik dari Periode Sebelumnya
+            </button>
             <button class="btn btn-subtle-secondary btn-sm d-none" id="fso-btn-reset-grid" type="button">
                 <span class="fas fa-undo me-1"></span>Batalkan Perubahan
             </button>
@@ -591,6 +594,49 @@
             document.getElementById('fso-btn-reset-filter')?.addEventListener('click', () => this.resetFilter());
             document.getElementById('fso-btn-save-grid')?.addEventListener('click', () => this.save());
             document.getElementById('fso-btn-reset-grid')?.addEventListener('click', () => this.reload());
+            document.getElementById('fso-btn-pull-previous')?.addEventListener('click', () => this.pullPrevious());
+        },
+
+        async pullPrevious() {
+            if (!this.currentPeriodId || !this.currentWarehouseId || this.currentWarehouseId === '__combined__') return;
+
+            const confirm = await Swal.fire({
+                title: 'Tarik dari Periode Sebelumnya?',
+                text: 'Kolom Nilai akan diisi otomatis dari saldo akhir periode sebelumnya (mengikuti versi resep yang tercatat saat itu). Data yang sudah kamu ketik di sini akan tertimpa. Kamu tetap harus klik Simpan setelah ini.',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'Ya, Tarik',
+                cancelButtonText: 'Batal',
+            });
+            if (!confirm.isConfirmed) return;
+
+            try {
+                const d = await this.get(this.BASE +
+                    `warehouse/stocks/formulation-opening/pull-previous?period_id=${this.currentPeriodId}&warehouse_id=${this.currentWarehouseId}`);
+                if (d.status !== 'success') {
+                    this.toast('error', d.message ?? 'Gagal menarik data periode sebelumnya');
+                    return;
+                }
+
+                let count = 0;
+                Object.entries(d.data).forEach(([formulationId, info]) => {
+                    const rowApi = this.dtEditable.row('#' + formulationId);
+                    if (!rowApi.length) return;
+                    const rowData = rowApi.data();
+                    rowData.quantity = info.quantity;
+                    rowData._touched = true;
+                    rowApi.invalidate();
+                    count++;
+                });
+
+                $('#fso-stock-table tbody tr').addClass('row-touched');
+                document.getElementById('fso-btn-save-grid').classList.remove('d-none');
+                document.getElementById('fso-btn-reset-grid').classList.remove('d-none');
+
+                this.toast('success', `${count} item ditarik dari periode "${d.period.name}". Jangan lupa klik Simpan.`);
+            } catch (e) {
+                this.toast('error', 'Gagal menarik data periode sebelumnya');
+            }
         },
 
         fmtDateOnly(d) {
@@ -738,6 +784,7 @@
             document.getElementById('fso-status-banner').classList.add('d-none');
             document.getElementById('fso-btn-save-grid').classList.add('d-none');
             document.getElementById('fso-btn-reset-grid').classList.add('d-none');
+            document.getElementById('fso-btn-pull-previous').classList.add('d-none');
             document.getElementById('fso-editable-wrapper').classList.add('d-none');
             document.getElementById('fso-combined-wrapper').classList.add('d-none');
             const empty = document.getElementById('fso-empty-wrapper');
@@ -805,6 +852,7 @@
                     </div>`;
                 document.getElementById('fso-btn-save-grid').classList.add('d-none');
                 document.getElementById('fso-btn-reset-grid').classList.add('d-none');
+                document.getElementById('fso-btn-pull-previous').classList.add('d-none');
                 return;
             }
 
@@ -816,6 +864,7 @@
                     </div>`;
                 document.getElementById('fso-btn-save-grid').classList.add('d-none');
                 document.getElementById('fso-btn-reset-grid').classList.add('d-none');
+                document.getElementById('fso-btn-pull-previous').classList.add('d-none');
                 return;
             }
 
@@ -835,6 +884,7 @@
             if (CAN_CREATE_FORMULATION_OPENING) {
                 document.getElementById('fso-btn-save-grid').classList.remove('d-none');
                 document.getElementById('fso-btn-reset-grid').classList.remove('d-none');
+                document.getElementById('fso-btn-pull-previous').classList.remove('d-none');
             }
         },
 

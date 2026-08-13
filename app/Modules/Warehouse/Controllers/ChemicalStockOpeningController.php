@@ -139,6 +139,23 @@ class ChemicalStockOpeningController extends BaseController
         return $this->response->setJSON(['status' => 'success', 'data' => $data]);
     }
 
+    /**
+     * Tarik saldo akhir periode sebelumnya untuk mengisi form Stok Awal — GET ?period_id=&warehouse_id=
+     * Hanya mengembalikan data; penyimpanan tetap lewat store() setelah user klik Simpan.
+     */
+    public function pullPrevious()
+    {
+        if (!$this->request->isAJAX()) return $this->jsonError('Method not allowed', 405);
+        if (!canDo('warehouse.stock_opening.create')) return $this->jsonError('Akses ditolak', 403);
+
+        $periodId    = (int) $this->request->getGet('period_id');
+        $warehouseId = (int) $this->request->getGet('warehouse_id');
+        if (!$periodId || !$warehouseId) return $this->jsonError('Periode dan gudang wajib dipilih', 422);
+
+        $result = $this->model->pullFromPreviousPeriod($periodId, $warehouseId);
+        return $this->jsonResponse($result, $result['status'] === 'success' ? 200 : 422);
+    }
+
     private function breadcrumbs(array $extra = []): array
     {
         $base = [

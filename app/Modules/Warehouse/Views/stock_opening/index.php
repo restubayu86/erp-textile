@@ -324,6 +324,9 @@
             <button class="btn btn-subtle-secondary btn-sm" id="so-btn-refresh" type="button">
                 <span class="fas fa-sync-alt me-1"></span>Refresh
             </button>
+            <button class="btn btn-subtle-info btn-sm d-none" id="so-btn-pull-previous" type="button">
+                <span class="fas fa-cloud-download-alt me-1"></span>Tarik dari Periode Sebelumnya
+            </button>
             <button class="btn btn-subtle-secondary btn-sm d-none" id="so-btn-reset-grid" type="button">
                 <span class="fas fa-undo me-1"></span>Batalkan Perubahan
             </button>
@@ -359,7 +362,6 @@
                     <th>No</th>
                     <th>Bahan Kimia</th>
                     <th>Kategori</th>
-                    <th>Status</th>
                     <th>Stok Awal (kg)</th>
                     <th class="no-print">Catatan</th>
                 </tr>
@@ -375,7 +377,6 @@
                     <th>No</th>
                     <th>Bahan Kimia</th>
                     <th>Kategori</th>
-                    <th>Status</th>
                     <th>Total Stok Awal (kg)</th>
                     <th>Tersebar di</th>
                     <th class="no-print"></th>
@@ -593,6 +594,49 @@
             document.getElementById('so-btn-reset-filter')?.addEventListener('click', () => this.resetFilter());
             document.getElementById('so-btn-save-grid')?.addEventListener('click', () => this.save());
             document.getElementById('so-btn-reset-grid')?.addEventListener('click', () => this.reload());
+            document.getElementById('so-btn-pull-previous')?.addEventListener('click', () => this.pullPrevious());
+        },
+
+        async pullPrevious() {
+            if (!this.currentPeriodId || !this.currentWarehouseId || this.currentWarehouseId === '__combined__') return;
+
+            const confirm = await Swal.fire({
+                title: 'Tarik dari Periode Sebelumnya?',
+                text: 'Kolom Nilai akan diisi otomatis dari saldo akhir periode sebelumnya. Data yang sudah kamu ketik di sini akan tertimpa. Kamu tetap harus klik Simpan setelah ini.',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'Ya, Tarik',
+                cancelButtonText: 'Batal',
+            });
+            if (!confirm.isConfirmed) return;
+
+            try {
+                const d = await this.get(this.BASE +
+                    `warehouse/stocks/opening/pull-previous?period_id=${this.currentPeriodId}&warehouse_id=${this.currentWarehouseId}`);
+                if (d.status !== 'success') {
+                    this.toast('error', d.message ?? 'Gagal menarik data periode sebelumnya');
+                    return;
+                }
+
+                let count = 0;
+                Object.entries(d.data).forEach(([chemicalId, qty]) => {
+                    const rowApi = this.dtEditable.row('#' + chemicalId);
+                    if (!rowApi.length) return;
+                    const rowData = rowApi.data();
+                    rowData.quantity = qty;
+                    rowData._touched = true;
+                    rowApi.invalidate();
+                    count++;
+                });
+
+                $('#so-stock-table tbody tr').addClass('row-touched');
+                document.getElementById('so-btn-save-grid').classList.remove('d-none');
+                document.getElementById('so-btn-reset-grid').classList.remove('d-none');
+
+                this.toast('success', `${count} item ditarik dari periode "${d.period.name}". Jangan lupa klik Simpan.`);
+            } catch (e) {
+                this.toast('error', 'Gagal menarik data periode sebelumnya');
+            }
         },
 
         fmtDateOnly(d) {
@@ -740,6 +784,7 @@
             document.getElementById('so-status-banner').classList.add('d-none');
             document.getElementById('so-btn-save-grid').classList.add('d-none');
             document.getElementById('so-btn-reset-grid').classList.add('d-none');
+            document.getElementById('so-btn-pull-previous').classList.add('d-none');
             document.getElementById('so-editable-wrapper').classList.add('d-none');
             document.getElementById('so-combined-wrapper').classList.add('d-none');
             const empty = document.getElementById('so-empty-wrapper');
@@ -807,6 +852,7 @@
                     </div>`;
                 document.getElementById('so-btn-save-grid').classList.add('d-none');
                 document.getElementById('so-btn-reset-grid').classList.add('d-none');
+                document.getElementById('so-btn-pull-previous').classList.add('d-none');
                 return;
             }
 
@@ -818,6 +864,7 @@
                     </div>`;
                 document.getElementById('so-btn-save-grid').classList.add('d-none');
                 document.getElementById('so-btn-reset-grid').classList.add('d-none');
+                document.getElementById('so-btn-pull-previous').classList.add('d-none');
                 return;
             }
 
@@ -837,6 +884,7 @@
             if (CAN_CREATE_OPENING) {
                 document.getElementById('so-btn-save-grid').classList.remove('d-none');
                 document.getElementById('so-btn-reset-grid').classList.remove('d-none');
+                document.getElementById('so-btn-pull-previous').classList.remove('d-none');
             }
         },
 
@@ -888,7 +936,7 @@
                     className: 'btn btn-subtle-success btn-sm',
                     title: 'Stok Awal Bahan Kimia',
                     exportOptions: {
-                        columns: [0, 1, 2, 3, 4],
+                        columns: [0, 1, 2, 3],
                         format: {
                             body: (data) => data.replace(/<[^>]*>/g, '').trim()
                         }
@@ -912,7 +960,7 @@
                     },
                     {
                         targets: 1,
-                        width: '150px'
+                        width: '220px'
                     },
                     {
                         targets: 2,
@@ -920,15 +968,7 @@
                     },
                     {
                         targets: 3,
-                        width: '50px'
-                    },
-                    {
-                        targets: 4,
-                        width: '100px'
-                    },
-                    {
-                        targets: 5,
-                        width: '220px'
+                        width: '150px'
                     },
                 ],
                 columns: [{
@@ -948,17 +988,8 @@
                     {
                         data: 'category_name',
                         render: d => d ?
-                            d.split(', ').map(c => `<span class="badge badge-phoenix badge-phoenix-secondary p-2 fs-10 me-1 mb-1">${self.e(c)}</span>`).join('') : '<span class="text-muted fst-italic">—</span>',
-                    },
-                    {
-                        data: 'chemical_status',
-                        render: d => {
-                            const statusMap = {
-                                Active: '<span class="badge badge-phoenix badge-phoenix-success fs-10">Aktif</span>',
-                                Inactive: '<span class="badge badge-phoenix badge-phoenix-secondary fs-10">Nonaktif</span>',
-                            };
-                            return statusMap[d] ?? `<span class="badge badge-phoenix badge-phoenix-secondary fs-10">${self.e(d)}</span>`;
-                        },
+                            d.split(', ').map(c => `<span class="badge badge-phoenix badge-phoenix-secondary p-2 fs-10 me-1 mb-1">${self.e(c)}</span>`).join('') :
+                            '<span class="text-muted fst-italic">—</span>',
                     },
                     {
                         data: 'quantity',
@@ -1052,7 +1083,7 @@
                     },
                     {
                         targets: 1,
-                        width: '150px'
+                        width: '220px'
                     },
                     {
                         targets: 2,
@@ -1060,18 +1091,14 @@
                     },
                     {
                         targets: 3,
-                        width: '50px'
+                        width: '160px'
                     },
                     {
                         targets: 4,
-                        width: '100px'
+                        width: '110px'
                     },
                     {
                         targets: 5,
-                        width: '100px'
-                    },
-                    {
-                        targets: 6,
                         width: '30px'
                     },
                 ],
@@ -1092,17 +1119,8 @@
                     {
                         data: 'category_name',
                         render: d => d ?
-                            d.split(', ').map(c => `<span class="badge badge-phoenix badge-phoenix-secondary p-2 fs-10 me-1 mb-1">${self.e(c)}</span>`).join('') : '<span class="text-muted fst-italic">—</span>',
-                    },
-                    {
-                        data: 'chemical_status',
-                        render: d => {
-                            const statusMap = {
-                                Active: '<span class="badge badge-phoenix badge-phoenix-success fs-10">Aktif</span>',
-                                Inactive: '<span class="badge badge-phoenix badge-phoenix-secondary fs-10">Nonaktif</span>',
-                            };
-                            return statusMap[d] ?? `<span class="badge badge-phoenix badge-phoenix-secondary fs-10">${self.e(d)}</span>`;
-                        },
+                            d.split(', ').map(c => `<span class="badge badge-phoenix badge-phoenix-secondary p-2 fs-10 me-1 mb-1">${self.e(c)}</span>`).join('') :
+                            '<span class="text-muted fst-italic">—</span>',
                     },
                     {
                         data: 'quantity',

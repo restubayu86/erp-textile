@@ -136,6 +136,7 @@ $routes->group('warehouse', [
     $routes->get('stocks/opening/breakdown',     'ChemicalStockOpeningController::breakdown');
     $routes->post('stocks/opening/store',        'ChemicalStockOpeningController::store');
     $routes->get('stocks/opening/status',        'ChemicalStockOpeningController::status');
+    $routes->get('stocks/opening/pull-previous', 'ChemicalStockOpeningController::pullPrevious');
 
     // Stock Opening — Formulasi
     $routes->get('stocks/formulation-opening',               'FormulationStockOpeningController::index');
@@ -144,4 +145,5 @@ $routes->group('warehouse', [
     $routes->get('stocks/formulation-opening/breakdown',     'FormulationStockOpeningController::breakdown');
     $routes->post('stocks/formulation-opening/store',        'FormulationStockOpeningController::store');
     $routes->get('stocks/formulation-opening/status',        'FormulationStockOpeningController::status');
+    $routes->get('stocks/formulation-opening/pull-previous', 'FormulationStockOpeningController::pullPrevious');
 });

@@ -16,6 +16,7 @@ class FormulationStockOpeningModel extends Model
         'period_id',
         'warehouse_id',
         'formulation_id',
+        'formulation_version_id',
         'quantity',
         'unit',
         'notes',
@@ -46,6 +47,8 @@ class FormulationStockOpeningModel extends Model
                 'f.process_type',
                 'f.process_sub_type',
                 'fg.group_name',
+                'v.id as active_version_id',
+                'v.version_no as active_version_no',
             ])
             ->join('formulation_versions v', 'v.id = f.current_version_id', 'left')
             ->join('formulation_groups fg', 'fg.id = f.group_id', 'left')
@@ -66,6 +69,8 @@ class FormulationStockOpeningModel extends Model
             $f['quantity']   = $ex ? (float) $ex['quantity'] : null;
             $f['unit']       = $ex['unit'] ?? 'kg';
             $f['notes']      = $ex['notes'] ?? null;
+            // Versi resep yang tersimpan di data (kalau sudah ada) vs versi aktif saat ini
+            $f['saved_version_id'] = $ex['formulation_version_id'] ?? null;
         }
 
         return $formulations;
@@ -90,14 +95,23 @@ class FormulationStockOpeningModel extends Model
             return ['status' => 'error', 'message' => 'Gudang tidak ditemukan'];
         }
 
+        // Peta formulation_id => versi resep AKTIF saat ini — dipakai untuk menandai
+        // "resep versi yang memiliki stok" pada setiap baris yang disimpan.
+        $activeVersions = $this->db->table('formulations')
+            ->select('id as formulation_id, current_version_id')
+            ->where('deleted_at', null)
+            ->get()->getResultArray();
+        $activeVersionMap = array_column($activeVersions, 'current_version_id', 'formulation_id');
+
         $saved = 0;
         foreach ($rows as $row) {
             $formulationId = (int) ($row['formulation_id'] ?? 0);
             if (!$formulationId) continue;
 
-            $quantity = is_numeric($row['quantity'] ?? null) ? (float) $row['quantity'] : 0;
-            $unit     = 'kg';
-            $notes    = trim($row['notes'] ?? '') ?: null;
+            $quantity  = is_numeric($row['quantity'] ?? null) ? (float) $row['quantity'] : 0;
+            $unit      = 'kg';
+            $notes     = trim($row['notes'] ?? '') ?: null;
+            $versionId = $activeVersionMap[$formulationId] ?? null;
 
             $existing = $this->where('period_id', $periodId)
                 ->where('warehouse_id', $warehouseId)
@@ -106,21 +120,23 @@ class FormulationStockOpeningModel extends Model
 
             if ($existing) {
                 $this->update($existing['id'], [
-                    'quantity'   => $quantity,
-                    'unit'       => $unit,
-                    'notes'      => $notes,
-                    'updated_by' => $userId,
+                    'quantity'                => $quantity,
+                    'unit'                     => $unit,
+                    'notes'                    => $notes,
+                    'formulation_version_id'   => $versionId,
+                    'updated_by'               => $userId,
                 ]);
             } else {
                 $this->insert([
-                    'period_id'      => $periodId,
-                    'warehouse_id'   => $warehouseId,
-                    'formulation_id' => $formulationId,
-                    'quantity'       => $quantity,
-                    'unit'           => $unit,
-                    'notes'          => $notes,
-                    'created_by'     => $userId,
-                    'updated_by'     => $userId,
+                    'period_id'               => $periodId,
+                    'warehouse_id'            => $warehouseId,
+                    'formulation_id'          => $formulationId,
+                    'formulation_version_id'  => $versionId,
+                    'quantity'                => $quantity,
+                    'unit'                    => $unit,
+                    'notes'                   => $notes,
+                    'created_by'              => $userId,
+                    'updated_by'              => $userId,
                 ]);
             }
             $saved++;
@@ -181,8 +197,9 @@ class FormulationStockOpeningModel extends Model
     public function getBreakdown(int $periodId, int $formulationId): array
     {
         return $this->db->table('formulation_stock_openings fso')
-            ->select(['fso.warehouse_id', 'w.warehouse_name', 'w.warehouse_code', 'fso.quantity', 'fso.unit', 'fso.notes'])
+            ->select(['fso.warehouse_id', 'w.warehouse_name', 'w.warehouse_code', 'fso.quantity', 'fso.unit', 'fso.notes', 'v.version_no'])
             ->join('warehouses w', 'w.id = fso.warehouse_id', 'left')
+            ->join('formulation_versions v', 'v.id = fso.formulation_version_id', 'left')
             ->where('fso.period_id', $periodId)
             ->where('fso.formulation_id', $formulationId)
             ->orderBy('w.warehouse_name', 'ASC')
@@ -214,5 +231,109 @@ class FormulationStockOpeningModel extends Model
         return $this->where('period_id', $periodId)
             ->where('warehouse_id', $warehouseId)
             ->countAllResults() > 0;
+    }
+
+    // ============================================================
+    // TARIK DARI PERIODE SEBELUMNYA
+    // ============================================================
+
+    /**
+     * Cari periode tepat sebelum periode tertentu (berdasarkan urutan start_date).
+     */
+    private function getPreviousPeriod(int $periodId): ?array
+    {
+        $current = $this->db->table('periods')->where('id', $periodId)->get()->getRowArray();
+        if (!$current) return null;
+
+        return $this->db->table('periods')
+            ->where('start_date <', $current['start_date'])
+            ->where('deleted_at', null)
+            ->orderBy('start_date', 'DESC')
+            ->limit(1)
+            ->get()->getRowArray();
+    }
+
+    /**
+     * Hitung saldo akhir formulasi (stok awal + pergerakan) untuk 1 periode + 1 gudang.
+     * Dipakai sebagai sumber "Tarik dari Periode Sebelumnya".
+     */
+    private function getClosingBalances(int $periodId, int $warehouseId): array
+    {
+        // Ambil baris opening (bisa lebih dari 1 versi per formulasi dalam kasus edge)
+        $openings = $this->where('period_id', $periodId)->where('warehouse_id', $warehouseId)
+            ->orderBy('id', 'DESC')->findAll();
+
+        $closing = []; // formulation_id => ['quantity' => float, 'version_id' => int|null]
+        foreach ($openings as $o) {
+            $fid = $o['formulation_id'];
+            if (!isset($closing[$fid])) {
+                $closing[$fid] = ['quantity' => (float) $o['quantity'], 'version_id' => $o['formulation_version_id']];
+            } else {
+                $closing[$fid]['quantity'] += (float) $o['quantity'];
+            }
+        }
+
+        $movements = $this->db->table('formulation_stock_movements')
+            ->select('formulation_id, SUM(quantity_in) as total_in, SUM(quantity_out) as total_out')
+            ->where('period_id', $periodId)
+            ->where('warehouse_id', $warehouseId)
+            ->groupBy('formulation_id')
+            ->get()->getResultArray();
+
+        foreach ($movements as $m) {
+            $fid = $m['formulation_id'];
+            $net = (float) $m['total_in'] - (float) $m['total_out'];
+            if (!isset($closing[$fid])) {
+                $closing[$fid] = ['quantity' => $net, 'version_id' => null];
+            } else {
+                $closing[$fid]['quantity'] += $net;
+            }
+        }
+
+        return $closing;
+    }
+
+    /**
+     * Ambil saldo akhir periode sebelumnya untuk 1 gudang — dipakai untuk
+     * mengisi otomatis form Stok Awal (user tetap harus klik Simpan).
+     */
+    public function pullFromPreviousPeriod(int $currentPeriodId, int $warehouseId): array
+    {
+        $prevPeriod = $this->getPreviousPeriod($currentPeriodId);
+        if (!$prevPeriod) {
+            return ['status' => 'error', 'message' => 'Tidak ada periode sebelumnya untuk ditarik'];
+        }
+
+        $closing = $this->getClosingBalances((int) $prevPeriod['id'], $warehouseId);
+
+        // Lengkapi version_no untuk ditampilkan di UI
+        $versionIds = array_filter(array_column($closing, 'version_id'));
+        $versionMap = [];
+        if (!empty($versionIds)) {
+            $versions = $this->db->table('formulation_versions')
+                ->select('id, version_no')
+                ->whereIn('id', $versionIds)
+                ->get()->getResultArray();
+            $versionMap = array_column($versions, 'version_no', 'id');
+        }
+
+        $data = [];
+        foreach ($closing as $formulationId => $c) {
+            $data[$formulationId] = [
+                'quantity'   => $c['quantity'],
+                'version_id' => $c['version_id'],
+                'version_no' => $c['version_id'] ? ($versionMap[$c['version_id']] ?? null) : null,
+            ];
+        }
+
+        return [
+            'status' => 'success',
+            'period' => [
+                'id'   => $prevPeriod['id'],
+                'code' => $prevPeriod['period_code'],
+                'name' => $prevPeriod['period_name'],
+            ],
+            'data' => $data,
+        ];
     }
 }

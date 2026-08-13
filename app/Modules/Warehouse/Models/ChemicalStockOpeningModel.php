@@ -43,7 +43,6 @@ class ChemicalStockOpeningModel extends Model
                 'c.id as chemical_id',
                 'c.chemical_code',
                 'c.chemical_name',
-                'c.status as chemical_status',
                 'GROUP_CONCAT(DISTINCT cc.category_name ORDER BY cc.category_name SEPARATOR ", ") as category_name',
                 'dv.unit as default_unit',
             ])
@@ -52,7 +51,7 @@ class ChemicalStockOpeningModel extends Model
             ->join('chemical_variants dv', 'dv.chemical_id = c.id AND dv.is_default = 1', 'left')
             ->where('c.status', 'Active')
             ->where('c.deleted_at', null)
-            ->groupBy('c.id, c.chemical_code, c.chemical_name, c.status, dv.unit')
+            ->groupBy('c.id, c.chemical_code, c.chemical_name, dv.unit')
             ->orderBy('c.chemical_name', 'ASC')
             ->get()->getResultArray();
 
@@ -145,7 +144,6 @@ class ChemicalStockOpeningModel extends Model
                 'c.id as chemical_id',
                 'c.chemical_code',
                 'c.chemical_name',
-                'c.status as chemical_status',
                 'GROUP_CONCAT(DISTINCT cc.category_name ORDER BY cc.category_name SEPARATOR ", ") as category_name',
                 'dv.unit as default_unit',
             ])
@@ -154,7 +152,7 @@ class ChemicalStockOpeningModel extends Model
             ->join('chemical_variants dv', 'dv.chemical_id = c.id AND dv.is_default = 1', 'left')
             ->where('c.status', 'Active')
             ->where('c.deleted_at', null)
-            ->groupBy('c.id, c.chemical_code, c.chemical_name, c.status, dv.unit')
+            ->groupBy('c.id, c.chemical_code, c.chemical_name, dv.unit')
             ->orderBy('c.chemical_name', 'ASC')
             ->get()->getResultArray();
 
@@ -219,5 +217,76 @@ class ChemicalStockOpeningModel extends Model
         return $this->where('period_id', $periodId)
             ->where('warehouse_id', $warehouseId)
             ->countAllResults() > 0;
+    }
+
+    // ============================================================
+    // TARIK DARI PERIODE SEBELUMNYA
+    // ============================================================
+
+    /**
+     * Cari periode tepat sebelum periode tertentu (berdasarkan urutan start_date).
+     */
+    private function getPreviousPeriod(int $periodId): ?array
+    {
+        $current = $this->db->table('periods')->where('id', $periodId)->get()->getRowArray();
+        if (!$current) return null;
+
+        return $this->db->table('periods')
+            ->where('start_date <', $current['start_date'])
+            ->where('deleted_at', null)
+            ->orderBy('start_date', 'DESC')
+            ->limit(1)
+            ->get()->getRowArray();
+    }
+
+    /**
+     * Hitung saldo akhir kimia (stok awal + pergerakan) untuk 1 periode + 1 gudang.
+     * Dipakai sebagai sumber "Tarik dari Periode Sebelumnya".
+     */
+    private function getClosingBalances(int $periodId, int $warehouseId): array
+    {
+        $openings = $this->where('period_id', $periodId)->where('warehouse_id', $warehouseId)->findAll();
+        $closing  = []; // chemical_id => float
+        foreach ($openings as $o) {
+            $closing[$o['chemical_id']] = (float) $o['quantity'];
+        }
+
+        $movements = $this->db->table('chemical_stock_movements')
+            ->select('chemical_id, SUM(quantity_in) as total_in, SUM(quantity_out) as total_out')
+            ->where('period_id', $periodId)
+            ->where('warehouse_id', $warehouseId)
+            ->groupBy('chemical_id')
+            ->get()->getResultArray();
+
+        foreach ($movements as $m) {
+            $net = (float) $m['total_in'] - (float) $m['total_out'];
+            $closing[$m['chemical_id']] = ($closing[$m['chemical_id']] ?? 0) + $net;
+        }
+
+        return $closing;
+    }
+
+    /**
+     * Ambil saldo akhir periode sebelumnya untuk 1 gudang — dipakai untuk
+     * mengisi otomatis form Stok Awal (user tetap harus klik Simpan).
+     */
+    public function pullFromPreviousPeriod(int $currentPeriodId, int $warehouseId): array
+    {
+        $prevPeriod = $this->getPreviousPeriod($currentPeriodId);
+        if (!$prevPeriod) {
+            return ['status' => 'error', 'message' => 'Tidak ada periode sebelumnya untuk ditarik'];
+        }
+
+        $closing = $this->getClosingBalances((int) $prevPeriod['id'], $warehouseId);
+
+        return [
+            'status' => 'success',
+            'period' => [
+                'id'   => $prevPeriod['id'],
+                'code' => $prevPeriod['period_code'],
+                'name' => $prevPeriod['period_name'],
+            ],
+            'data' => $closing,
+        ];
     }
 }

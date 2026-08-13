@@ -80,6 +80,60 @@ class FormulationController extends BaseController
         return $this->jsonResponse($result, $result['status'] === 'success' ? 200 : 404);
     }
 
+    /**
+     * Salin sebagai formulasi baru: membuka form "Tambah" dengan data
+     * (nama, proses, group, output, item komposisi) dari formulasi sumber
+     * sudah terisi. Kode formulasi & id tidak dibawa — dianggap sepenuhnya
+     * formulasi baru (bukan versi baru dari formulasi lama).
+     */
+    public function copy(int $id): string|RedirectResponse
+    {
+        if (!canDo('warehouse.formulations.manage')) return $this->forbidden();
+
+        $result = $this->model->getData($id);
+        if ($result['status'] !== 'success') {
+            return redirect()->to(site_url('warehouse/formulations'))->with('error', $result['message']);
+        }
+
+        $source = $result['data'];
+
+        // Lepaskan identitas formulasi lama supaya form.php berperilaku
+        // sebagai mode "Tambah" (bukan "Edit"/"Versi Baru").
+        unset(
+            $source['id'],
+            $source['formulation_code'],
+            $source['current_version_id'],
+            $source['version_id'],
+            $source['version_no'],
+            $source['status'],
+            $source['version_notes'],
+            $source['last_used_at'],
+            $source['created_at'],
+            $source['updated_at'],
+            $source['deleted_at'],
+            $source['versions']
+        );
+
+        $source['formulation_name'] = trim(($source['formulation_name'] ?? '') . ' (Copy)');
+
+        // Item komposisi dibawa apa adanya, tapi tanpa id agar tersimpan
+        // sebagai item baru saat formulasi baru ini dibuat.
+        foreach ($source['items'] as &$item) {
+            unset($item['id'], $item['formulation_version_id']);
+        }
+        unset($item);
+
+        return view('App\Modules\Warehouse\Views\formulations\form', [
+            'title'            => 'Salin Formulasi',
+            'page_title'       => 'Salin Formulasi',
+            'page_description' => 'Formulasi baru berdasarkan salinan formulasi lain',
+            'breadcrumbs'      => $this->breadcrumbs([['name' => 'Salin', 'active' => true]]),
+            'formulation'      => $source,
+            'suggested_code'   => $this->model->generateNextCode(),
+            'process_sub_types' => $this->getProcessSubTypes(),
+        ]);
+    }
+
     public function trash(): string|RedirectResponse
     {
         if (!canDo('warehouse.formulations.manage')) return $this->forbidden();

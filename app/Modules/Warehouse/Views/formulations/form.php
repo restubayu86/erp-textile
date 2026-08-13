@@ -691,8 +691,8 @@
                                         <th style="width:15%">Jenis</th>
                                         <th style="width:25%">Bahan / Label</th>
                                         <th style="width:10%">Satuan</th>
-                                        <th style="width:16%">Nilai</th>
-                                        <th style="width:25%">Catatan</th>
+                                        <th style="width:19%">Nilai</th>
+                                        <th style="width:22%">Catatan</th>
                                         <th style="width:6%" class="text-end"></th>
                                     </tr>
                                 </thead>
@@ -787,12 +787,12 @@
                                         Buat Versi Baru
                                     </label>
                                     <div class="form-check form-switch mb-0">
-                                        <input class="form-check-input" type="checkbox" role="switch" id="create-new-version" checked>
+                                        <input class="form-check-input" type="checkbox" role="switch" id="create-new-version">
                                     </div>
                                 </div>
-                                <div class="form-text mt-1" style="font-size:0.7rem;" id="version-toggle-hint">
+                                <div class="form-text mt-1 text-warning" style="font-size:0.7rem;" id="version-toggle-hint">
                                     <span class="fas fa-info-circle me-1"></span>
-                                    <span id="version-toggle-text">Aktif: menyimpan akan membuat versi baru</span>
+                                    <span id="version-toggle-text">Nonaktif: update data tanpa membuat versi baru (overwrite versi saat ini)</span>
                                 </div>
                             </div>
                             <hr class="sidebar-divider">
@@ -801,7 +801,7 @@
                         <div class="d-grid gap-2">
                             <button type="submit" id="btn-submit-formulation" class="btn btn-primary">
                                 <span class="fas fa-save me-1"></span>
-                                <span id="btn-submit-text"><?= !empty($formulation['id']) ? 'Simpan sebagai Versi Baru' : 'Simpan Formulasi' ?></span>
+                                <span id="btn-submit-text"><?= !empty($formulation['id']) ? 'Simpan Perubahan' : 'Simpan Formulasi' ?></span>
                             </button>
                             <a href="<?= site_url('warehouse/formulations') ?>" class="btn btn-subtle-secondary">
                                 <span class="fas fa-times me-1"></span>Batal
@@ -1257,12 +1257,15 @@
 
                 if (type === 'chemical' && item.chemical_id) {
                     if ($select.length) {
-                        const opt = new Option(
-                            `${item.chemical_name} (${item.chemical_code})`,
-                            item.chemical_id,
-                            true,
-                            true
-                        );
+                        const text = `${item.chemical_name} (${item.chemical_code})`;
+                        const opt = new Option(text, item.chemical_id, true, true);
+
+                        $(opt).data('data', {
+                            id: item.chemical_id,
+                            text: text,
+                            code: item.chemical_code,
+                            name: item.chemical_name
+                        });
                         $select.append(opt).trigger('change');
                     }
                 } else {

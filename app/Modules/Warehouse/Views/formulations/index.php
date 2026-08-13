@@ -1058,10 +1058,13 @@
                             const edit = CAN_MANAGE_FORMULATION ?
                                 `<a href="${self.BASE}warehouse/formulations/${r.id}/edit" class="btn btn-subtle-primary btn-sm" title="Edit"><span class="fas fa-pencil-alt"></span></a>` :
                                 '';
+                            const copy = CAN_MANAGE_FORMULATION ? // ⬅️ baru
+                                `<a href="${self.BASE}warehouse/formulations/${r.id}/copy" class="btn btn-subtle-secondary btn-sm" title="Salin sebagai Baru"><span class="fas fa-copy"></span></a>` : // ⬅️ baru
+                                ''; // ⬅️ baru
                             const del = CAN_MANAGE_FORMULATION ?
                                 `<button class="btn btn-subtle-danger btn-sm btn-delete" data-id="${r.id}" data-name="${self.e(r.formulation_name)}" title="Hapus"><span class="fas fa-trash"></span></button>` :
                                 '';
-                            return `<div class="btn-group btn-group-sm">${versions}${edit}${del}</div>`;
+                            return `<div class="btn-group btn-group-sm">${versions}${edit}${copy}${del}</div>`; // ⬅️ tambahkan ${copy}
                         }
                     },
                 ],
@@ -1856,7 +1859,7 @@
                 const totalValue = this.formatValue(r.version?.output_percentage);
                 const itemCount = (r.items || []).length;
 
-                const units = (r.items || []).map(i => i.unit).filter(Boolean);
+                const units = (r.items || []).map(i => this.unitLabel(i.unit)).filter(Boolean); // sebelumnya: i.unit
                 const unitList = [...new Set(units)].join(', ') || '—';
 
                 cardsHtml += `
@@ -1934,7 +1937,7 @@
                 {
                     label: 'Satuan',
                     value: r => {
-                        const units = (r.items || []).map(i => i.unit).filter(Boolean);
+                        const units = (r.items || []).map(i => this.unitLabel(i.unit)).filter(Boolean); // sebelumnya: i.unit
                         return [...new Set(units)].join(', ') || '—';
                     }
                 },
@@ -1970,8 +1973,8 @@
                 const avg = allValues.reduce((a, b) => a + b, 0) / allValues.length;
 
                 tableRows += `<tr>
-                    <td><span class="badge badge-phoenix badge-phoenix-${badgeClass} fs-10 me-1">${badgeText}</span> ${chem.label}${chem.code ? `<small class="text-muted">(${chem.code})</small>` : ''}</td>
-                    <td class="text-center">${chem.unit ? this.e(chem.unit) : '—'}</td>`;
+                                <td><span class="badge badge-phoenix badge-phoenix-${badgeClass} fs-10 me-1">${badgeText}</span> ${chem.label}${chem.code ? `<small class="text-muted">(${chem.code})</small>` : ''}</td>
+                                <td class="text-center">${chem.unit ? this.e(this.unitLabel(chem.unit)) : '—'}</td>`;
                 results.forEach((r, idx) => {
                     const val = chem.values[idx];
                     const diff = Math.abs((val || 0) - avg);
@@ -2099,8 +2102,8 @@
                 const allValues = results.map((_, i) => chem.values[i] || 0);
                 const avg = allValues.reduce((a, b) => a + b, 0) / allValues.length;
                 materialRows += `<tr>
-            <td>${this.e(chem.label)}${chem.code ? ` <span class="muted">(${this.e(chem.code)})</span>` : ''}</td>
-            <td class="text-center">${chem.unit ? this.e(chem.unit) : '—'}</td>`;
+                            <td>${this.e(chem.label)}${chem.code ? ` <span class="muted">(${this.e(chem.code)})</span>` : ''}</td>
+                            <td class="text-center">${chem.unit ? this.e(this.unitLabel(chem.unit)) : '—'}</td>`; // sebelumnya: this.e(chem.unit)
                 results.forEach((r, idx) => {
                     const val = chem.values[idx];
                     const diff = Math.abs((val || 0) - avg);
