@@ -76,6 +76,15 @@ class AuthGroups extends ShieldAuthGroups
         'warehouse.formulation_stock_opening.view'   => 'Lihat stok awal periode (formulasi)',
         'warehouse.formulation_stock_opening.create' => 'Input/ubah stok awal periode (formulasi)',
 
+        'warehouse.stock_opname.view'   => 'Lihat stock opname (kimia)',
+        'warehouse.stock_opname.create' => 'Input stock opname (kimia)',
+
+        'warehouse.formulation_stock_opname.view'   => 'Lihat stock opname (formulasi)',
+        'warehouse.formulation_stock_opname.create' => 'Input stock opname (formulasi)',
+
+        'warehouse.stock_ifs.view'   => 'Lihat stok akhir IFS',
+        'warehouse.stock_ifs.create' => 'Input stok akhir IFS',
+
         'warehouse.formulations.view'   => 'Lihat formulasi',
         'warehouse.formulations.manage' => 'Kelola formulasi',
 
@@ -109,6 +118,9 @@ class AuthGroups extends ShieldAuthGroups
             'warehouse.periods.view',
             'warehouse.stock_opening.view',
             'warehouse.formulation_stock_opening.view',
+            'warehouse.stock_opname.view',
+            'warehouse.formulation_stock_opname.view',
+            'warehouse.stock_ifs.view',
             'warehouse.formulations.view',
             'warehouse.stocks.view',
             'warehouse.stocks.receive',
@@ -129,6 +141,9 @@ class AuthGroups extends ShieldAuthGroups
             'warehouse.periods.view',
             'warehouse.stock_opening.view',
             'warehouse.formulation_stock_opening.view',
+            'warehouse.stock_opname.view',
+            'warehouse.formulation_stock_opname.view',
+            'warehouse.stock_ifs.view',
             'warehouse.formulations.view',
             'warehouse.stocks.view',
         ],

@@ -146,4 +146,25 @@ $routes->group('warehouse', [
     $routes->post('stocks/formulation-opening/store',        'FormulationStockOpeningController::store');
     $routes->get('stocks/formulation-opening/status',        'FormulationStockOpeningController::status');
     $routes->get('stocks/formulation-opening/pull-previous', 'FormulationStockOpeningController::pullPrevious');
+
+    // Stock Opname — Kimia
+    $routes->get('stocks/opname',           'ChemicalStockOpnameController::index');
+    $routes->get('stocks/opname/grid',      'ChemicalStockOpnameController::grid');
+    $routes->get('stocks/opname/combined',  'ChemicalStockOpnameController::combinedGrid');
+    $routes->get('stocks/opname/breakdown', 'ChemicalStockOpnameController::breakdown');
+    $routes->post('stocks/opname/store',    'ChemicalStockOpnameController::store');
+
+    // Stock Opname — Formulasi
+    $routes->get('stocks/formulation-opname',           'FormulationStockOpnameController::index');
+    $routes->get('stocks/formulation-opname/grid',      'FormulationStockOpnameController::grid');
+    $routes->get('stocks/formulation-opname/combined',  'FormulationStockOpnameController::combinedGrid');
+    $routes->get('stocks/formulation-opname/breakdown', 'FormulationStockOpnameController::breakdown');
+    $routes->post('stocks/formulation-opname/store',    'FormulationStockOpnameController::store');
+
+    // Stok Akhir IFS — Kimia
+    $routes->get('stocks/ifs',           'ChemicalStockIfsController::index');
+    $routes->get('stocks/ifs/grid',      'ChemicalStockIfsController::grid');
+    $routes->get('stocks/ifs/combined',  'ChemicalStockIfsController::combinedGrid');
+    $routes->get('stocks/ifs/breakdown', 'ChemicalStockIfsController::breakdown');
+    $routes->post('stocks/ifs/store',    'ChemicalStockIfsController::store');
 });
