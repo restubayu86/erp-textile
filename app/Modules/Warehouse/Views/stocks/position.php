@@ -275,7 +275,7 @@
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
-                            <div class="info-label">Ada Stok</div>
+                            <div class="info-label">Ada Stok (On Hand)</div>
                             <div class="info-value text-success" id="pos-stat-available">—</div>
                         </div>
                         <div class="stat-icon bg-success bg-opacity-10 text-success">
@@ -290,7 +290,7 @@
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
-                            <div class="info-label">Stok Kosong</div>
+                            <div class="info-label">Ada Selisih Opname</div>
                             <div class="info-value text-warning" id="pos-stat-empty">—</div>
                         </div>
                         <div class="stat-icon bg-warning bg-opacity-10 text-warning">
@@ -354,13 +354,29 @@
         <table class="table table-hover fs-9 nowrap align-middle" id="pos-stock-table">
             <thead>
                 <tr>
-                    <th>No</th>
-                    <th>Bahan Kimia</th>
-                    <th>Kategori</th>
-                    <th>Stok Awal</th>
+                    <th rowspan="2">No</th>
+                    <th rowspan="2">Bahan Kimia</th>
+                    <th rowspan="2">Kategori</th>
+                    <th colspan="2" class="text-center">Stok Awal</th>
+                    <th colspan="3" class="text-center">Pergerakan</th>
+                    <th colspan="3" class="text-center">Saldo &amp; Alokasi</th>
+                    <th colspan="2" class="text-center">Stock Opname</th>
+                    <th rowspan="2">IFS</th>
+                    <th colspan="2" class="text-center">Selisih</th>
+                </tr>
+                <tr>
+                    <th>Available</th>
+                    <th>On Hand</th>
                     <th>Masuk</th>
                     <th>Keluar</th>
-                    <th>Saldo</th>
+                    <th>Adjustment</th>
+                    <th>Allocated</th>
+                    <th>On Hand</th>
+                    <th>Available</th>
+                    <th>Available</th>
+                    <th>On Hand</th>
+                    <th>vs Opname</th>
+                    <th>IFS vs Opname</th>
                 </tr>
             </thead>
         </table>
@@ -374,7 +390,9 @@
                     <th>No</th>
                     <th>Bahan Kimia</th>
                     <th>Kategori</th>
-                    <th>Saldo Total</th>
+                    <th>On Hand</th>
+                    <th>Allocated</th>
+                    <th>Available</th>
                     <th>Tersebar di</th>
                     <th class="no-print"></th>
                 </tr>
@@ -437,7 +455,7 @@
 
 <!-- Modal Rincian per Gudang (mode Gabungan) -->
 <div class="modal fade" id="pos-breakdownModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-dialog modal-dialog-centered modal-xl">
         <div class="modal-content border-0 shadow-lg rounded-3 overflow-hidden">
             <div class="modal-header border-bottom py-3 px-4">
                 <div>
@@ -723,11 +741,11 @@
 
         setStats(rows) {
             const total = rows.length;
-            const available = rows.filter(r => Number(r.balance) > 0).length;
-            const empty = total - available;
+            const available = rows.filter(r => Number(r.on_hand) > 0).length;
+            const withVariance = rows.filter(r => r.variance_on_hand !== null && Math.abs(Number(r.variance_on_hand)) > 0.001).length;
             document.getElementById('pos-stat-total').textContent = total;
             document.getElementById('pos-stat-available').textContent = available;
-            document.getElementById('pos-stat-empty').textContent = empty;
+            document.getElementById('pos-stat-empty').textContent = withVariance;
         },
 
         balanceClass(v) {
@@ -743,8 +761,26 @@
                 '<span class="text-muted fst-italic">—</span>';
         },
 
+        fmtOrDash(v) {
+            return v === null || v === undefined ? '<span class="text-muted fst-italic">—</span>' : this.fmtNumber(v);
+        },
+
+        varianceClass(v) {
+            if (v === null || v === undefined) return 'text-muted';
+            const n = Number(v);
+            if (Math.abs(n) < 0.001) return 'text-balance-zero';
+            return n > 0 ? 'text-balance-positive' : 'text-balance-negative';
+        },
+
+        signedFmt(v) {
+            if (v === null || v === undefined) return '<span class="text-muted fst-italic">—</span>';
+            const n = Number(v);
+            const sign = n > 0 ? '+' : '';
+            return `${sign}${this.fmtNumber(n)}`;
+        },
+
         // ============================================================
-        // TABLE — per gudang (read-only)
+        // TABLE — per gudang (read-only, 13 metrik + no + nama + kategori)
         // ============================================================
         buildPerWarehouseTable(rows) {
             this.setStats(rows);
@@ -755,11 +791,20 @@
             }
 
             const self = this;
+            const numCol = (field, opts = {}) => ({
+                data: field,
+                render: {
+                    display: (d, t, row) => opts.signed ? self.signedFmt(d) : self.fmtOrDash(d),
+                    sort: d => Number(d ?? -Infinity),
+                    type: d => Number(d ?? -Infinity),
+                    _: d => d,
+                },
+            });
 
             this.dtPerWarehouse = $('#pos-stock-table').DataTable({
                 data: rows,
                 rowId: 'chemical_id',
-                responsive: true,
+                responsive: false,
                 scrollX: true,
                 pageLength: 25,
                 lengthMenu: [
@@ -776,7 +821,7 @@
                         className: 'btn btn-subtle-success btn-sm',
                         title: 'Posisi Stok Bahan Kimia',
                         exportOptions: {
-                            columns: [0, 1, 2, 3, 4, 5, 6]
+                            columns: ':visible'
                         },
                     },
                     {
@@ -784,7 +829,7 @@
                         text: '<span class="fas fa-print me-1"></span>Cetak',
                         className: 'btn btn-subtle-secondary btn-sm',
                         exportOptions: {
-                            columns: [0, 1, 2, 3, 4, 5, 6]
+                            columns: ':visible'
                         },
                     },
                 ],
@@ -806,15 +851,19 @@
                     },
                     {
                         targets: 1,
-                        width: '220px'
+                        width: '200px'
                     },
                     {
                         targets: 2,
-                        width: '150px'
+                        width: '130px'
                     },
                     {
-                        targets: [3, 4, 5, 6],
+                        targets: '_all',
                         className: 'text-end'
+                    },
+                    {
+                        targets: [0, 1, 2],
+                        className: ''
                     },
                 ],
                 columns: [{
@@ -833,41 +882,68 @@
                     },
                     {
                         data: 'category_name',
-                        render: d => self.categoryBadges(d),
+                        render: d => self.categoryBadges(d)
                     },
+                    numCol('available_opening'),
+                    numCol('on_hand_opening'),
                     {
-                        data: 'opening_qty',
-                        render: {
-                            display: (d, t, row) => `${self.fmtNumber(d)} <span class="text-muted">${self.e(row.unit ?? 'kg')}</span>`,
-                            sort: d => Number(d ?? 0),
-                            type: d => Number(d ?? 0),
-                            _: d => d,
-                        },
-                    },
-                    {
-                        data: 'total_in',
+                        data: 'stock_in',
                         render: {
                             display: d => `<span class="text-success">+${self.fmtNumber(d)}</span>`,
                             sort: d => Number(d ?? 0),
                             type: d => Number(d ?? 0),
-                            _: d => d,
-                        },
+                            _: d => d
+                        }
                     },
                     {
-                        data: 'total_out',
+                        data: 'stock_out',
                         render: {
                             display: d => `<span class="text-danger">-${self.fmtNumber(d)}</span>`,
                             sort: d => Number(d ?? 0),
                             type: d => Number(d ?? 0),
+                            _: d => d
+                        }
+                    },
+                    numCol('adjustment', {
+                        signed: true
+                    }),
+                    numCol('allocated'),
+                    {
+                        data: 'on_hand',
+                        render: {
+                            display: (d, t, row) => `<span class="fw-bold ${self.balanceClass(d)}">${self.fmtNumber(d)}</span>`,
+                            sort: d => Number(d ?? 0),
+                            type: d => Number(d ?? 0),
                             _: d => d,
                         },
                     },
                     {
-                        data: 'balance',
+                        data: 'available',
                         render: {
-                            display: (d, t, row) => `<span class="fw-bold ${self.balanceClass(d)}">${self.fmtNumber(d)} ${self.e(row.unit ?? 'kg')}</span>`,
+                            display: (d, t, row) => `<span class="fw-bold ${self.balanceClass(d)}">${self.fmtNumber(d)}</span>`,
                             sort: d => Number(d ?? 0),
                             type: d => Number(d ?? 0),
+                            _: d => d,
+                        },
+                    },
+                    numCol('opname_available'),
+                    numCol('opname_on_hand'),
+                    numCol('ifs_qty'),
+                    {
+                        data: 'variance_on_hand',
+                        render: {
+                            display: (d, t, row) => `<span class="fw-semibold ${self.varianceClass(d)}">${self.signedFmt(d)}</span>`,
+                            sort: d => Number(d ?? -Infinity),
+                            type: d => Number(d ?? -Infinity),
+                            _: d => d,
+                        },
+                    },
+                    {
+                        data: 'variance_ifs',
+                        render: {
+                            display: (d, t, row) => `<span class="fw-semibold ${self.varianceClass(d)}">${self.signedFmt(d)}</span>`,
+                            sort: d => Number(d ?? -Infinity),
+                            type: d => Number(d ?? -Infinity),
                             _: d => d,
                         },
                     },
@@ -876,7 +952,7 @@
         },
 
         // ============================================================
-        // TABLE — combined (semua gudang)
+        // TABLE — combined (semua gudang) — ringkasan, detail lengkap ada di modal breakdown
         // ============================================================
         buildCombinedTable(rows) {
             this.setStats(rows);
@@ -908,7 +984,7 @@
                     className: 'btn btn-subtle-success btn-sm',
                     title: 'Posisi Stok Bahan Kimia (Gabungan)',
                     exportOptions: {
-                        columns: [0, 1, 2, 3, 4]
+                        columns: [0, 1, 2, 3, 4, 5, 6]
                     },
                 }, ],
                 language: {
@@ -936,15 +1012,15 @@
                         width: '150px'
                     },
                     {
-                        targets: 3,
+                        targets: [3, 4, 5],
                         className: 'text-end'
                     },
                     {
-                        targets: 4,
+                        targets: 6,
                         width: '110px'
                     },
                     {
-                        targets: 5,
+                        targets: 7,
                         width: '30px'
                     },
                 ],
@@ -964,12 +1040,30 @@
                     },
                     {
                         data: 'category_name',
-                        render: d => self.categoryBadges(d),
+                        render: d => self.categoryBadges(d)
                     },
                     {
-                        data: 'balance',
+                        data: 'on_hand',
                         render: {
-                            display: (d, t, row) => `<span class="fw-bold ${self.balanceClass(d)}">${self.fmtNumber(d)} ${self.e(row.unit ?? 'kg')}</span>`,
+                            display: d => `<span class="fw-bold ${self.balanceClass(d)}">${self.fmtNumber(d)}</span>`,
+                            sort: d => Number(d ?? 0),
+                            type: d => Number(d ?? 0),
+                            _: d => d,
+                        },
+                    },
+                    {
+                        data: 'allocated',
+                        render: {
+                            display: d => self.fmtOrDash(d),
+                            sort: d => Number(d ?? 0),
+                            type: d => Number(d ?? 0),
+                            _: d => d
+                        },
+                    },
+                    {
+                        data: 'available',
+                        render: {
+                            display: d => `<span class="fw-bold ${self.balanceClass(d)}">${self.fmtNumber(d)}</span>`,
                             sort: d => Number(d ?? 0),
                             type: d => Number(d ?? 0),
                             _: d => d,
@@ -1015,17 +1109,43 @@
                 const rows = d.data.map(r => `
                     <tr>
                         <td>${this.e(r.warehouse_name)} <span class="text-muted small">(${this.e(r.warehouse_code)})</span></td>
-                        <td class="text-end">${this.fmtNumber(r.opening_qty)}</td>
-                        <td class="text-end text-success">+${this.fmtNumber(r.total_in)}</td>
-                        <td class="text-end text-danger">-${this.fmtNumber(r.total_out)}</td>
-                        <td class="text-end fw-bold ${this.balanceClass(r.balance)}">${this.fmtNumber(r.balance)}</td>
+                        <td class="text-end">${this.fmtOrDash(r.available_opening)}</td>
+                        <td class="text-end">${this.fmtOrDash(r.on_hand_opening)}</td>
+                        <td class="text-end text-success">+${this.fmtNumber(r.stock_in)}</td>
+                        <td class="text-end text-danger">-${this.fmtNumber(r.stock_out)}</td>
+                        <td class="text-end ${this.varianceClass(r.adjustment)}">${this.signedFmt(r.adjustment)}</td>
+                        <td class="text-end">${this.fmtOrDash(r.allocated)}</td>
+                        <td class="text-end fw-bold ${this.balanceClass(r.on_hand)}">${this.fmtNumber(r.on_hand)}</td>
+                        <td class="text-end fw-bold ${this.balanceClass(r.available)}">${this.fmtNumber(r.available)}</td>
+                        <td class="text-end">${this.fmtOrDash(r.opname_on_hand)}</td>
+                        <td class="text-end">${this.fmtOrDash(r.ifs_qty)}</td>
+                        <td class="text-end fw-semibold ${this.varianceClass(r.variance_on_hand)}">${this.signedFmt(r.variance_on_hand)}</td>
+                        <td class="text-end fw-semibold ${this.varianceClass(r.variance_ifs)}">${this.signedFmt(r.variance_ifs)}</td>
                     </tr>
                 `).join('');
                 document.getElementById('pos-breakdown-body').innerHTML = `
+                    <div class="table-responsive">
                     <table class="table table-sm fs-9 mb-0">
-                        <thead><tr><th>Gudang</th><th class="text-end">Stok Awal</th><th class="text-end">Masuk</th><th class="text-end">Keluar</th><th class="text-end">Saldo</th></tr></thead>
+                        <thead>
+                            <tr>
+                                <th>Gudang</th>
+                                <th class="text-end">Awal (Avl)</th>
+                                <th class="text-end">Awal (OH)</th>
+                                <th class="text-end">Masuk</th>
+                                <th class="text-end">Keluar</th>
+                                <th class="text-end">Adj.</th>
+                                <th class="text-end">Alloc.</th>
+                                <th class="text-end">On Hand</th>
+                                <th class="text-end">Available</th>
+                                <th class="text-end">Opname (OH)</th>
+                                <th class="text-end">IFS</th>
+                                <th class="text-end">Selisih OH</th>
+                                <th class="text-end">Selisih IFS</th>
+                            </tr>
+                        </thead>
                         <tbody>${rows}</tbody>
-                    </table>`;
+                    </table>
+                    </div>`;
             } catch {
                 document.getElementById('pos-breakdown-body').innerHTML = `<p class="text-danger text-center mb-0">Gagal memuat rincian.</p>`;
             }
