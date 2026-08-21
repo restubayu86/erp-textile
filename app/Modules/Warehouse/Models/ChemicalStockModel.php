@@ -341,12 +341,13 @@ class ChemicalStockModel extends Model
     public function getStockCard(int $periodId, int $warehouseId, int $chemicalId, ?string $fromDate = null, ?string $toDate = null): array
     {
         $opening = $this->db->table('chemical_stock_openings')
-            ->select('quantity')
+            ->select('quantity, created_at')
             ->where('period_id', $periodId)
             ->where('warehouse_id', $warehouseId)
             ->where('chemical_id', $chemicalId)
             ->get()->getRowArray();
-        $openingQty = (float) ($opening['quantity'] ?? 0);
+        $openingQty  = (float) ($opening['quantity'] ?? 0);
+        $openingDate = $opening['created_at'] ?? null; // tanggal input opening stok, dipakai sbg tanggal baris "Stok Awal"
 
         $rows = $this->db->table('chemical_stock_movements')
             ->select(['id', 'movement_type', 'quantity_in', 'quantity_out', 'unit', 'reference_type', 'reference_id', 'movement_date', 'notes'])
@@ -407,6 +408,7 @@ class ChemicalStockModel extends Model
 
         return [
             'opening_qty'    => $displayOpeningQty,
+            'opening_date'   => $openingDate,
             'total_in'       => $totalIn,
             'total_out'      => $totalOut,
             'closing_qty'    => $displayOpeningQty + $totalIn - $totalOut,

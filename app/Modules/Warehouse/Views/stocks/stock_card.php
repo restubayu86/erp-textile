@@ -334,7 +334,16 @@
                 <span class="fas fa-info-circle me-1"></span>Pilih periode, gudang &amp; bahan kimia
             </span>
         </div>
-        <div class="d-flex gap-2">
+        <div class="d-flex gap-2 align-items-center">
+            <div class="d-flex align-items-center gap-1" title="Pengaturan orientasi kertas untuk Cetak Kartu Stok">
+                <label for="card-print-orientation" class="fs-10 text-muted mb-0 text-nowrap">
+                    <span class="fas fa-cog me-1"></span>Orientasi
+                </label>
+                <select class="form-select form-select-sm" id="card-print-orientation" style="width:auto">
+                    <option value="portrait" selected>Portrait</option>
+                    <option value="landscape">Landscape</option>
+                </select>
+            </div>
             <button class="btn btn-subtle-primary btn-sm" id="card-btn-print" type="button">
                 <span class="fas fa-print me-1"></span>Cetak Kartu Stok
             </button>
@@ -451,18 +460,29 @@
 
 <?= $this->endSection() ?>
 
+<?php
+// Nama yang tampil di "Dicetak Oleh" — prioritas: nama lengkap employee, fallback username/email.
+$printedByName = '-';
+if (!empty($user_employee['fullname'])) {
+    $printedByName = ucwords(strtolower($user_employee['fullname']));
+} elseif (auth()->user()) {
+    $printedByName = auth()->user()->username ?? auth()->user()->email ?? '-';
+}
+?>
 <?= $this->section('scripts') ?>
 
 <script>
     const StockCard = {
         BASE: '<?= base_url() ?>',
-        printedBy: '<?= esc(auth()->user()->username ?? auth()->user()->email ?? "-") ?>',
+        printedBy: '<?= esc($printedByName) ?>',
+        printOrientation: 'portrait',
         currentPeriodId: null,
         currentPeriodRange: null,
         currentPeriodStatus: null,
         currentWarehouseId: null,
         currentWarehouseText: null,
         currentChemicalId: null,
+        currentChemicalCode: null,
         currentChemicalText: null,
         currentFromDate: null,
         currentToDate: null,
@@ -505,6 +525,7 @@
             const periodText = p.get('period_text') || '';
             const warehouseText = p.get('warehouse_text') || '';
             const chemicalText = p.get('chemical_text') || '';
+            const chemicalCode = p.get('chemical_code') || '';
 
             // Isi select2 secara visual (kosmetik) tanpa perlu fetch ulang ke server
             if (periodText) {
@@ -524,7 +545,12 @@
             this.currentPeriodRange = p.get('period_range') || null;
             this.currentPeriodStatus = p.get('period_status') || null;
             this.currentWarehouseId = warehouseId;
+            this.currentWarehouseText = warehouseText || null;
             this.currentChemicalId = chemicalId;
+            // chemical_text dari link Posisi Stok berformat "Nama (KODE)" — dipakai langsung utk tampilan.
+            // chemical_code dikirim terpisah supaya barcode di halaman cetak tidak perlu parsing string.
+            this.currentChemicalText = chemicalText || null;
+            this.currentChemicalCode = chemicalCode || null;
             this._pendingSearchRegex = p.get('search_regex') || null;
             this._pendingSearch = p.get('search') || null;
 
@@ -644,6 +670,9 @@
         initEvents() {
             document.getElementById('card-btn-refresh')?.addEventListener('click', () => this.reload());
             document.getElementById('card-btn-print')?.addEventListener('click', () => this.printStockCard());
+            document.getElementById('card-print-orientation')?.addEventListener('change', e => {
+                this.printOrientation = e.target.value === 'landscape' ? 'landscape' : 'portrait';
+            });
             document.getElementById('card-btn-apply-filter')?.addEventListener('click', () => this.applyFilter());
             document.getElementById('card-btn-reset-filter')?.addEventListener('click', () => this.resetFilter());
 
@@ -664,7 +693,9 @@
 
         fmtDateOnly(d) {
             if (!d) return '—';
-            return new Date(d).toLocaleDateString('id-ID', {
+            // created_at dari backend berformat "Y-m-d H:i:s" — ganti spasi jadi 'T' supaya konsisten diparse semua browser.
+            const normalized = typeof d === 'string' ? d.replace(' ', 'T') : d;
+            return new Date(normalized).toLocaleDateString('id-ID', {
                 day: '2-digit',
                 month: 'short',
                 year: 'numeric'
@@ -698,6 +729,7 @@
             this.currentWarehouseId = warehouseData.id;
             this.currentWarehouseText = warehouseData.text;
             this.currentChemicalId = chemicalData.id;
+            this.currentChemicalCode = chemicalData.code ?? null;
             this.currentChemicalText = chemicalData.code ? `${chemicalData.text} (${chemicalData.code})` : chemicalData.text;
             this.currentFromDate = fromDate;
             this.currentToDate = toDate;
@@ -718,7 +750,10 @@
             this.currentPeriodRange = null;
             this.currentPeriodStatus = null;
             this.currentWarehouseId = null;
+            this.currentWarehouseText = null;
             this.currentChemicalId = null;
+            this.currentChemicalCode = null;
+            this.currentChemicalText = null;
             this.currentFromDate = null;
             this.currentToDate = null;
             this.renderEmpty();
@@ -844,10 +879,11 @@
 
             const self = this;
 
-            // Baris "Stok Awal" ditambahkan manual sebagai baris pertama (bukan dari ledger)
+            // Baris "Stok Awal" ditambahkan manual sebagai baris pertama (bukan dari ledger).
+            // Tanggalnya memakai tanggal input opening stok (created_at chemical_stock_openings), bukan filter tanggal.
             const openingRow = {
                 is_opening: true,
-                movement_date: this.currentFromDate ?? null,
+                movement_date: data.opening_date ?? null,
                 movement_label: data.is_filtered ? 'Saldo Awal (sebelum rentang filter)' : 'Stok Awal Periode',
                 quantity_in: null,
                 quantity_out: null,
@@ -864,25 +900,7 @@
                 searching: rows.length > 15,
                 info: false,
                 ordering: false,
-                dom: '<"top"Bf>rt',
-                buttons: [{
-                        extend: 'excelHtml5',
-                        text: '<span class="fas fa-file-excel me-1"></span>Export Excel',
-                        className: 'btn btn-subtle-success btn-sm',
-                        title: `Kartu Stok - ${self.currentChemicalText ?? ''}`,
-                        exportOptions: {
-                            columns: [0, 1, 2, 3, 4]
-                        },
-                    },
-                    {
-                        extend: 'print',
-                        text: '<span class="fas fa-print me-1"></span>Cetak',
-                        className: 'btn btn-subtle-secondary btn-sm',
-                        exportOptions: {
-                            columns: [0, 1, 2, 3, 4]
-                        },
-                    },
-                ],
+                dom: '<"top"f>rt',
                 language: {
                     search: '',
                     searchPlaceholder: 'Cari transaksi...',
@@ -949,14 +967,19 @@
             });
             const periodText = $('#card-filter-period').select2('data')[0]?.text ?? '';
             const searchTerm = $('#card-stock-table_filter input').val() || '';
+            const orientation = this.printOrientation === 'landscape' ? 'landscape' : 'portrait';
+
+            // Kode kimia untuk barcode — utamakan state currentChemicalCode; fallback parsing dari
+            // "Nama (KODE)" untuk kompatibilitas link lama yang belum membawa parameter chemical_code.
+            const chemicalCode = this.currentChemicalCode || (this.currentChemicalText?.match(/\(([^)]+)\)\s*$/)?.[1] ?? '');
 
             const rowsHtml = rows.map(r => `
                 <tr class="${r.is_opening ? 'opening' : ''}">
                     <td>${r.movement_date ? this.fmtDateOnly(r.movement_date) : '-'}</td>
                     <td>${this.e(r.movement_label)}</td>
-                    <td class="num">${(r.quantity_in === null || r.quantity_in === undefined) ? '-' : '+' + this.fmtNumber(r.quantity_in)}</td>
-                    <td class="num">${(r.quantity_out === null || r.quantity_out === undefined) ? '-' : '-' + this.fmtNumber(r.quantity_out)}</td>
-                    <td class="num"><b>${this.fmtNumber(r.running_balance)}</b></td>
+                    <td class="num in">${(r.quantity_in === null || r.quantity_in === undefined) ? '-' : '+' + this.fmtNumber(r.quantity_in)}</td>
+                    <td class="num out">${(r.quantity_out === null || r.quantity_out === undefined) ? '-' : '-' + this.fmtNumber(r.quantity_out)}</td>
+                    <td class="num bold ${this.balancePrintClass(r.running_balance)}">${this.fmtNumber(r.running_balance)}</td>
                     <td>${r.notes ? this.e(r.notes) : '-'}</td>
                 </tr>
             `).join('');
@@ -968,14 +991,19 @@
                 <head>
                     <meta charset="UTF-8">
                     <title>Kartu Stok - ${this.e(this.currentChemicalText ?? '')}</title>
+                    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"><\/script>
                     <style>
-                        @page { size: A4 portrait; margin: 12mm; }
+                        @page { size: A4 ${orientation}; margin: 3mm; }
                         * { box-sizing: border-box; }
-                        body { font-family: Arial, Helvetica, sans-serif; font-size: 9pt; color: #111; margin: 0; padding: 10mm; }
-                        .letterhead { display: flex; align-items: center; gap: 12px; border-bottom: 2px solid #111; padding-bottom: 8px; margin-bottom: 10px; }
+                        body { font-family: Arial, Helvetica, sans-serif; font-size: 9pt; color: #111; margin: 0; padding: 4mm; }
+                        .letterhead { display: flex; align-items: center; justify-content: space-between; gap: 12px; border-bottom: 2px solid #111; padding-bottom: 8px; margin-bottom: 10px; }
+                        .letterhead .brand { display: flex; align-items: center; gap: 12px; }
                         .letterhead img { height: 48px; }
                         .letterhead .company { font-size: 15pt; font-weight: bold; letter-spacing: .3px; }
                         .letterhead .division { font-size: 10pt; color: #444; }
+                        .barcode-box { text-align: center; }
+                        .barcode-box svg { display: block; }
+                        .barcode-box .code-text { font-size: 7pt; color: #555; font-family: 'Courier New', monospace; margin-top: -2px; }
                         .doc-title { text-align: center; font-size: 11pt; font-weight: bold; margin: 6px 0 10px; text-transform: uppercase; }
                         .info-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px 16px; font-size: 8.5pt; margin-bottom: 10px; border: 1px solid #ccc; padding: 8px 10px; background: #f8f8f8; }
                         .info-grid div span.label { color: #666; display: block; font-size: 7.5pt; text-transform: uppercase; letter-spacing: .3px; }
@@ -984,6 +1012,12 @@
                         th, td { border: 1px solid #999; padding: 3px 6px; text-align: left; }
                         th { background: #eee; font-weight: 700; }
                         td.num, th.num { text-align: right; }
+                        td.bold { font-weight: 700; }
+                        td.in { color: #1e7e34; }
+                        td.out { color: #c0392b; }
+                        td.pos { color: #1e7e34; }
+                        td.neg { color: #c0392b; }
+                        td.zero { color: #6c757d; }
                         tr.opening { background: #eef4ff; font-weight: 600; }
                         .footer-note { margin-top: 14px; font-size: 7.5pt; color: #777; display: flex; justify-content: space-between; border-top: 1px solid #ccc; padding-top: 6px; }
                         @media print { .no-print { display: none !important; } }
@@ -991,15 +1025,21 @@
                 </head>
                 <body>
                     <div class="letterhead">
-                        <img src="${logoPath}" alt="Logo" onerror="this.style.display='none'">
-                        <div>
-                            <div class="company">PT. SINAR CONTINENTAL</div>
-                            <div class="division">DIVISI 3A</div>
+                        <div class="brand">
+                            <img src="${logoPath}" alt="Logo" onerror="this.style.display='none'">
+                            <div>
+                                <div class="company">PT. SINAR CONTINENTAL</div>
+                                <div class="division">DIVISI 3A</div>
+                            </div>
+                        </div>
+                        <div class="barcode-box">
+                            <svg id="chemical-barcode"></svg>
                         </div>
                     </div>
                     <div class="doc-title">Kartu Stok Bahan Kimia</div>
                     <div class="info-grid">
                         <div><span class="label">Bahan Kimia</span><span class="value">${this.e(this.currentChemicalText ?? '-')}</span></div>
+                        <div><span class="label">Kode Kimia</span><span class="value">${this.e(chemicalCode || '-')}</span></div>
                         <div><span class="label">Gudang</span><span class="value">${this.e(this.currentWarehouseText ?? '-')}</span></div>
                         <div><span class="label">Periode</span><span class="value">${this.e(periodText)}${this.currentPeriodStatus === 'Closed' ? ' (Close)' : ' (Opening)'}</span></div>
                         <div><span class="label">Rentang Tanggal</span><span class="value">${this.e((this.currentFromDate || this.currentToDate) ? `${this.currentFromDate ? this.fmtDateOnly(this.currentFromDate) : 'Awal periode'} — ${this.currentToDate ? this.fmtDateOnly(this.currentToDate) : 'Akhir periode'}` : (this.currentPeriodRange ?? '-'))}</span></div>
@@ -1016,11 +1056,40 @@
                         <span>Dokumen ini dihasilkan otomatis dari sistem ERP — PT. Sinar Continental · Dicetak oleh ${this.e(this.printedBy)}</span>
                         <span>Dicetak: ${now}</span>
                     </div>
-                    <script>window.onload = () => window.print();<\/script>
+                    <script>
+                        window.onload = () => {
+                            try {
+                                const code = ${JSON.stringify(chemicalCode || '')};
+                                if (window.JsBarcode && code.trim()) {
+                                    JsBarcode('#chemical-barcode', code, {
+                                        format: 'CODE128',
+                                        displayValue: true,
+                                        fontSize: 11,
+                                        height: 34,
+                                        width: 1.4,
+                                        margin: 0,
+                                    });
+                                } else {
+                                    document.querySelector('.barcode-box').style.display = 'none';
+                                }
+                            } catch (e) {
+                                document.querySelector('.barcode-box').style.display = 'none';
+                            }
+                            window.print();
+                        };
+                    <\/script>
                 </body>
                 </html>
             `);
             printWindow.document.close();
+        },
+
+        // Kelas warna saldo berjalan di halaman cetak — meniru text-balance-positive/negative/zero di tabel layar.
+        balancePrintClass(v) {
+            const n = Number(v ?? 0);
+            if (n > 0) return 'pos';
+            if (n < 0) return 'neg';
+            return 'zero';
         },
 
         e(s) {
