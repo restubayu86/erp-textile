@@ -34,15 +34,15 @@ class ChemicalStockModel extends Model
                 'c.id as chemical_id',
                 'c.chemical_code',
                 'c.chemical_name',
+                'c.status',
                 'GROUP_CONCAT(DISTINCT cc.category_name ORDER BY cc.category_name SEPARATOR ", ") as category_name',
                 'dv.unit as default_unit',
             ])
             ->join('chemical_category_map ccm', 'ccm.chemical_id = c.id', 'left')
             ->join('chemical_categories cc', 'cc.id = ccm.category_id', 'left')
             ->join('chemical_variants dv', 'dv.chemical_id = c.id AND dv.is_default = 1', 'left')
-            ->where('c.status', 'Active')
             ->where('c.deleted_at', null)
-            ->groupBy('c.id, c.chemical_code, c.chemical_name, dv.unit')
+            ->groupBy('c.id, c.chemical_code, c.chemical_name, c.status, dv.unit')
             ->orderBy('c.chemical_name', 'ASC');
     }
 

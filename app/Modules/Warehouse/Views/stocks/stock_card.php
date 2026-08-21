@@ -335,6 +335,9 @@
             </span>
         </div>
         <div class="d-flex gap-2">
+            <button class="btn btn-subtle-primary btn-sm" id="card-btn-print" type="button">
+                <span class="fas fa-print me-1"></span>Cetak Kartu Stok
+            </button>
             <button class="btn btn-subtle-secondary btn-sm" id="card-btn-refresh" type="button">
                 <span class="fas fa-sync-alt me-1"></span>Refresh
             </button>
@@ -453,6 +456,7 @@
 <script>
     const StockCard = {
         BASE: '<?= base_url() ?>',
+        printedBy: '<?= esc(auth()->user()->username ?? auth()->user()->email ?? "-") ?>',
         currentPeriodId: null,
         currentPeriodRange: null,
         currentPeriodStatus: null,
@@ -483,6 +487,54 @@
                 hour: '2-digit',
                 minute: '2-digit'
             });
+            this.initFromQueryParams();
+        },
+
+        /**
+         * Dipanggil dari halaman lain (mis. Posisi Stok) lewat link berisi query string,
+         * supaya filter langsung terisi & data langsung tampil tanpa user pilih manual.
+         * Contoh: ?period_id=1&period_text=...&warehouse_id=2&warehouse_text=...&chemical_id=3&chemical_text=...&search_regex=Penerimaan
+         */
+        initFromQueryParams() {
+            const p = new URLSearchParams(window.location.search);
+            const periodId = p.get('period_id');
+            const warehouseId = p.get('warehouse_id');
+            const chemicalId = p.get('chemical_id');
+            if (!periodId || !warehouseId || !chemicalId) return;
+
+            const periodText = p.get('period_text') || '';
+            const warehouseText = p.get('warehouse_text') || '';
+            const chemicalText = p.get('chemical_text') || '';
+
+            // Isi select2 secara visual (kosmetik) tanpa perlu fetch ulang ke server
+            if (periodText) {
+                const opt = new Option(periodText, periodId, true, true);
+                $('#card-filter-period').append(opt).trigger('change');
+            }
+            if (warehouseText) {
+                const opt = new Option(warehouseText, warehouseId, true, true);
+                $('#card-filter-warehouse').append(opt).trigger('change');
+            }
+            if (chemicalText) {
+                const opt = new Option(chemicalText, chemicalId, true, true);
+                $('#card-filter-chemical').append(opt).trigger('change');
+            }
+
+            this.currentPeriodId = periodId;
+            this.currentPeriodRange = p.get('period_range') || null;
+            this.currentPeriodStatus = p.get('period_status') || null;
+            this.currentWarehouseId = warehouseId;
+            this.currentChemicalId = chemicalId;
+            this._pendingSearchRegex = p.get('search_regex') || null;
+            this._pendingSearch = p.get('search') || null;
+
+            if (this.currentPeriodRange) {
+                document.getElementById('card-period-status-hint').textContent =
+                    `${periodText}${this.currentPeriodStatus === 'Closed' ? ' — Ditutup' : ''} · ${this.currentPeriodRange}`;
+            }
+
+            this.updateFilterUI();
+            this.reload();
         },
 
         async get(url) {
@@ -591,6 +643,7 @@
 
         initEvents() {
             document.getElementById('card-btn-refresh')?.addEventListener('click', () => this.reload());
+            document.getElementById('card-btn-print')?.addEventListener('click', () => this.printStockCard());
             document.getElementById('card-btn-apply-filter')?.addEventListener('click', () => this.applyFilter());
             document.getElementById('card-btn-reset-filter')?.addEventListener('click', () => this.resetFilter());
 
@@ -724,6 +777,17 @@
                 }
                 this.showWrapper();
                 this.buildTable(d.data);
+
+                // Terapkan pencarian otomatis kalau datang dari link Posisi Stok
+                if (this._pendingSearchRegex && this.dt) {
+                    this.dt.search(this._pendingSearchRegex, true, false).draw();
+                    $('#card-stock-table_filter input').val(this._pendingSearchRegex);
+                    this._pendingSearchRegex = null;
+                } else if (this._pendingSearch && this.dt) {
+                    this.dt.search(this._pendingSearch).draw();
+                    $('#card-stock-table_filter input').val(this._pendingSearch);
+                    this._pendingSearch = null;
+                }
             } catch (e) {
                 this.toast('error', 'Gagal memuat data');
                 this.renderEmpty();
@@ -861,6 +925,102 @@
                     if (rowData.is_opening) tr.classList.add('row-opening');
                 },
             });
+        },
+
+        // ============================================================
+        // CETAK KARTU STOK — halaman print dengan kop surat resmi
+        // ============================================================
+        printStockCard() {
+            if (!this.currentPeriodId || !this.currentWarehouseId || !this.currentChemicalId || !this.dt) {
+                this.toast('error', 'Pilih periode, gudang, dan bahan kimia terlebih dahulu');
+                return;
+            }
+
+            const rows = this.dt.rows({
+                search: 'applied'
+            }).data().toArray();
+            const logoPath = this.BASE + 'assets/img/app/logo-regency-footer.png';
+            const now = new Date().toLocaleDateString('id-ID', {
+                day: '2-digit',
+                month: 'long',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+            const periodText = $('#card-filter-period').select2('data')[0]?.text ?? '';
+            const searchTerm = $('#card-stock-table_filter input').val() || '';
+
+            const rowsHtml = rows.map(r => `
+                <tr class="${r.is_opening ? 'opening' : ''}">
+                    <td>${r.movement_date ? this.fmtDateOnly(r.movement_date) : '-'}</td>
+                    <td>${this.e(r.movement_label)}</td>
+                    <td class="num">${(r.quantity_in === null || r.quantity_in === undefined) ? '-' : '+' + this.fmtNumber(r.quantity_in)}</td>
+                    <td class="num">${(r.quantity_out === null || r.quantity_out === undefined) ? '-' : '-' + this.fmtNumber(r.quantity_out)}</td>
+                    <td class="num"><b>${this.fmtNumber(r.running_balance)}</b></td>
+                    <td>${r.notes ? this.e(r.notes) : '-'}</td>
+                </tr>
+            `).join('');
+
+            const printWindow = window.open('', '_blank', 'width=1100,height=850');
+            printWindow.document.write(`
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <meta charset="UTF-8">
+                    <title>Kartu Stok - ${this.e(this.currentChemicalText ?? '')}</title>
+                    <style>
+                        @page { size: A4 portrait; margin: 12mm; }
+                        * { box-sizing: border-box; }
+                        body { font-family: Arial, Helvetica, sans-serif; font-size: 9pt; color: #111; margin: 0; padding: 10mm; }
+                        .letterhead { display: flex; align-items: center; gap: 12px; border-bottom: 2px solid #111; padding-bottom: 8px; margin-bottom: 10px; }
+                        .letterhead img { height: 48px; }
+                        .letterhead .company { font-size: 15pt; font-weight: bold; letter-spacing: .3px; }
+                        .letterhead .division { font-size: 10pt; color: #444; }
+                        .doc-title { text-align: center; font-size: 11pt; font-weight: bold; margin: 6px 0 10px; text-transform: uppercase; }
+                        .info-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px 16px; font-size: 8.5pt; margin-bottom: 10px; border: 1px solid #ccc; padding: 8px 10px; background: #f8f8f8; }
+                        .info-grid div span.label { color: #666; display: block; font-size: 7.5pt; text-transform: uppercase; letter-spacing: .3px; }
+                        .info-grid div span.value { font-weight: 600; }
+                        table { width: 100%; border-collapse: collapse; font-size: 8.5pt; }
+                        th, td { border: 1px solid #999; padding: 3px 6px; text-align: left; }
+                        th { background: #eee; font-weight: 700; }
+                        td.num, th.num { text-align: right; }
+                        tr.opening { background: #eef4ff; font-weight: 600; }
+                        .footer-note { margin-top: 14px; font-size: 7.5pt; color: #777; display: flex; justify-content: space-between; border-top: 1px solid #ccc; padding-top: 6px; }
+                        @media print { .no-print { display: none !important; } }
+                    </style>
+                </head>
+                <body>
+                    <div class="letterhead">
+                        <img src="${logoPath}" alt="Logo" onerror="this.style.display='none'">
+                        <div>
+                            <div class="company">PT. SINAR CONTINENTAL</div>
+                            <div class="division">DIVISI 3A</div>
+                        </div>
+                    </div>
+                    <div class="doc-title">Kartu Stok Bahan Kimia</div>
+                    <div class="info-grid">
+                        <div><span class="label">Bahan Kimia</span><span class="value">${this.e(this.currentChemicalText ?? '-')}</span></div>
+                        <div><span class="label">Gudang</span><span class="value">${this.e(this.currentWarehouseText ?? '-')}</span></div>
+                        <div><span class="label">Periode</span><span class="value">${this.e(periodText)}${this.currentPeriodStatus === 'Closed' ? ' (Close)' : ' (Opening)'}</span></div>
+                        <div><span class="label">Rentang Tanggal</span><span class="value">${this.e((this.currentFromDate || this.currentToDate) ? `${this.currentFromDate ? this.fmtDateOnly(this.currentFromDate) : 'Awal periode'} — ${this.currentToDate ? this.fmtDateOnly(this.currentToDate) : 'Akhir periode'}` : (this.currentPeriodRange ?? '-'))}</span></div>
+                        <div><span class="label">Filter Jenis Transaksi</span><span class="value">${searchTerm ? this.e(searchTerm) : 'Semua'}</span></div>
+                        <div><span class="label">Tanggal Cetak</span><span class="value">${now}</span></div>
+                    </div>
+                    <table>
+                        <thead>
+                            <tr><th>Tanggal</th><th>Jenis Transaksi</th><th class="num">Masuk</th><th class="num">Keluar</th><th class="num">Saldo Berjalan</th><th>Catatan</th></tr>
+                        </thead>
+                        <tbody>${rowsHtml}</tbody>
+                    </table>
+                    <div class="footer-note">
+                        <span>Dokumen ini dihasilkan otomatis dari sistem ERP — PT. Sinar Continental · Dicetak oleh ${this.e(this.printedBy)}</span>
+                        <span>Dicetak: ${now}</span>
+                    </div>
+                    <script>window.onload = () => window.print();<\/script>
+                </body>
+                </html>
+            `);
+            printWindow.document.close();
         },
 
         e(s) {

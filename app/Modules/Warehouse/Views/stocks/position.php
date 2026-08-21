@@ -224,6 +224,37 @@
     .text-balance-negative {
         color: var(--phoenix-danger);
     }
+
+    tr.row-muted {
+        opacity: .45;
+    }
+
+    tr.row-muted:hover {
+        opacity: .7;
+    }
+
+    tr.pos-row-clickable {
+        cursor: pointer;
+    }
+
+    .status-badge-Active {
+        background-color: rgba(var(--phoenix-success-rgb), .12);
+        color: var(--phoenix-success);
+    }
+
+    .status-badge-Draft {
+        background-color: rgba(var(--phoenix-warning-rgb), .15);
+        color: var(--phoenix-warning);
+    }
+
+    .status-badge-Archived {
+        background-color: rgba(var(--phoenix-secondary-rgb), .15);
+        color: var(--phoenix-secondary-color);
+    }
+
+    .print-letterhead {
+        display: none;
+    }
 </style>
 <?= $this->endSection() ?>
 
@@ -326,6 +357,15 @@
             </span>
         </div>
         <div class="d-flex gap-2">
+            <button class="btn btn-subtle-success btn-sm" id="pos-btn-export-excel" type="button">
+                <span class="fas fa-file-excel me-1"></span>Export Excel
+            </button>
+            <button class="btn btn-subtle-danger btn-sm" id="pos-btn-export-pdf" type="button">
+                <span class="fas fa-file-pdf me-1"></span>Export PDF
+            </button>
+            <button class="btn btn-subtle-primary btn-sm" id="pos-btn-print" type="button">
+                <span class="fas fa-print me-1"></span>Cetak Laporan
+            </button>
             <button class="btn btn-subtle-secondary btn-sm" id="pos-btn-refresh" type="button">
                 <span class="fas fa-sync-alt me-1"></span>Refresh
             </button>
@@ -357,6 +397,7 @@
                     <th rowspan="2">No</th>
                     <th rowspan="2">Bahan Kimia</th>
                     <th rowspan="2">Kategori</th>
+                    <th rowspan="2">Status</th>
                     <th colspan="2" class="text-center">Stok Awal</th>
                     <th colspan="3" class="text-center">Pergerakan</th>
                     <th colspan="3" class="text-center">Saldo &amp; Alokasi</th>
@@ -390,6 +431,7 @@
                     <th>No</th>
                     <th>Bahan Kimia</th>
                     <th>Kategori</th>
+                    <th>Status</th>
                     <th>On Hand</th>
                     <th>Allocated</th>
                     <th>Available</th>
@@ -435,6 +477,33 @@
                     <option value="__combined__">— Gabungan (Semua Gudang) —</option>
                 </select>
             </div>
+
+            <hr class="my-3">
+            <div class="fw-semibold fs-9 text-uppercase text-muted mb-2">Filter Tambahan <span class="text-muted normal-case fw-normal">(opsional)</span></div>
+
+            <div class="mb-3">
+                <label class="form-label fw-semibold fs-9 text-uppercase text-muted" for="pos-filter-status">Status Kimia</label>
+                <select class="form-select form-select-sm" id="pos-filter-status">
+                    <option value="">— Semua Status —</option>
+                    <option value="Active">Active</option>
+                    <option value="Draft">Draft</option>
+                    <option value="Archived">Archived</option>
+                </select>
+            </div>
+            <div class="mb-3">
+                <label class="form-label fw-semibold fs-9 text-uppercase text-muted" for="pos-filter-category">Kategori</label>
+                <select class="form-select form-select-sm" id="pos-filter-category">
+                    <option value="">— Semua Kategori —</option>
+                </select>
+            </div>
+            <div class="form-check mb-2">
+                <input class="form-check-input" type="checkbox" id="pos-filter-has-movement">
+                <label class="form-check-label fs-9" for="pos-filter-has-movement">Hanya yang ada pergerakan stok</label>
+            </div>
+            <div class="form-check mb-4">
+                <input class="form-check-input" type="checkbox" id="pos-filter-has-variance">
+                <label class="form-check-label fs-9" for="pos-filter-has-variance">Hanya yang ada selisih opname</label>
+            </div>
         </div>
         <div id="pos-filter-summary" class="mb-3 d-none">
             <div class="alert alert-subtle-info py-2 px-3 mb-0 fs-10">
@@ -471,6 +540,25 @@
     </div>
 </div>
 
+<!-- Modal Detail Pergerakan (klik baris di tabel per-gudang) -->
+<div class="modal fade" id="pos-movementModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-3 overflow-hidden">
+            <div class="modal-header border-bottom py-3 px-4">
+                <div>
+                    <h5 class="modal-title fw-bold mb-0" id="pos-movement-title">Detail Pergerakan</h5>
+                    <p class="text-muted fs-10 mb-0" id="pos-movement-subtitle"></p>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body px-4 py-3">
+                <p class="text-muted fs-10 mb-3">Pilih jenis transaksi untuk melihat rinciannya di Kartu Stok:</p>
+                <div class="d-grid gap-2" id="pos-movement-links"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <?= $this->endSection() ?>
 
 <?= $this->section('scripts') ?>
@@ -478,6 +566,7 @@
 <script>
     const PositionStock = {
         BASE: '<?= base_url() ?>',
+        printedBy: '<?= esc(auth()->user()->username ?? auth()->user()->email ?? "-") ?>',
         currentPeriodId: null,
         currentPeriodRange: null,
         currentWarehouseId: null,
@@ -489,6 +578,7 @@
         init() {
             this.initSelect2();
             this.initEvents();
+            this.initColumnFilters();
             document.getElementById('pos-print-date').textContent = new Date().toLocaleDateString('id-ID', {
                 day: '2-digit',
                 month: 'long',
@@ -536,14 +626,14 @@
                 templateResult: p => {
                     if (!p.id) return p.text;
                     const badge = p.status === 'Closed' ?
-                        '<span class="badge badge-phoenix badge-phoenix-secondary fs-10 ms-2">Ditutup</span>' :
-                        '<span class="badge badge-phoenix badge-phoenix-success fs-10 ms-2">Open</span>';
+                        '<span class="badge badge-phoenix badge-phoenix-secondary fs-10 ms-2">Close</span>' :
+                        '<span class="badge badge-phoenix badge-phoenix-success fs-10 ms-2">Opening</span>';
                     return $(`<span>${this.e(p.text)}${badge}</span>`);
                 },
                 templateSelection: p => {
                     if (!p.id) return p.text;
                     const badge = p.status === 'Closed' ?
-                        '<span class="badge badge-phoenix badge-phoenix-secondary fs-10 ms-2">Ditutup</span>' :
+                        '<span class="badge badge-phoenix badge-phoenix-secondary fs-10 ms-2">Close</span>' :
                         '';
                     return $(`<span>${this.e(p.text)}${badge}</span>`);
                 },
@@ -578,8 +668,71 @@
 
         initEvents() {
             document.getElementById('pos-btn-refresh')?.addEventListener('click', () => this.reload());
+            document.getElementById('pos-btn-print')?.addEventListener('click', () => this.printPosition());
+            document.getElementById('pos-btn-export-excel')?.addEventListener('click', () => this.exportExcel());
+            document.getElementById('pos-btn-export-pdf')?.addEventListener('click', () => this.exportPdf());
             document.getElementById('pos-btn-apply-filter')?.addEventListener('click', () => this.applyFilter());
             document.getElementById('pos-btn-reset-filter')?.addEventListener('click', () => this.resetFilter());
+
+            ['pos-filter-status', 'pos-filter-category'].forEach(id => {
+                document.getElementById(id)?.addEventListener('change', () => this.redrawActiveTable());
+            });
+            ['pos-filter-has-movement', 'pos-filter-has-variance'].forEach(id => {
+                document.getElementById(id)?.addEventListener('change', () => this.redrawActiveTable());
+            });
+        },
+
+        /**
+         * Filter kolom tambahan (opsional) — diterapkan langsung di client (tanpa reload server)
+         * lewat mekanisme custom search DataTables, supaya instan.
+         */
+        initColumnFilters() {
+            $.fn.dataTable.ext.search.push((settings, data, dataIndex, rowData) => {
+                if (!['pos-stock-table', 'pos-stock-table-combined'].includes(settings.nTable.id)) return true;
+
+                const statusFilter = document.getElementById('pos-filter-status')?.value;
+                if (statusFilter && rowData.status !== statusFilter) return false;
+
+                const categoryFilter = document.getElementById('pos-filter-category')?.value;
+                if (categoryFilter) {
+                    const cats = (rowData.category_name || '').split(', ');
+                    if (!cats.includes(categoryFilter)) return false;
+                }
+
+                if (document.getElementById('pos-filter-has-movement')?.checked) {
+                    if (!this.hasMovement(rowData)) return false;
+                }
+
+                if (document.getElementById('pos-filter-has-variance')?.checked) {
+                    if (rowData.variance_on_hand === null || rowData.variance_on_hand === undefined || Math.abs(Number(rowData.variance_on_hand)) < 0.001) return false;
+                }
+
+                return true;
+            });
+        },
+
+        redrawActiveTable() {
+            if (this.dtPerWarehouse && !document.getElementById('pos-perwarehouse-wrapper').classList.contains('d-none')) {
+                this.dtPerWarehouse.draw();
+            }
+            if (this.dtCombined && !document.getElementById('pos-combined-wrapper').classList.contains('d-none')) {
+                this.dtCombined.draw();
+            }
+        },
+
+        populateCategoryFilter(rows) {
+            const set = new Set();
+            rows.forEach(r => {
+                (r.category_name || '').split(', ').forEach(c => {
+                    if (c) set.add(c);
+                });
+            });
+            const sorted = Array.from(set).sort((a, b) => a.localeCompare(b));
+            const select = document.getElementById('pos-filter-category');
+            const currentVal = select.value;
+            select.innerHTML = '<option value="">— Semua Kategori —</option>' +
+                sorted.map(c => `<option value="${this.e(c)}">${this.e(c)}</option>`).join('');
+            if (sorted.includes(currentVal)) select.value = currentVal;
         },
 
         fmtDateOnly(d) {
@@ -604,7 +757,7 @@
             document.getElementById('pos-period-status-hint').classList.remove('text-danger');
             const rangeText = `${this.fmtDateOnly(periodData.start_date)} — ${this.fmtDateOnly(periodData.end_date)}`;
             document.getElementById('pos-period-status-hint').textContent =
-                `${periodData.name} (${periodData.code})${periodData.status === 'Closed' ? ' — Ditutup' : ''} · ${rangeText}`;
+                `${periodData.name} (${periodData.code})${periodData.status === 'Closed' ? ' — Close' : ''} · ${rangeText}`;
 
             this.currentPeriodId = periodData.id;
             this.currentPeriodRange = rangeText;
@@ -629,6 +782,10 @@
             $('#pos-filter-period').val(null).trigger('change');
             $('#pos-filter-warehouse').val('__combined__').trigger('change');
             document.getElementById('pos-period-status-hint').textContent = '';
+            document.getElementById('pos-filter-status').value = '';
+            document.getElementById('pos-filter-category').value = '';
+            document.getElementById('pos-filter-has-movement').checked = false;
+            document.getElementById('pos-filter-has-variance').checked = false;
             this.currentPeriodId = null;
             this.currentPeriodRange = null;
             this.currentPeriodStatus = null;
@@ -659,11 +816,11 @@
             const periodEl = document.getElementById('pos-stat-period');
             const iconEl = document.getElementById('pos-stat-period-icon');
             if (this.currentPeriodStatus === 'Closed') {
-                periodEl.textContent = 'Ditutup';
+                periodEl.textContent = 'Close';
                 periodEl.className = 'info-value text-secondary';
                 iconEl.className = 'stat-icon bg-secondary bg-opacity-10 text-secondary';
             } else if (this.currentPeriodStatus) {
-                periodEl.textContent = 'Terbuka';
+                periodEl.textContent = 'Opening';
                 periodEl.className = 'info-value text-success';
                 iconEl.className = 'stat-icon bg-success bg-opacity-10 text-success';
             } else {
@@ -746,6 +903,7 @@
             document.getElementById('pos-stat-total').textContent = total;
             document.getElementById('pos-stat-available').textContent = available;
             document.getElementById('pos-stat-empty').textContent = withVariance;
+            this.populateCategoryFilter(rows);
         },
 
         balanceClass(v) {
@@ -759,6 +917,20 @@
             return catText ?
                 catText.split(', ').map(c => `<span class="badge badge-phoenix badge-phoenix-secondary p-2 fs-10 me-1 mb-1">${this.e(c)}</span>`).join('') :
                 '<span class="text-muted fst-italic">—</span>';
+        },
+
+        statusBadge(status) {
+            const labels = {
+                Active: 'Active',
+                Draft: 'Draft',
+                Archived: 'Archived'
+            };
+            const label = labels[status] ?? status ?? '—';
+            return `<span class="badge p-2 fs-10 status-badge-${this.e(status)}">${this.e(label)}</span>`;
+        },
+
+        hasMovement(row) {
+            return Number(row.stock_in ?? 0) > 0 || Number(row.stock_out ?? 0) > 0;
         },
 
         fmtOrDash(v) {
@@ -814,25 +986,15 @@
                 order: [
                     [1, 'asc']
                 ],
-                dom: '<"top"Bf>rt<"bottom"lpi>',
+                dom: '<"top"f>rt<"bottom"lpi>',
                 buttons: [{
-                        extend: 'excelHtml5',
-                        text: '<span class="fas fa-file-excel me-1"></span>Export Excel',
-                        className: 'btn btn-subtle-success btn-sm',
-                        title: 'Posisi Stok Bahan Kimia',
-                        exportOptions: {
-                            columns: ':visible'
-                        },
+                    extend: 'excelHtml5',
+                    title: 'Posisi Stok Bahan Kimia',
+                    messageTop: () => this.excelLetterhead(false),
+                    exportOptions: {
+                        columns: ':visible'
                     },
-                    {
-                        extend: 'print',
-                        text: '<span class="fas fa-print me-1"></span>Cetak',
-                        className: 'btn btn-subtle-secondary btn-sm',
-                        exportOptions: {
-                            columns: ':visible'
-                        },
-                    },
-                ],
+                }, ],
                 language: {
                     search: '',
                     searchPlaceholder: 'Cari bahan kimia...',
@@ -858,11 +1020,15 @@
                         width: '130px'
                     },
                     {
+                        targets: 3,
+                        width: '90px'
+                    },
+                    {
                         targets: '_all',
                         className: 'text-end'
                     },
                     {
-                        targets: [0, 1, 2],
+                        targets: [0, 1, 2, 3],
                         className: ''
                     },
                 ],
@@ -876,13 +1042,18 @@
                         data: 'chemical_name',
                         render: (data, type, row) => {
                             if (type !== 'display') return data;
-                            return `<span class="fw-semibold">${self.e(data)}</span>
+                            const nameClass = self.hasMovement(row) ? 'fw-semibold text-danger' : 'fw-semibold';
+                            return `<span class="${nameClass}">${self.e(data)}</span>
                                     <div class="text-muted small font-monospace">${self.e(row.chemical_code)}</div>`;
                         },
                     },
                     {
                         data: 'category_name',
                         render: d => self.categoryBadges(d)
+                    },
+                    {
+                        data: 'status',
+                        render: d => self.statusBadge(d)
                     },
                     numCol('available_opening'),
                     numCol('on_hand_opening'),
@@ -948,6 +1119,15 @@
                         },
                     },
                 ],
+                createdRow: (tr, rowData) => {
+                    tr.classList.add('pos-row-clickable');
+                    if (rowData.status !== 'Active') tr.classList.add('row-muted');
+                },
+            });
+
+            $('#pos-stock-table tbody').off('click').on('click', 'tr', function() {
+                const rowData = self.dtPerWarehouse.row(this).data();
+                if (rowData) self.openMovementDetail(rowData);
             });
         },
 
@@ -977,14 +1157,13 @@
                 order: [
                     [1, 'asc']
                 ],
-                dom: '<"top"Bf>rt<"bottom"lpi>',
+                dom: '<"top"f>rt<"bottom"lpi>',
                 buttons: [{
                     extend: 'excelHtml5',
-                    text: '<span class="fas fa-file-excel me-1"></span>Export Excel',
-                    className: 'btn btn-subtle-success btn-sm',
                     title: 'Posisi Stok Bahan Kimia (Gabungan)',
+                    messageTop: () => this.excelLetterhead(true),
                     exportOptions: {
-                        columns: [0, 1, 2, 3, 4, 5, 6]
+                        columns: [0, 1, 2, 3, 4, 5, 6, 7]
                     },
                 }, ],
                 language: {
@@ -1012,15 +1191,19 @@
                         width: '150px'
                     },
                     {
-                        targets: [3, 4, 5],
+                        targets: 3,
+                        width: '90px'
+                    },
+                    {
+                        targets: [4, 5, 6],
                         className: 'text-end'
                     },
                     {
-                        targets: 6,
+                        targets: 7,
                         width: '110px'
                     },
                     {
-                        targets: 7,
+                        targets: 8,
                         width: '30px'
                     },
                 ],
@@ -1034,13 +1217,18 @@
                         data: 'chemical_name',
                         render: (data, type, row) => {
                             if (type !== 'display') return data;
-                            return `<span class="fw-semibold">${self.e(data)}</span>
+                            const nameClass = self.hasMovement(row) ? 'fw-semibold text-danger' : 'fw-semibold';
+                            return `<span class="${nameClass}">${self.e(data)}</span>
                                     <div class="text-muted small font-monospace">${self.e(row.chemical_code)}</div>`;
                         },
                     },
                     {
                         data: 'category_name',
                         render: d => self.categoryBadges(d)
+                    },
+                    {
+                        data: 'status',
+                        render: d => self.statusBadge(d)
                     },
                     {
                         data: 'on_hand',
@@ -1081,7 +1269,10 @@
                         render: () => '<span class="fas fa-chevron-right text-muted"></span>',
                     },
                 ],
-                createdRow: tr => tr.classList.add('combined-row'),
+                createdRow: (tr, rowData) => {
+                    tr.classList.add('combined-row');
+                    if (rowData.status !== 'Active') tr.classList.add('row-muted');
+                },
             });
 
             $('#pos-stock-table-combined tbody').off('click').on('click', 'tr', function() {
@@ -1149,6 +1340,447 @@
             } catch {
                 document.getElementById('pos-breakdown-body').innerHTML = `<p class="text-danger text-center mb-0">Gagal memuat rincian.</p>`;
             }
+        },
+
+        // ============================================================
+        // MODAL DETAIL PERGERAKAN — klik baris di tabel per-gudang
+        // Link menuju Kartu Stok dengan filter otomatis + pencarian per jenis transaksi
+        // ============================================================
+        openMovementDetail(row) {
+            document.getElementById('pos-movement-title').textContent = row.chemical_name;
+            document.getElementById('pos-movement-subtitle').textContent =
+                `${row.chemical_code} · ${this.currentWarehouseText ?? ''}`;
+
+            const periodData = $('#pos-filter-period').select2('data')[0];
+            const params = new URLSearchParams({
+                period_id: this.currentPeriodId,
+                period_text: periodData?.text ?? '',
+                period_status: this.currentPeriodStatus ?? '',
+                period_range: this.currentPeriodRange ?? '',
+                warehouse_id: this.currentWarehouseId,
+                warehouse_text: this.currentWarehouseText ?? '',
+                chemical_id: row.chemical_id,
+                chemical_text: `${row.chemical_name} (${row.chemical_code})`,
+            });
+
+            const base = `${this.BASE}warehouse/stocks/stock-card?${params.toString()}`;
+            const links = [{
+                    label: 'Penerimaan &amp; Transfer Masuk',
+                    icon: 'fa-arrow-down text-success',
+                    search: 'Penerimaan|Transfer Masuk'
+                },
+                {
+                    label: 'Pemakaian &amp; Transfer Keluar',
+                    icon: 'fa-arrow-up text-danger',
+                    search: 'Pemakaian|Transfer Keluar'
+                },
+                {
+                    label: 'Penyesuaian (Adjustment)',
+                    icon: 'fa-balance-scale text-warning',
+                    search: 'Penyesuaian'
+                },
+                {
+                    label: 'Lihat Semua Transaksi (Kartu Stok)',
+                    icon: 'fa-book text-primary',
+                    search: ''
+                },
+            ];
+            document.getElementById('pos-movement-links').innerHTML = links.map(l => {
+                const href = base + (l.search ? `&search_regex=${encodeURIComponent(l.search)}` : '');
+                return `<a href="${href}" target="_blank" class="btn btn-subtle-secondary btn-sm text-start d-flex align-items-center gap-2">
+                            <span class="fas ${l.icon}"></span> ${l.label}
+                        </a>`;
+            }).join('');
+
+            new bootstrap.Modal(document.getElementById('pos-movementModal')).show();
+        },
+
+        // ============================================================
+        // EXPORT EXCEL — trigger tombol excelHtml5 yang sudah terpasang di tabel aktif
+        // ============================================================
+        excelLetterhead(isCombined) {
+            const periodText = $('#pos-filter-period').select2('data')[0]?.text ?? '-';
+            const now = new Date().toLocaleDateString('id-ID', {
+                day: '2-digit',
+                month: 'long',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+            return `PT. SINAR CONTINENTAL - DIVISI 3A | Gudang: ${this.currentWarehouseText ?? '-'} | Periode: ${periodText}${this.currentPeriodStatus === 'Closed' ? ' (Close)' : ' (Opening)'} | Dicetak: ${now} oleh ${this.printedBy}`;
+        },
+
+        exportExcel() {
+            if (!this.currentPeriodId || !this.currentWarehouseId) {
+                this.toast('error', 'Pilih periode dan gudang terlebih dahulu');
+                return;
+            }
+            const isCombined = this.currentWarehouseId === '__combined__';
+            const dt = isCombined ? this.dtCombined : this.dtPerWarehouse;
+            if (!dt) {
+                this.toast('error', 'Belum ada data untuk diexport');
+                return;
+            }
+            dt.button(0).trigger();
+        },
+
+        // ============================================================
+        // EXPORT PDF — dibuat manual pakai pdfMake supaya tampilannya konsisten
+        // dengan kop surat "Cetak Laporan" (logo, PT. Sinar Continental, Divisi 3A)
+        // ============================================================
+        async loadImageAsBase64(url) {
+            try {
+                const res = await fetch(url);
+                const blob = await res.blob();
+                return await new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onloadend = () => resolve(reader.result);
+                    reader.onerror = reject;
+                    reader.readAsDataURL(blob);
+                });
+            } catch (e) {
+                return null;
+            }
+        },
+
+        async exportPdf() {
+            if (!this.currentPeriodId || !this.currentWarehouseId) {
+                this.toast('error', 'Pilih periode dan gudang terlebih dahulu');
+                return;
+            }
+            const isCombined = this.currentWarehouseId === '__combined__';
+            const dt = isCombined ? this.dtCombined : this.dtPerWarehouse;
+            if (!dt) {
+                this.toast('error', 'Belum ada data untuk diexport');
+                return;
+            }
+
+            this.toast('info', 'Menyiapkan PDF...');
+            const rows = dt.rows({
+                search: 'applied'
+            }).data().toArray();
+            const logoBase64 = await this.loadImageAsBase64(this.BASE + 'assets/img/app/logo-regency-footer.png');
+            const periodText = $('#pos-filter-period').select2('data')[0]?.text ?? '-';
+            const now = new Date().toLocaleDateString('id-ID', {
+                day: '2-digit',
+                month: 'long',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+
+            const plain = v => (v === null || v === undefined) ? '-' : this.fmtNumber(v);
+            const plainSigned = v => (v === null || v === undefined) ? '-' : (Number(v) > 0 ? '+' : '') + this.fmtNumber(v);
+
+            let headerRow, body, widths;
+            if (isCombined) {
+                headerRow = ['No', 'Bahan Kimia', 'Kategori', 'Status', 'On Hand', 'Allocated', 'Available', 'Tersebar'].map(t => ({
+                    text: t,
+                    style: 'th'
+                }));
+                body = rows.map((r, i) => [
+                    i + 1, `${r.chemical_name}\n${r.chemical_code}`, r.category_name ?? '-', r.status,
+                    plain(r.on_hand), plain(r.allocated), plain(r.available), `${r.warehouse_count} gudang`,
+                ]);
+                widths = ['auto', '*', 'auto', 'auto', 'auto', 'auto', 'auto', 'auto'];
+            } else {
+                headerRow = ['No', 'Bahan Kimia', 'Kategori', 'Status', 'Avl', 'OH', 'Masuk', 'Keluar', 'Adj', 'Alloc', 'OH', 'Avl', 'Avl', 'OH', 'IFS', 'vs Opname', 'IFS vs Opname'].map(t => ({
+                    text: t,
+                    style: 'th'
+                }));
+                body = rows.map((r, i) => [
+                    i + 1, `${r.chemical_name}\n${r.chemical_code}`, r.category_name ?? '-', r.status,
+                    plain(r.available_opening), plain(r.on_hand_opening),
+                    '+' + this.fmtNumber(r.stock_in), '-' + this.fmtNumber(r.stock_out), plainSigned(r.adjustment),
+                    plain(r.allocated), plain(r.on_hand), plain(r.available),
+                    plain(r.opname_available), plain(r.opname_on_hand), plain(r.ifs_qty),
+                    plainSigned(r.variance_on_hand), plainSigned(r.variance_ifs),
+                ]);
+                widths = Array(17).fill('auto');
+            }
+
+            const docDefinition = {
+                pageOrientation: 'landscape',
+                pageMargins: [24, 24, 24, 24],
+                content: [{
+                        columns: [
+                            logoBase64 ? {
+                                image: logoBase64,
+                                width: 42
+                            } : {
+                                text: ''
+                            },
+                            {
+                                text: [{
+                                        text: 'PT. SINAR CONTINENTAL\n',
+                                        style: 'company'
+                                    },
+                                    {
+                                        text: 'DIVISI 3A',
+                                        style: 'division'
+                                    },
+                                ],
+                                margin: [8, 2, 0, 0],
+                            },
+                        ],
+                    },
+                    {
+                        canvas: [{
+                            type: 'line',
+                            x1: 0,
+                            y1: 4,
+                            x2: 780,
+                            y2: 4,
+                            lineWidth: 1.2
+                        }],
+                        margin: [0, 4, 0, 8]
+                    },
+                    {
+                        text: `Laporan Posisi Stok Bahan Kimia${isCombined ? ' (Gabungan Semua Gudang)' : ''}`,
+                        style: 'title',
+                        margin: [0, 0, 0, 8]
+                    },
+                    {
+                        columns: [{
+                                text: [{
+                                    text: 'Gudang: ',
+                                    bold: true
+                                }, this.currentWarehouseText ?? '-'],
+                                fontSize: 8
+                            },
+                            {
+                                text: [{
+                                    text: 'Periode: ',
+                                    bold: true
+                                }, `${periodText}${this.currentPeriodStatus === 'Closed' ? ' (Close)' : ' (Opening)'}`],
+                                fontSize: 8
+                            },
+                            {
+                                text: [{
+                                    text: 'Rentang: ',
+                                    bold: true
+                                }, this.currentPeriodRange ?? '-'],
+                                fontSize: 8
+                            },
+                            {
+                                text: [{
+                                    text: 'Dicetak: ',
+                                    bold: true
+                                }, now],
+                                fontSize: 8
+                            },
+                        ],
+                        margin: [0, 0, 0, 10],
+                    },
+                    {
+                        table: {
+                            headerRows: 1,
+                            widths,
+                            body: [headerRow, ...body]
+                        },
+                        layout: 'lightHorizontalLines',
+                        fontSize: 6.5,
+                    },
+                    {
+                        text: `Total ${rows.length} bahan kimia · Dicetak oleh ${this.printedBy}`,
+                        fontSize: 7,
+                        margin: [0, 8, 0, 0],
+                        color: '#777'
+                    },
+                ],
+                styles: {
+                    company: {
+                        fontSize: 14,
+                        bold: true
+                    },
+                    division: {
+                        fontSize: 9,
+                        color: '#444'
+                    },
+                    title: {
+                        fontSize: 11,
+                        bold: true,
+                        alignment: 'center'
+                    },
+                    th: {
+                        bold: true,
+                        fillColor: '#eeeeee'
+                    },
+                },
+                defaultStyle: {
+                    fontSize: 7
+                },
+            };
+
+            pdfMake.createPdf(docDefinition).download(`Posisi_Stok_${(periodText || 'periode').replace(/[^\w-]+/g, '_')}.pdf`);
+        },
+
+        // ============================================================
+        // CETAK LAPORAN — halaman print dengan kop surat resmi
+        // ============================================================
+        printPosition() {
+            if (!this.currentPeriodId || !this.currentWarehouseId) {
+                this.toast('error', 'Pilih periode dan gudang terlebih dahulu');
+                return;
+            }
+
+            const isCombined = this.currentWarehouseId === '__combined__';
+            const dt = isCombined ? this.dtCombined : this.dtPerWarehouse;
+            if (!dt) {
+                this.toast('error', 'Belum ada data untuk dicetak');
+                return;
+            }
+
+            const rows = dt.rows({
+                search: 'applied'
+            }).data().toArray();
+            const logoPath = this.BASE + 'assets/img/app/logo-regency-footer.png';
+            const now = new Date().toLocaleDateString('id-ID', {
+                day: '2-digit',
+                month: 'long',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+            const periodText = $('#pos-filter-period').select2('data')[0]?.text ?? '';
+
+            const withVariance = rows.filter(r => r.variance_on_hand !== null && Math.abs(Number(r.variance_on_hand)) > 0.001).length;
+            const draftArchived = rows.filter(r => r.status !== 'Active').length;
+
+            let tableHtml;
+            if (isCombined) {
+                tableHtml = `
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>#</th><th>Bahan Kimia</th><th>Kategori</th><th>Status</th>
+                                <th class="num">On Hand</th><th class="num">Allocated</th><th class="num">Available</th><th>Tersebar</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${rows.map((r, i) => `
+                                <tr class="${r.status !== 'Active' ? 'muted' : ''}">
+                                    <td>${i + 1}</td>
+                                    <td class="${this.hasMovement(r) ? 'moved' : ''}">${this.e(r.chemical_name)}<div class="mono">${this.e(r.chemical_code)}</div></td>
+                                    <td>${this.e(r.category_name ?? '-')}</td>
+                                    <td>${this.e(r.status)}</td>
+                                    <td class="num">${this.fmtNumber(r.on_hand)}</td>
+                                    <td class="num">${this.fmtOrDash(r.allocated)}</td>
+                                    <td class="num">${this.fmtNumber(r.available)}</td>
+                                    <td>${r.warehouse_count} gudang</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>`;
+            } else {
+                tableHtml = `
+                    <table>
+                        <thead>
+                            <tr>
+                                <th rowspan="2">#</th><th rowspan="2">Bahan Kimia</th><th rowspan="2">Kategori</th><th rowspan="2">Status</th>
+                                <th colspan="2">Stok Awal</th><th colspan="3">Pergerakan</th><th colspan="3">Saldo &amp; Alokasi</th>
+                                <th colspan="2">Stock Opname</th><th rowspan="2">IFS</th><th colspan="2">Selisih</th>
+                            </tr>
+                            <tr>
+                                <th class="num">Avl</th><th class="num">OH</th>
+                                <th class="num">Masuk</th><th class="num">Keluar</th><th class="num">Adj</th>
+                                <th class="num">Alloc</th><th class="num">OH</th><th class="num">Avl</th>
+                                <th class="num">Avl</th><th class="num">OH</th>
+                                <th class="num">vs Opname</th><th class="num">IFS vs Opname</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${rows.map((r, i) => `
+                                <tr class="${r.status !== 'Active' ? 'muted' : ''}">
+                                    <td>${i + 1}</td>
+                                    <td class="${this.hasMovement(r) ? 'moved' : ''}">${this.e(r.chemical_name)}<div class="mono">${this.e(r.chemical_code)}</div></td>
+                                    <td>${this.e(r.category_name ?? '-')}</td>
+                                    <td>${this.e(r.status)}</td>
+                                    <td class="num">${this.fmtOrDash(r.available_opening)}</td>
+                                    <td class="num">${this.fmtOrDash(r.on_hand_opening)}</td>
+                                    <td class="num">+${this.fmtNumber(r.stock_in)}</td>
+                                    <td class="num">-${this.fmtNumber(r.stock_out)}</td>
+                                    <td class="num">${this.signedFmt(r.adjustment)}</td>
+                                    <td class="num">${this.fmtOrDash(r.allocated)}</td>
+                                    <td class="num"><b>${this.fmtNumber(r.on_hand)}</b></td>
+                                    <td class="num"><b>${this.fmtNumber(r.available)}</b></td>
+                                    <td class="num">${this.fmtOrDash(r.opname_available)}</td>
+                                    <td class="num">${this.fmtOrDash(r.opname_on_hand)}</td>
+                                    <td class="num">${this.fmtOrDash(r.ifs_qty)}</td>
+                                    <td class="num">${this.signedFmt(r.variance_on_hand)}</td>
+                                    <td class="num">${this.signedFmt(r.variance_ifs)}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>`;
+            }
+
+            const printWindow = window.open('', '_blank', 'width=1400,height=900');
+            printWindow.document.write(`
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <meta charset="UTF-8">
+                    <title>Posisi Stok Bahan Kimia</title>
+                    <style>
+                        @page { size: A4 portrait; margin: 5mm; }
+                        * { box-sizing: border-box; }
+                        body { font-family: Arial, Helvetica, sans-serif; font-size: 8pt; color: #111; margin: 0; padding: 10mm; }
+                        .letterhead { display: flex; align-items: center; gap: 12px; border-bottom: 2px solid #111; padding-bottom: 8px; margin-bottom: 10px; }
+                        .letterhead img { height: 48px; }
+                        .letterhead .company { font-size: 15pt; font-weight: bold; letter-spacing: .3px; }
+                        .letterhead .division { font-size: 10pt; color: #444; }
+                        .doc-title { text-align: center; font-size: 11pt; font-weight: bold; margin: 6px 0 10px; text-transform: uppercase; }
+                        .info-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px 16px; font-size: 8pt; margin-bottom: 10px; border: 1px solid #ccc; padding: 8px 10px; background: #f8f8f8; }
+                        .info-grid div span.label { color: #666; display: block; font-size: 7pt; text-transform: uppercase; letter-spacing: .3px; }
+                        .info-grid div span.value { font-weight: 600; }
+                        table { width: 100%; border-collapse: collapse; font-size: 7pt; }
+                        th, td { border: 1px solid #999; padding: 2px 4px; text-align: left; }
+                        th { background: #eee; font-weight: 700; text-align: center; }
+                        td.num, th.num { text-align: right; }
+                        .mono { font-family: 'Courier New', monospace; font-size: 6.5pt; color: #555; }
+                        tr.muted { color: #999; background: #fafafa; }
+                        td.moved { color: #c0392b; font-weight: 700; }
+                        .legend { margin-top: 8px; font-size: 7pt; color: #555; }
+                        .legend b { color: #c0392b; }
+                        .footer-note { margin-top: 14px; font-size: 7pt; color: #777; display: flex; justify-content: space-between; border-top: 1px solid #ccc; padding-top: 6px; }
+                        @media print { .no-print { display: none !important; } }
+                    </style>
+                </head>
+                <body>
+                    <div class="letterhead">
+                        <img src="${logoPath}" alt="Logo" onerror="this.style.display='none'">
+                        <div>
+                            <div class="company">PT. SINAR CONTINENTAL</div>
+                            <div class="division">DIVISI 3A</div>
+                        </div>
+                    </div>
+                    <div class="doc-title">Laporan Posisi Stok Bahan Kimia${isCombined ? ' (Gabungan Semua Gudang)' : ''}</div>
+                    <div class="info-grid">
+                        <div><span class="label">Gudang</span><span class="value">${this.e(this.currentWarehouseText ?? '-')}</span></div>
+                        <div><span class="label">Periode</span><span class="value">${this.e(periodText)}${this.currentPeriodStatus === 'Closed' ? ' (Close)' : ' (Opening)'}</span></div>
+                        <div><span class="label">Rentang Periode</span><span class="value">${this.e(this.currentPeriodRange ?? '-')}</span></div>
+                        <div><span class="label">Tanggal Cetak</span><span class="value">${now}</span></div>
+                        <div><span class="label">Total Item</span><span class="value">${rows.length} bahan kimia</span></div>
+                        <div><span class="label">Ada Selisih Opname</span><span class="value">${withVariance} item</span></div>
+                        <div><span class="label">Status Non-Aktif</span><span class="value">${draftArchived} item (Draft/Archived)</span></div>
+                        <div><span class="label">Dicetak Oleh</span><span class="value">${this.e(this.printedBy)}</span></div>
+                    </div>
+                    ${tableHtml}
+                    <div class="legend">
+                        Baris pudar = bahan kimia berstatus Draft/Archived &nbsp;·&nbsp;
+                        <b>Nama merah tebal</b> = ada pergerakan stok (masuk/keluar) pada periode ini &nbsp;·&nbsp;
+                        "—" = data opname/IFS belum diinput
+                    </div>
+                    <div class="footer-note">
+                        <span>Dokumen ini dihasilkan otomatis dari sistem ERP — PT. Sinar Continental</span>
+                        <span>Dicetak: ${now}</span>
+                    </div>
+                    <script>window.onload = () => window.print();<\/script>
+                </body>
+                </html>
+            `);
+            printWindow.document.close();
         },
 
         e(s) {
