@@ -4,15 +4,18 @@ namespace App\Modules\Warehouse\Controllers;
 
 use App\Controllers\BaseController;
 use App\Modules\Warehouse\Models\ChemicalStockModel;
+use App\Modules\Warehouse\Models\ChemicalStockMovementModel;
 use CodeIgniter\HTTP\RedirectResponse;
 
 class StockController extends BaseController
 {
     protected ChemicalStockModel $model;
+    protected ChemicalStockMovementModel $movementModel;
 
     public function __construct()
     {
-        $this->model = new ChemicalStockModel();
+        $this->model         = new ChemicalStockModel();
+        $this->movementModel = new ChemicalStockMovementModel();
     }
 
     /**
@@ -141,6 +144,83 @@ class StockController extends BaseController
         ]);
     }
 
+    // ============================================================
+    // PENERIMAAN (RECEIPT)
+    // ============================================================
+
+    public function receipt(): string|RedirectResponse
+    {
+        if (!canDo('warehouse.stocks.receive')) return $this->forbidden();
+
+        return view('App\Modules\Warehouse\Views\stocks\receipt', [
+            'title'            => 'Penerimaan Stok',
+            'page_title'       => 'Penerimaan Stok Bahan Kimia',
+            'page_description' => 'Catat penerimaan bahan kimia masuk ke gudang untuk periode berjalan',
+            'breadcrumbs'      => $this->breadcrumbs('Penerimaan'),
+        ]);
+    }
+
+    /**
+     * Simpan bulk baris Penerimaan — POST period_id, warehouse_id, movement_date, rows[] (JSON string)
+     */
+    public function storeReceipt()
+    {
+        if (!$this->request->isAJAX()) return $this->jsonError('Method not allowed', 405);
+        if (!canDo('warehouse.stocks.receive')) return $this->jsonError('Akses ditolak', 403);
+
+        $periodId     = (int) $this->request->getPost('period_id');
+        $warehouseId  = (int) $this->request->getPost('warehouse_id');
+        $movementDate = trim((string) $this->request->getPost('movement_date'));
+        $rowsRaw      = $this->request->getPost('rows');
+
+        if (!$periodId || !$warehouseId || !$movementDate) {
+            return $this->jsonError('Periode, gudang, dan tanggal penerimaan wajib diisi', 422);
+        }
+
+        $rows = is_string($rowsRaw) ? json_decode($rowsRaw, true) : $rowsRaw;
+        if (!is_array($rows) || empty($rows)) {
+            return $this->jsonError('Belum ada item penerimaan yang ditambahkan', 422);
+        }
+
+        $result = $this->movementModel->saveReceiptBulk($periodId, $warehouseId, $movementDate, $rows, (int) auth()->id());
+        return $this->jsonResponse($result, $result['status'] === 'success' ? 200 : 422);
+    }
+
+    /**
+     * Riwayat penerimaan terbaru — GET ?period_id=&warehouse_id=
+     */
+    public function receiptRecent()
+    {
+        if (!$this->request->isAJAX()) return $this->jsonError('Method not allowed', 405);
+        if (!canDo('warehouse.stocks.receive')) return $this->jsonError('Akses ditolak', 403);
+
+        $periodId    = (int) $this->request->getGet('period_id');
+        $warehouseId = (int) $this->request->getGet('warehouse_id');
+        if (!$periodId || !$warehouseId) {
+            return $this->jsonError('Periode dan gudang wajib dipilih', 422);
+        }
+
+        return $this->response->setJSON([
+            'status' => 'success',
+            'data'   => $this->movementModel->getRecent($periodId, $warehouseId, 'Receipt', 30),
+        ]);
+    }
+
+    /**
+     * Batalkan 1 baris Penerimaan yang salah input — POST id=
+     */
+    public function receiptDelete()
+    {
+        if (!$this->request->isAJAX()) return $this->jsonError('Method not allowed', 405);
+        if (!canDo('warehouse.stocks.receive')) return $this->jsonError('Akses ditolak', 403);
+
+        $id = (int) $this->request->getPost('id');
+        if (!$id) return $this->jsonError('ID transaksi tidak valid', 422);
+
+        $result = $this->movementModel->deleteOne($id);
+        return $this->jsonResponse($result, $result['status'] === 'success' ? 200 : 422);
+    }
+
     private function breadcrumbs(string $label): array
     {
         return [
@@ -153,6 +233,10 @@ class StockController extends BaseController
     private function forbidden(): RedirectResponse
     {
         return redirect()->to(site_url('errors/403'));
+    }
+    private function jsonResponse(array $result, int $code = 200)
+    {
+        return $this->response->setStatusCode($code)->setJSON(array_merge($result, ['csrfHash' => csrf_hash()]));
     }
     private function jsonError(string $message, int $code = 500)
     {

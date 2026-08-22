@@ -343,8 +343,8 @@ function navActive(string $seg1, string $seg2 = '', string $seg3 = ''): string
                                         <?php endif; ?>
 
                                         <!-- Transaksi -->
-                                        <!-- CATATAN: StockController (receipt/issue/adjustment/stock-card/position)
-                                             belum dibangun — route sudah terdaftar, ditandai "Segera" sampai controllernya ada -->
+                                        <!-- CATATAN: Penerimaan sudah dibangun (StockController::receipt).
+                                             Pemakaian & Penyesuaian (adjustment) masih "Segera" — menyusul. -->
                                         <li class="nav-item">
                                             <a class="nav-link dropdown-indicator"
                                                 href="#nv-wh-stock-transaksi"
@@ -361,10 +361,9 @@ function navActive(string $seg1, string $seg2 = '', string $seg3 = ''): string
                                                 <ul class="nav collapse parent" id="nv-wh-stock-transaksi">
                                                     <?php if (canDo('warehouse.stocks.receive')): ?>
                                                         <li class="nav-item">
-                                                            <a class="nav-link disabled" href="#" aria-disabled="true" tabindex="-1">
+                                                            <a class="nav-link" href="<?= site_url('warehouse/stocks/receipt') ?>">
                                                                 <div class="d-flex align-items-center">
                                                                     <span class="nav-link-text">Penerimaan</span>
-                                                                    <span class="badge ms-2 badge-phoenix badge-phoenix-warning nav-link-badge">Segera</span>
                                                                 </div>
                                                             </a>
                                                         </li>

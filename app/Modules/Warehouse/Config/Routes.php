@@ -16,6 +16,8 @@ $routes->group('warehouse', [
     $routes->get('stocks/position/breakdown', 'StockController::positionBreakdown');
     $routes->get('stocks/receipt',           'StockController::receipt');
     $routes->post('stocks/receipt/store',    'StockController::storeReceipt');
+    $routes->get('stocks/receipt/recent',    'StockController::receiptRecent');
+    $routes->post('stocks/receipt/delete',   'StockController::receiptDelete');
     $routes->get('stocks/issue',             'StockController::issue');
     $routes->post('stocks/issue/store',      'StockController::storeIssue');
     $routes->get('stocks/adjustment',        'StockController::adjustment');
