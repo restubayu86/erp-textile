@@ -108,6 +108,14 @@ class ChemicalStockMovementModel extends Model
                 continue;
             }
 
+            $variantId = !empty($row['variant_id']) ? (int) $row['variant_id'] : null;
+            if ($variantId) {
+                $variantOk = $this->db->table('chemical_variants')
+                    ->where('id', $variantId)->where('chemical_id', $chemicalId)
+                    ->countAllResults() > 0;
+                if (!$variantOk) $variantId = null; // varian tidak cocok dgn chemical — abaikan saja, bukan alasan gagal simpan
+            }
+
             $unit  = trim($row['unit'] ?? '') ?: 'kg';
             $notes = trim($row['notes'] ?? '') ?: null;
 
@@ -115,7 +123,7 @@ class ChemicalStockMovementModel extends Model
                 'period_id'      => $periodId,
                 'warehouse_id'   => $warehouseId,
                 'chemical_id'    => $chemicalId,
-                'variant_id'     => null,
+                'variant_id'     => $variantId,
                 'movement_type'  => 'Receipt',
                 'quantity_in'    => $quantity,
                 'quantity_out'   => 0,
@@ -147,12 +155,16 @@ class ChemicalStockMovementModel extends Model
     }
 
     /**
-     * Riwayat transaksi terbaru untuk 1 jenis pergerakan di 1 periode+gudang — dipakai
-     * untuk tabel "Riwayat Penerimaan Terbaru" setelah user menyimpan.
+     * Riwayat transaksi untuk 1 jenis pergerakan di 1 periode+gudang — dipakai tabel
+     * "Riwayat Penerimaan". Bisa difilter: seluruh periode (default, dibatasi $limit
+     * terbaru), rentang tanggal ($fromDate & $toDate), atau satu tanggal saja
+     * ($fromDate == $toDate).
      */
-    public function getRecent(int $periodId, int $warehouseId, string $movementType, int $limit = 20): array
+    public function getRecent(int $periodId, int $warehouseId, string $movementType, ?string $fromDate = null, ?string $toDate = null, int $limit = 30): array
     {
-        return $this->db->table('chemical_stock_movements m')
+        $hasDateFilter = $fromDate !== null || $toDate !== null;
+
+        $q = $this->db->table('chemical_stock_movements m')
             ->select([
                 'm.id',
                 'm.movement_date',
@@ -163,18 +175,29 @@ class ChemicalStockMovementModel extends Model
                 'm.created_at',
                 'c.chemical_code',
                 'c.chemical_name',
+                'v.variant_name',
+                'v.packaging',
                 'u.username',
                 'e.fullname as employee_fullname',
             ])
             ->join('chemicals c', 'c.id = m.chemical_id', 'left')
+            ->join('chemical_variants v', 'v.id = m.variant_id', 'left')
             ->join('users u', 'u.id = m.created_by', 'left')
             ->join('employees e', 'e.id = u.employee_id', 'left')
             ->where('m.period_id', $periodId)
             ->where('m.warehouse_id', $warehouseId)
-            ->where('m.movement_type', $movementType)
-            ->orderBy('m.created_at', 'DESC')
-            ->limit($limit)
-            ->get()->getResultArray();
+            ->where('m.movement_type', $movementType);
+
+        if ($fromDate !== null) $q->where('m.movement_date >=', $fromDate);
+        if ($toDate !== null) $q->where('m.movement_date <=', $toDate);
+
+        $q->orderBy('m.movement_date', 'DESC')->orderBy('m.created_at', 'DESC');
+
+        // Kalau user memang minta rentang/tanggal tertentu, tampilkan semua (dibatasi wajar 1000)
+        // supaya tidak terpotong; kalau tanpa filter tanggal, cukup N terbaru saja.
+        $q->limit($hasDateFilter ? 1000 : $limit);
+
+        return $q->get()->getResultArray();
     }
 
     /**

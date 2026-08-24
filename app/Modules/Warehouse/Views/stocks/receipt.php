@@ -1,3 +1,12 @@
+<?php
+// Nama yang tampil di "Dicetak Oleh" — prioritas: nama lengkap employee, fallback username/email.
+$printedByName = '-';
+if (!empty($user_employee['fullname'])) {
+    $printedByName = ucwords(strtolower($user_employee['fullname']));
+} elseif (auth()->user()) {
+    $printedByName = auth()->user()->username ?? auth()->user()->email ?? '-';
+}
+?>
 <?= $this->extend('templates/layout') ?>
 
 <?= $this->section('styles') ?>
@@ -42,6 +51,19 @@
         font-weight: 700;
         font-size: 1.5rem;
         line-height: 1;
+    }
+
+    /* Status periode — Open = hijau, Closed = merah, netral = abu-abu */
+    .info-value.period-open {
+        color: var(--phoenix-success) !important;
+    }
+
+    .info-value.period-closed {
+        color: var(--phoenix-danger) !important;
+    }
+
+    .info-value.period-neutral {
+        color: var(--phoenix-secondary-color) !important;
     }
 
     .filter-toggle {
@@ -96,18 +118,82 @@
         color: var(--phoenix-secondary-color);
     }
 
-    #rcp-pending-table input.qty-input,
-    #rcp-pending-table input.unit-input {
-        text-align: right;
-        max-width: 110px;
-    }
-
-    #rcp-pending-table input.notes-input {
-        min-width: 160px;
-    }
-
     #rcp-history-table {
         width: 100% !important;
+    }
+
+    #rcp-history-mode-group label {
+        font-size: .72rem;
+    }
+
+    /* Gaya DataTable disamakan dengan tabel di halaman Posisi Stok — search box bulat
+       di tengah, baris bawah (length/pagination/info) sejajar flex, pagination rounded. */
+    #rcp-history-table_wrapper {
+        max-width: 100%;
+    }
+
+    #rcp-history-table_wrapper .top {
+        display: flex;
+        justify-content: center;
+        margin-bottom: 1rem;
+    }
+
+    #rcp-history-table_wrapper .top input {
+        width: 300px;
+        border-radius: 20px;
+        padding: 0.375rem 1rem;
+        text-align: center;
+    }
+
+    #rcp-history-table_wrapper .bottom {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 1rem;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+
+    #rcp-history-table_wrapper .bottom .dataTables_length {
+        flex: 1;
+        text-align: left;
+        order: 1;
+    }
+
+    #rcp-history-table_wrapper .bottom .dataTables_paginate {
+        flex: 1;
+        text-align: center;
+        order: 2;
+    }
+
+    #rcp-history-table_wrapper .bottom .dataTables_info {
+        flex: 1;
+        text-align: right;
+        order: 3;
+    }
+
+    #rcp-history-table_wrapper .dataTables_filter label,
+    #rcp-history-table_wrapper .dataTables_length label {
+        margin-bottom: 0;
+    }
+
+    #rcp-history-table_wrapper .dataTables_length select {
+        width: auto;
+        display: inline-block;
+        margin: 0 0.5rem;
+        border-radius: 0.375rem;
+    }
+
+    #rcp-history-table_wrapper .dataTables_paginate .paginate_button {
+        padding: 0.375rem 0.75rem;
+        margin: 0 0.25rem;
+        border-radius: 0.375rem;
+    }
+
+    #rcp-history-table_wrapper .dataTables_paginate .paginate_button.current {
+        background: var(--phoenix-primary);
+        border-color: var(--phoenix-primary);
+        color: white !important;
     }
 </style>
 <?= $this->endSection() ?>
@@ -171,7 +257,7 @@
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
                             <div class="info-label">Status Periode</div>
-                            <div class="info-value" id="rcp-stat-period">—</div>
+                            <div class="info-value period-neutral" id="rcp-stat-period">—</div>
                             <div class="period-range-text" id="rcp-stat-period-range"></div>
                         </div>
                         <div class="stat-icon bg-secondary bg-opacity-10 text-secondary" id="rcp-stat-period-icon">
@@ -193,7 +279,19 @@
                 <span class="fas fa-info-circle me-1"></span>Pilih periode, gudang &amp; tanggal penerimaan
             </span>
         </div>
-        <div class="d-flex gap-2">
+        <div class="d-flex gap-2 align-items-center">
+            <div class="d-flex align-items-center gap-1" title="Pengaturan orientasi kertas untuk Cetak">
+                <label for="rcp-print-orientation" class="fs-10 text-muted mb-0 text-nowrap">
+                    <span class="fas fa-cog me-1"></span>Orientasi
+                </label>
+                <select class="form-select form-select-sm" id="rcp-print-orientation" style="width:auto">
+                    <option value="portrait" selected>Portrait</option>
+                    <option value="landscape">Landscape</option>
+                </select>
+            </div>
+            <button class="btn btn-subtle-primary btn-sm" id="rcp-btn-print" type="button">
+                <span class="fas fa-print me-1"></span>Cetak
+            </button>
             <button class="btn btn-subtle-secondary btn-sm" id="rcp-btn-refresh" type="button">
                 <span class="fas fa-sync-alt me-1"></span>Refresh
             </button>
@@ -210,48 +308,19 @@
 
     <!-- Form area -->
     <div class="d-none" id="rcp-form-wrapper">
-        <!-- Tambah item -->
-        <div class="card mb-3">
-            <div class="card-header py-3">
-                <h6 class="mb-0 fw-bold"><span class="fas fa-plus-circle me-2 text-primary"></span>Tambah Item Penerimaan</h6>
-            </div>
-            <div class="card-body">
-                <div class="row g-2 align-items-end">
-                    <div class="col-lg-4 col-md-6">
-                        <label class="form-label fw-semibold fs-9 text-uppercase text-muted">Bahan Kimia</label>
-                        <select class="form-select form-select-sm" id="rcp-input-chemical" style="width:100%">
-                            <option value=""></option>
-                        </select>
-                    </div>
-                    <div class="col-lg-2 col-md-3 col-6">
-                        <label class="form-label fw-semibold fs-9 text-uppercase text-muted">Qty</label>
-                        <input type="number" min="0.001" step="0.001" class="form-control form-control-sm text-end" id="rcp-input-qty" placeholder="0">
-                    </div>
-                    <div class="col-lg-2 col-md-3 col-6">
-                        <label class="form-label fw-semibold fs-9 text-uppercase text-muted">Satuan</label>
-                        <input type="text" class="form-control form-control-sm" id="rcp-input-unit" value="kg">
-                    </div>
-                    <div class="col-lg-3 col-md-8">
-                        <label class="form-label fw-semibold fs-9 text-uppercase text-muted">Catatan (opsional)</label>
-                        <input type="text" class="form-control form-control-sm" id="rcp-input-notes" placeholder="mis. No. Surat Jalan / Supplier">
-                    </div>
-                    <div class="col-lg-1 col-md-4">
-                        <button class="btn btn-primary btn-sm w-100" id="rcp-btn-add-item" type="button">
-                            <span class="fas fa-plus"></span>
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-
         <!-- Daftar item pending -->
         <div class="card mb-3">
-            <div class="card-header py-3 d-flex justify-content-between align-items-center">
-                <h6 class="mb-0 fw-bold"><span class="fas fa-list-ul me-2 text-primary"></span>Daftar Item yang Akan Disimpan</h6>
-                <button class="btn btn-success btn-sm" id="rcp-btn-save" type="button" disabled>
-                    <span class="fas fa-save me-1" id="rcp-save-icon"></span>
-                    <span id="rcp-save-text">Simpan Penerimaan</span>
-                </button>
+            <div class="card-header py-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
+                <h6 class="mb-0 fw-bold"><span class="fas fa-list-ul me-2 text-primary"></span>Daftar Item Penerimaan</h6>
+                <div class="d-flex gap-2">
+                    <button class="btn btn-outline-primary btn-sm" id="rcp-btn-open-add-modal" type="button">
+                        <span class="fas fa-plus me-1"></span>Tambah Item
+                    </button>
+                    <button class="btn btn-success btn-sm" id="rcp-btn-save" type="button" disabled>
+                        <span class="fas fa-save me-1" id="rcp-save-icon"></span>
+                        <span id="rcp-save-text">Simpan Penerimaan</span>
+                    </button>
+                </div>
             </div>
             <div class="card-body p-0">
                 <div class="table-responsive">
@@ -260,15 +329,16 @@
                             <tr>
                                 <th style="width:30px">No</th>
                                 <th>Bahan Kimia</th>
-                                <th class="text-end" style="width:110px">Qty</th>
-                                <th style="width:90px">Satuan</th>
+                                <th>Varian / Kemasan</th>
+                                <th class="text-end" style="width:110px">Qty Berat</th>
+                                <th style="width:70px">Satuan</th>
                                 <th>Catatan</th>
                                 <th style="width:40px"></th>
                             </tr>
                         </thead>
                         <tbody id="rcp-pending-tbody">
                             <tr id="rcp-pending-empty-row">
-                                <td colspan="6" class="text-center text-muted py-4">Belum ada item ditambahkan.</td>
+                                <td colspan="7" class="text-center text-muted py-4">Belum ada item ditambahkan. Klik "Tambah Item" untuk mulai.</td>
                             </tr>
                         </tbody>
                     </table>
@@ -276,13 +346,45 @@
             </div>
         </div>
 
-        <!-- Riwayat penerimaan terbaru -->
+        <!-- Riwayat penerimaan -->
         <div class="card mb-3">
             <div class="card-header py-3">
-                <h6 class="mb-0 fw-bold"><span class="fas fa-history me-2 text-primary"></span>Riwayat Penerimaan Terbaru</h6>
-                <p class="text-muted fs-10 mb-0">30 transaksi Penerimaan terakhir untuk gudang &amp; periode yang dipilih</p>
+                <h6 class="mb-0 fw-bold"><span class="fas fa-history me-2 text-primary"></span>Riwayat Penerimaan</h6>
             </div>
             <div class="card-body">
+                <div class="d-flex flex-wrap align-items-end gap-2 mb-3">
+                    <div>
+                        <label class="form-label fs-10 text-muted mb-1 d-block">Tampilkan</label>
+                        <div class="btn-group btn-group-sm" role="group" id="rcp-history-mode-group">
+                            <input type="radio" class="btn-check" name="rcp-history-mode" id="rcp-mode-period" value="period" checked autocomplete="off">
+                            <label class="btn btn-outline-secondary" for="rcp-mode-period">Seluruh Periode</label>
+                            <input type="radio" class="btn-check" name="rcp-history-mode" id="rcp-mode-range" value="range" autocomplete="off">
+                            <label class="btn btn-outline-secondary" for="rcp-mode-range">Rentang Tanggal</label>
+                            <input type="radio" class="btn-check" name="rcp-history-mode" id="rcp-mode-date" value="date" autocomplete="off">
+                            <label class="btn btn-outline-secondary" for="rcp-mode-date">Tanggal Tertentu</label>
+                        </div>
+                    </div>
+                    <div class="d-none align-items-end gap-2" id="rcp-history-range-inputs">
+                        <div>
+                            <label class="form-label fs-10 text-muted mb-1 d-block">Dari</label>
+                            <input type="date" class="form-control form-control-sm" id="rcp-history-from">
+                        </div>
+                        <div>
+                            <label class="form-label fs-10 text-muted mb-1 d-block">Sampai</label>
+                            <input type="date" class="form-control form-control-sm" id="rcp-history-to">
+                        </div>
+                    </div>
+                    <div class="d-none align-items-end gap-2" id="rcp-history-date-input">
+                        <div>
+                            <label class="form-label fs-10 text-muted mb-1 d-block">Tanggal</label>
+                            <input type="date" class="form-control form-control-sm" id="rcp-history-single-date">
+                        </div>
+                    </div>
+                    <button class="btn btn-outline-primary btn-sm" id="rcp-btn-history-apply" type="button">
+                        <span class="fas fa-filter me-1"></span>Tampilkan
+                    </button>
+                </div>
+
                 <table class="table table-hover fs-9 nowrap align-middle" id="rcp-history-table">
                     <thead>
                         <tr>
@@ -352,6 +454,56 @@
     </div>
 </div>
 
+<!-- Modal: Tambah Item Penerimaan -->
+<div class="modal fade" id="rcp-add-modal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h6 class="modal-title fw-bold"><span class="fas fa-plus-circle me-2 text-primary"></span>Tambah Item Penerimaan</h6>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label fw-semibold fs-9 text-uppercase text-muted">Bahan Kimia</label>
+                    <select class="form-select form-select-sm" id="rcp-modal-chemical" style="width:100%">
+                        <option value=""></option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-semibold fs-9 text-uppercase text-muted">Varian / Kemasan (template)</label>
+                    <select class="form-select form-select-sm" id="rcp-modal-variant" disabled>
+                        <option value="">— Pilih bahan kimia dulu —</option>
+                    </select>
+                    <div class="form-text fs-10" id="rcp-modal-variant-hint"></div>
+                </div>
+                <div class="row g-2 mb-3">
+                    <div class="col-6">
+                        <label class="form-label fw-semibold fs-9 text-uppercase text-muted">Qty Unit (jumlah kemasan)</label>
+                        <input type="number" min="0" step="1" class="form-control form-control-sm text-end" id="rcp-modal-qty-unit" placeholder="mis. 5" disabled>
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label fw-semibold fs-9 text-uppercase text-muted">Qty Berat (total)</label>
+                        <div class="input-group input-group-sm">
+                            <input type="number" min="0.001" step="0.001" class="form-control text-end" id="rcp-modal-qty-berat" placeholder="0">
+                            <span class="input-group-text" id="rcp-modal-unit-suffix">kg</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="mb-1">
+                    <label class="form-label fw-semibold fs-9 text-uppercase text-muted">Catatan (opsional)</label>
+                    <input type="text" class="form-control form-control-sm" id="rcp-modal-notes" placeholder="mis. No. Surat Jalan / Supplier">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-subtle-secondary btn-sm" data-bs-dismiss="modal" type="button">Batal</button>
+                <button class="btn btn-primary btn-sm" id="rcp-modal-btn-submit" type="button">
+                    <span class="fas fa-plus me-1"></span>Tambahkan ke Daftar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <?= $this->endSection() ?>
 
 <?= $this->section('scripts') ?>
@@ -359,19 +511,25 @@
 <script>
     const StockReceipt = {
         BASE: '<?= base_url() ?>',
+        printedBy: '<?= esc($printedByName) ?>',
+        printOrientation: 'portrait',
         currentPeriodId: null,
         currentPeriodRange: null,
+        currentPeriodStart: null,
+        currentPeriodEnd: null,
         currentPeriodStatus: null,
+        currentPeriodText: null,
         currentWarehouseId: null,
         currentWarehouseText: null,
         currentDate: null,
-        pendingItems: [], // { chemical_id, chemical_name, chemical_code, quantity, unit, notes }
+        pendingItems: [], // { chemical_id, chemical_name, chemical_code, variant_id, variant_label, quantity, unit, notes }
         dtHistory: null,
+        _modalSelectedVariant: null,
+        _modalQtyBeratManual: false,
 
         init() {
             this.initSelect2();
             this.initEvents();
-            // Default tanggal penerimaan = hari ini
             const today = new Date().toISOString().slice(0, 10);
             document.getElementById('rcp-filter-date').value = today;
         },
@@ -439,7 +597,8 @@
                 },
             });
 
-            $('#rcp-input-chemical').select2({
+            $('#rcp-modal-chemical').select2({
+                dropdownParent: $('#rcp-add-modal'),
                 width: '100%',
                 theme: 'bootstrap-5',
                 placeholder: '— Pilih Bahan Kimia —',
@@ -468,17 +627,36 @@
                     return $(`<span>${this.e(c.text)}${c.code ? ` <span class="text-muted font-monospace" style="font-size:.85em">(${this.e(c.code)})</span>` : ''}</span>`);
                 },
             });
+
+            $('#rcp-modal-chemical').on('change', () => {
+                const data = $('#rcp-modal-chemical').select2('data')[0];
+                this.onModalChemicalChange(data);
+            });
         },
 
         initEvents() {
             document.getElementById('rcp-btn-refresh')?.addEventListener('click', () => this.reload());
             document.getElementById('rcp-btn-apply-filter')?.addEventListener('click', () => this.applyFilter());
             document.getElementById('rcp-btn-reset-filter')?.addEventListener('click', () => this.resetFilter());
-            document.getElementById('rcp-btn-add-item')?.addEventListener('click', () => this.addItem());
             document.getElementById('rcp-btn-save')?.addEventListener('click', () => this.save());
-            document.getElementById('rcp-input-qty')?.addEventListener('keydown', e => {
-                if (e.key === 'Enter') this.addItem();
+            document.getElementById('rcp-btn-print')?.addEventListener('click', () => this.printReceiptHistory());
+            document.getElementById('rcp-print-orientation')?.addEventListener('change', e => {
+                this.printOrientation = e.target.value === 'landscape' ? 'landscape' : 'portrait';
             });
+
+            // Modal tambah item
+            document.getElementById('rcp-btn-open-add-modal')?.addEventListener('click', () => this.openAddModal());
+            document.getElementById('rcp-modal-variant')?.addEventListener('change', () => this.onModalVariantChange());
+            document.getElementById('rcp-modal-qty-unit')?.addEventListener('input', () => this.recalcModalQtyBerat());
+            document.getElementById('rcp-modal-qty-berat')?.addEventListener('input', () => {
+                this._modalQtyBeratManual = true;
+            });
+            document.getElementById('rcp-modal-btn-submit')?.addEventListener('click', () => this.submitModalItem());
+
+            // Riwayat: mode filter tanggal
+            document.querySelectorAll('input[name="rcp-history-mode"]').forEach(r =>
+                r.addEventListener('change', () => this.onHistoryModeChange()));
+            document.getElementById('rcp-btn-history-apply')?.addEventListener('click', () => this.loadHistory());
         },
 
         applyFilter() {
@@ -496,14 +674,24 @@
             }
 
             this.currentPeriodId = periodData.id;
+            this.currentPeriodStart = periodData.start_date;
+            this.currentPeriodEnd = periodData.end_date;
             this.currentPeriodRange = `${this.fmtDateOnly(periodData.start_date)} — ${this.fmtDateOnly(periodData.end_date)}`;
             this.currentPeriodStatus = periodData.status;
+            this.currentPeriodText = `${periodData.name} (${periodData.code})`;
             this.currentWarehouseId = warehouseData.id;
             this.currentWarehouseText = warehouseData.text;
             this.currentDate = date;
 
             document.getElementById('rcp-period-status-hint').textContent =
-                `${periodData.name} (${periodData.code})${periodData.status === 'Closed' ? ' — Ditutup' : ''} · ${this.currentPeriodRange}`;
+                `${this.currentPeriodText}${periodData.status === 'Closed' ? ' — Ditutup' : ''} · ${this.currentPeriodRange}`;
+
+            // Default input filter riwayat mengikuti tanggal & rentang periode terpilih
+            document.getElementById('rcp-history-single-date').value = date;
+            document.getElementById('rcp-history-from').value = periodData.start_date;
+            document.getElementById('rcp-history-to').value = periodData.end_date;
+            document.getElementById('rcp-mode-period').checked = true;
+            this.onHistoryModeChange();
 
             this.updateFilterUI();
             bootstrap.Offcanvas.getInstance(document.getElementById('rcp-filter-offcanvas'))?.hide();
@@ -516,8 +704,11 @@
             document.getElementById('rcp-filter-date').value = new Date().toISOString().slice(0, 10);
             document.getElementById('rcp-period-status-hint').textContent = '';
             this.currentPeriodId = null;
+            this.currentPeriodStart = null;
+            this.currentPeriodEnd = null;
             this.currentPeriodRange = null;
             this.currentPeriodStatus = null;
+            this.currentPeriodText = null;
             this.currentWarehouseId = null;
             this.currentWarehouseText = null;
             this.currentDate = null;
@@ -529,7 +720,7 @@
 
         updateFilterUI() {
             const labels = [];
-            if (this.currentPeriodId) labels.push(`Periode: ${$('#rcp-filter-period').select2('data')[0]?.text ?? ''}`);
+            if (this.currentPeriodId) labels.push(`Periode: ${this.currentPeriodText}`);
             if (this.currentWarehouseText) labels.push(`Gudang: ${this.currentWarehouseText}`);
             if (this.currentDate) labels.push(`Tanggal: ${this.fmtDateOnly(this.currentDate)}`);
 
@@ -543,14 +734,20 @@
                 toggle.classList.remove('has-filter');
             }
 
-            document.getElementById('rcp-stat-period').textContent = this.currentPeriodStatus ?? '—';
-            document.getElementById('rcp-stat-period-range').textContent = this.currentPeriodRange ?? '';
+            const periodEl = document.getElementById('rcp-stat-period');
             const icon = document.getElementById('rcp-stat-period-icon');
+            periodEl.textContent = this.currentPeriodStatus ?? '—';
+            document.getElementById('rcp-stat-period-range').textContent = this.currentPeriodRange ?? '';
+
+            periodEl.classList.remove('period-open', 'period-closed', 'period-neutral');
             if (this.currentPeriodStatus === 'Closed') {
+                periodEl.classList.add('period-closed');
                 icon.className = 'stat-icon bg-danger bg-opacity-10 text-danger';
             } else if (this.currentPeriodStatus === 'Open') {
+                periodEl.classList.add('period-open');
                 icon.className = 'stat-icon bg-success bg-opacity-10 text-success';
             } else {
+                periodEl.classList.add('period-neutral');
                 icon.className = 'stat-icon bg-secondary bg-opacity-10 text-secondary';
             }
         },
@@ -569,7 +766,6 @@
             document.getElementById('rcp-empty-wrapper').classList.add('d-none');
             document.getElementById('rcp-form-wrapper').classList.remove('d-none');
 
-            // Banner periode ditutup — form tetap terlihat tapi aksi disimpan diblok.
             const banner = document.getElementById('rcp-status-banner');
             if (this.currentPeriodStatus === 'Closed') {
                 banner.className = 'alert alert-subtle-danger d-flex align-items-center gap-2 mb-3';
@@ -585,29 +781,138 @@
         },
 
         // ============================================================
-        // TAMBAH ITEM (pending, belum tersimpan ke server)
+        // MODAL TAMBAH ITEM — pakai varian sebagai template Qty Unit & Qty Berat
         // ============================================================
-        async addItem() {
+        openAddModal() {
             if (this.currentPeriodStatus === 'Closed') {
                 this.toast('error', 'Periode sudah ditutup, tidak bisa menambah item');
                 return;
             }
+            if (!this.currentPeriodId || !this.currentWarehouseId || !this.currentDate) {
+                this.toast('error', 'Pilih periode, gudang, dan tanggal terlebih dahulu');
+                return;
+            }
 
-            const chemicalData = $('#rcp-input-chemical').select2('data')[0];
-            const qty = parseFloat(document.getElementById('rcp-input-qty').value);
-            const unit = document.getElementById('rcp-input-unit').value.trim() || 'kg';
-            const notes = document.getElementById('rcp-input-notes').value.trim();
+            $('#rcp-modal-chemical').val(null).trigger('change');
+            document.getElementById('rcp-modal-variant').innerHTML = '<option value="">— Pilih bahan kimia dulu —</option>';
+            document.getElementById('rcp-modal-variant').disabled = true;
+            document.getElementById('rcp-modal-variant-hint').textContent = '';
+            document.getElementById('rcp-modal-qty-unit').value = '';
+            document.getElementById('rcp-modal-qty-unit').disabled = true;
+            document.getElementById('rcp-modal-qty-berat').value = '';
+            document.getElementById('rcp-modal-unit-suffix').textContent = 'kg';
+            document.getElementById('rcp-modal-notes').value = '';
+            this._modalSelectedVariant = null;
+            this._modalQtyBeratManual = false;
+
+            new bootstrap.Modal(document.getElementById('rcp-add-modal')).show();
+        },
+
+        async onModalChemicalChange(chemicalData) {
+            const variantSelect = document.getElementById('rcp-modal-variant');
+            this._modalSelectedVariant = null;
+
+            if (!chemicalData?.id) {
+                variantSelect.innerHTML = '<option value="">— Pilih bahan kimia dulu —</option>';
+                variantSelect.disabled = true;
+                return;
+            }
+
+            variantSelect.innerHTML = '<option value="">Memuat varian...</option>';
+            variantSelect.disabled = true;
+
+            try {
+                const res = await this.get(this.BASE + `warehouse/master/chemicals/${chemicalData.id}/variants`);
+                const variants = (res.status === 'success' ? (res.data ?? []) : []).filter(v => v.status === 'Active');
+
+                let opts = '<option value="">— Tanpa Varian (input manual) —</option>';
+                opts += variants.map(v => {
+                    const sizeText = v.packaging_size ? `${this.fmtNumber(v.packaging_size)} ${v.unit ?? ''}`.trim() : (v.unit ?? '');
+                    return `<option value="${v.id}"
+                                data-packaging-size="${v.packaging_size ?? ''}"
+                                data-unit="${this.e(v.unit ?? 'kg')}"
+                                data-name="${this.e(v.variant_name)}"
+                                ${Number(v.is_default) === 1 ? 'selected' : ''}>
+                                ${this.e(v.variant_name)}${sizeText ? ' — ' + sizeText : ''}
+                            </option>`;
+                }).join('');
+
+                variantSelect.innerHTML = opts;
+                variantSelect.disabled = false;
+                this.onModalVariantChange();
+            } catch (e) {
+                variantSelect.innerHTML = '<option value="">Gagal memuat varian — coba lagi</option>';
+                variantSelect.disabled = true;
+            }
+        },
+
+        onModalVariantChange() {
+            const sel = document.getElementById('rcp-modal-variant');
+            const opt = sel.options[sel.selectedIndex];
+            const qtyUnitInput = document.getElementById('rcp-modal-qty-unit');
+            const unitSuffix = document.getElementById('rcp-modal-unit-suffix');
+            const hint = document.getElementById('rcp-modal-variant-hint');
+
+            if (!opt || !opt.value) {
+                this._modalSelectedVariant = null;
+                qtyUnitInput.value = '';
+                qtyUnitInput.disabled = true;
+                unitSuffix.textContent = 'kg';
+                hint.textContent = 'Tanpa varian — isi Qty Berat &amp; satuan secara manual.';
+                this._modalQtyBeratManual = true; // manual sepenuhnya
+                return;
+            }
+
+            const packagingSize = parseFloat(opt.dataset.packagingSize || '0');
+            const unit = opt.dataset.unit || 'kg';
+            this._modalSelectedVariant = {
+                id: opt.value,
+                name: opt.dataset.name,
+                packaging_size: packagingSize,
+                unit,
+            };
+            unitSuffix.textContent = unit;
+
+            if (packagingSize > 0) {
+                qtyUnitInput.disabled = false;
+                hint.textContent = `1 ${opt.dataset.name} = ${this.fmtNumber(packagingSize)} ${unit} — isi Qty Unit, Qty Berat terhitung otomatis (bisa disesuaikan).`;
+                this._modalQtyBeratManual = false;
+                this.recalcModalQtyBerat();
+            } else {
+                qtyUnitInput.value = '';
+                qtyUnitInput.disabled = true;
+                hint.textContent = 'Varian ini tidak punya ukuran kemasan baku — isi Qty Berat manual.';
+                this._modalQtyBeratManual = true;
+            }
+        },
+
+        recalcModalQtyBerat() {
+            if (this._modalQtyBeratManual) return;
+            const qtyUnit = parseFloat(document.getElementById('rcp-modal-qty-unit').value) || 0;
+            if (this._modalSelectedVariant?.packaging_size) {
+                const total = qtyUnit * this._modalSelectedVariant.packaging_size;
+                document.getElementById('rcp-modal-qty-berat').value = total > 0 ? total : '';
+            }
+        },
+
+        async submitModalItem() {
+            const chemicalData = $('#rcp-modal-chemical').select2('data')[0];
+            const qtyBerat = parseFloat(document.getElementById('rcp-modal-qty-berat').value);
+            const qtyUnit = parseFloat(document.getElementById('rcp-modal-qty-unit').value) || null;
+            const notes = document.getElementById('rcp-modal-notes').value.trim();
+            const variant = this._modalSelectedVariant;
+            const unit = variant?.unit || document.getElementById('rcp-modal-unit-suffix').textContent || 'kg';
 
             if (!chemicalData?.id) {
                 this.toast('error', 'Pilih bahan kimia terlebih dahulu');
                 return;
             }
-            if (!qty || qty <= 0) {
-                this.toast('error', 'Qty harus lebih dari 0');
+            if (!qtyBerat || qtyBerat <= 0) {
+                this.toast('error', 'Qty Berat harus lebih dari 0');
                 return;
             }
             if (this.pendingItems.some(it => String(it.chemical_id) === String(chemicalData.id))) {
-                this.toast('error', 'Bahan kimia ini sudah ada di daftar — hapus dulu kalau mau ubah qty');
+                this.toast('error', 'Bahan kimia ini sudah ada di daftar — hapus dulu kalau mau ubah');
                 return;
             }
 
@@ -628,17 +933,14 @@
                 chemical_id: chemicalData.id,
                 chemical_name: chemicalData.text,
                 chemical_code: chemicalData.code ?? '',
-                quantity: qty,
+                variant_id: variant?.id ?? null,
+                variant_label: variant ? `${qtyUnit ? this.fmtNumber(qtyUnit) + ' x ' : ''}${variant.name}` : null,
+                quantity: qtyBerat,
                 unit,
                 notes,
             });
 
-            $('#rcp-input-chemical').val(null).trigger('change');
-            document.getElementById('rcp-input-qty').value = '';
-            document.getElementById('rcp-input-unit').value = 'kg';
-            document.getElementById('rcp-input-notes').value = '';
-            document.getElementById('rcp-input-qty').focus();
-
+            bootstrap.Modal.getInstance(document.getElementById('rcp-add-modal'))?.hide();
             this.renderPending();
         },
 
@@ -653,7 +955,7 @@
             document.getElementById('rcp-btn-save').disabled = this.pendingItems.length === 0 || this.currentPeriodStatus === 'Closed';
 
             if (!this.pendingItems.length) {
-                tbody.innerHTML = `<tr id="rcp-pending-empty-row"><td colspan="6" class="text-center text-muted py-4">Belum ada item ditambahkan.</td></tr>`;
+                tbody.innerHTML = `<tr id="rcp-pending-empty-row"><td colspan="7" class="text-center text-muted py-4">Belum ada item ditambahkan. Klik "Tambah Item" untuk mulai.</td></tr>`;
                 return;
             }
 
@@ -664,6 +966,7 @@
                         <span class="fw-semibold">${this.e(it.chemical_name)}</span>
                         <div class="text-muted small font-monospace">${this.e(it.chemical_code)}</div>
                     </td>
+                    <td>${it.variant_label ? this.e(it.variant_label) : '<span class="text-muted fst-italic">—</span>'}</td>
                     <td class="text-end fw-semibold">${this.fmtNumber(it.quantity)}</td>
                     <td>${this.e(it.unit)}</td>
                     <td class="text-muted">${it.notes ? this.e(it.notes) : '<span class="fst-italic">—</span>'}</td>
@@ -695,11 +998,15 @@
                 fd.set('period_id', this.currentPeriodId);
                 fd.set('warehouse_id', this.currentWarehouseId);
                 fd.set('movement_date', this.currentDate);
+                // Info varian (mis. "5 x Drum 200L") digabung ke catatan supaya tercatat di ledger,
+                // karena tabel movements tidak punya kolom jumlah-kemasan terpisah.
                 fd.set('rows', JSON.stringify(this.pendingItems.map(it => ({
                     chemical_id: it.chemical_id,
+                    variant_id: it.variant_id,
                     quantity: it.quantity,
                     unit: it.unit,
-                    notes: it.notes,
+                    notes: it.variant_label ?
+                        (it.notes ? `${it.variant_label} — ${it.notes}` : it.variant_label) : it.notes,
                 }))));
 
                 const res = await this.post(this.BASE + 'warehouse/stocks/receipt/store', fd);
@@ -719,12 +1026,37 @@
         },
 
         // ============================================================
-        // RIWAYAT
+        // RIWAYAT — bisa per periode, rentang tanggal, atau satu tanggal
         // ============================================================
+        onHistoryModeChange() {
+            const mode = document.querySelector('input[name="rcp-history-mode"]:checked')?.value ?? 'period';
+            const rangeEl = document.getElementById('rcp-history-range-inputs');
+            const dateEl = document.getElementById('rcp-history-date-input');
+
+            rangeEl.classList.toggle('d-none', mode !== 'range');
+            rangeEl.classList.toggle('d-flex', mode === 'range');
+            dateEl.classList.toggle('d-none', mode !== 'date');
+            dateEl.classList.toggle('d-flex', mode === 'date');
+        },
+
         async loadHistory() {
+            if (!this.currentPeriodId || !this.currentWarehouseId) return;
+
+            const mode = document.querySelector('input[name="rcp-history-mode"]:checked')?.value ?? 'period';
+            let qs = `period_id=${this.currentPeriodId}&warehouse_id=${this.currentWarehouseId}`;
+
+            if (mode === 'range') {
+                const from = document.getElementById('rcp-history-from').value;
+                const to = document.getElementById('rcp-history-to').value;
+                if (from) qs += `&from_date=${from}`;
+                if (to) qs += `&to_date=${to}`;
+            } else if (mode === 'date') {
+                const d = document.getElementById('rcp-history-single-date').value;
+                if (d) qs += `&from_date=${d}&to_date=${d}`;
+            }
+
             try {
-                const res = await this.get(this.BASE +
-                    `warehouse/stocks/receipt/recent?period_id=${this.currentPeriodId}&warehouse_id=${this.currentWarehouseId}`);
+                const res = await this.get(this.BASE + `warehouse/stocks/receipt/recent?${qs}`);
                 const rows = res.status === 'success' ? (res.data ?? []) : [];
                 this.buildHistoryTable(rows);
 
@@ -838,6 +1170,117 @@
             if (!btn) return;
             btn.disabled = on || this.pendingItems.length === 0;
             ico.className = on ? 'spinner-border spinner-border-sm me-1' : 'fas fa-save me-1';
+        },
+
+        // ============================================================
+        // CETAK — layout sama dengan Posisi Stok / Kartu Stok (letterhead, info-grid, dst)
+        // ============================================================
+        printReceiptHistory() {
+            if (!this.currentPeriodId || !this.currentWarehouseId || !this.dtHistory) {
+                this.toast('error', 'Pilih periode & gudang, lalu tunggu riwayat termuat dulu');
+                return;
+            }
+
+            const rows = this.dtHistory.rows({
+                search: 'applied'
+            }).data().toArray();
+            const logoPath = this.BASE + 'assets/img/app/logo-regency-footer.png';
+            const now = new Date().toLocaleDateString('id-ID', {
+                day: '2-digit',
+                month: 'long',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+            const orientation = this.printOrientation === 'landscape' ? 'landscape' : 'portrait';
+
+            const mode = document.querySelector('input[name="rcp-history-mode"]:checked')?.value ?? 'period';
+            let filterText = this.currentPeriodRange ?? '-';
+            if (mode === 'range') {
+                const from = document.getElementById('rcp-history-from').value;
+                const to = document.getElementById('rcp-history-to').value;
+                filterText = `${from ? this.fmtDateOnly(from) : 'Awal periode'} — ${to ? this.fmtDateOnly(to) : 'Akhir periode'}`;
+            } else if (mode === 'date') {
+                const d = document.getElementById('rcp-history-single-date').value;
+                filterText = d ? this.fmtDateOnly(d) : '-';
+            }
+
+            const totalQty = rows.reduce((sum, r) => sum + (Number(r.quantity_in) || 0), 0);
+
+            const rowsHtml = rows.map((r, i) => `
+                <tr>
+                    <td>${i + 1}</td>
+                    <td>${this.fmtDateOnly(r.movement_date)}</td>
+                    <td>${this.e(r.chemical_name)}<div class="mono">${this.e(r.chemical_code)}</div></td>
+                    <td class="num in bold">+${this.fmtNumber(r.quantity_in)}</td>
+                    <td>${this.e(r.unit ?? '-')}</td>
+                    <td>${r.notes ? this.e(r.notes) : '-'}</td>
+                    <td>${this.e(r.employee_fullname || r.username || '-')}</td>
+                </tr>
+            `).join('');
+
+            const printWindow = window.open('', '_blank', 'width=1300,height=900');
+            printWindow.document.write(`
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <meta charset="UTF-8">
+                    <title>Bukti Penerimaan Stok Bahan Kimia</title>
+                    <style>
+                        @page { size: A4 ${orientation}; margin: 3mm; }
+                        * { box-sizing: border-box; }
+                        body { font-family: Arial, Helvetica, sans-serif; font-size: 8pt; color: #111; margin: 0; padding: 4mm; }
+                        .letterhead { display: flex; align-items: center; gap: 12px; border-bottom: 2px solid #111; padding-bottom: 8px; margin-bottom: 10px; }
+                        .letterhead img { height: 48px; }
+                        .letterhead .company { font-size: 15pt; font-weight: bold; letter-spacing: .3px; }
+                        .letterhead .division { font-size: 10pt; color: #444; }
+                        .doc-title { text-align: center; font-size: 11pt; font-weight: bold; margin: 6px 0 10px; text-transform: uppercase; }
+                        .info-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px 16px; font-size: 8pt; margin-bottom: 10px; border: 1px solid #ccc; padding: 8px 10px; background: #f8f8f8; }
+                        .info-grid div span.label { color: #666; display: block; font-size: 7pt; text-transform: uppercase; letter-spacing: .3px; }
+                        .info-grid div span.value { font-weight: 600; }
+                        table { width: 100%; border-collapse: collapse; font-size: 7.5pt; }
+                        th, td { border: 1px solid #999; padding: 3px 5px; text-align: left; }
+                        th { background: #eee; font-weight: 700; text-align: center; }
+                        td.num, th.num { text-align: right; }
+                        td.bold { font-weight: 700; }
+                        td.in { color: #1e7e34; }
+                        .mono { font-family: 'Courier New', monospace; font-size: 6.5pt; color: #555; }
+                        .footer-note { margin-top: 14px; font-size: 7pt; color: #777; display: flex; justify-content: space-between; border-top: 1px solid #ccc; padding-top: 6px; }
+                        @media print { .no-print { display: none !important; } }
+                    </style>
+                </head>
+                <body>
+                    <div class="letterhead">
+                        <img src="${logoPath}" alt="Logo" onerror="this.style.display='none'">
+                        <div>
+                            <div class="company">PT. SINAR CONTINENTAL</div>
+                            <div class="division">DIVISI 3A</div>
+                        </div>
+                    </div>
+                    <div class="doc-title">Bukti Penerimaan Stok Bahan Kimia</div>
+                    <div class="info-grid">
+                        <div><span class="label">Gudang</span><span class="value">${this.e(this.currentWarehouseText ?? '-')}</span></div>
+                        <div><span class="label">Periode</span><span class="value">${this.e(this.currentPeriodText ?? '-')}${this.currentPeriodStatus === 'Closed' ? ' (Close)' : ' (Open)'}</span></div>
+                        <div><span class="label">Filter Tanggal</span><span class="value">${this.e(filterText)}</span></div>
+                        <div><span class="label">Total Transaksi</span><span class="value">${rows.length} baris</span></div>
+                        <div><span class="label">Total Qty Diterima</span><span class="value">${this.fmtNumber(totalQty)}</span></div>
+                        <div><span class="label">Dicetak Oleh</span><span class="value">${this.e(this.printedBy)}</span></div>
+                    </div>
+                    <table>
+                        <thead>
+                            <tr><th>#</th><th>Tanggal</th><th>Bahan Kimia</th><th class="num">Qty Masuk</th><th>Satuan</th><th>Catatan</th><th>Dicatat Oleh</th></tr>
+                        </thead>
+                        <tbody>${rowsHtml}</tbody>
+                    </table>
+                    <div class="footer-note">
+                        <span>Dokumen ini dihasilkan otomatis dari sistem ERP — PT. Sinar Continental</span>
+                        <span>Dicetak: ${now}</span>
+                    </div>
+                    <script>window.onload = () => window.print();<\/script>
+                </body>
+                </html>
+            `);
+            printWindow.document.close();
         },
 
         // ============================================================

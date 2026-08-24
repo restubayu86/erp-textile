@@ -511,8 +511,11 @@ if (!empty($user_employee['fullname'])) {
         },
 
         /**
-         * Dipanggil dari halaman lain (mis. Posisi Stok) lewat link berisi query string,
-         * supaya filter langsung terisi & data langsung tampil tanpa user pilih manual.
+         * Dipanggil dari halaman lain (mis. Posisi Stok, Penerimaan) lewat link berisi query
+         * string, supaya filter langsung terisi & data langsung tampil tanpa user pilih manual.
+         * chemical_id bersifat opsional — kalau hanya period_id/warehouse_id yang dikirim
+         * (mis. dari tombol "Lihat Kartu Stok" di halaman Penerimaan), dropdown tetap
+         * ter-pre-fill tapi user masih perlu pilih bahan kimia sendiri.
          * Contoh: ?period_id=1&period_text=...&warehouse_id=2&warehouse_text=...&chemical_id=3&chemical_text=...&search_regex=Penerimaan
          */
         initFromQueryParams() {
@@ -520,7 +523,7 @@ if (!empty($user_employee['fullname'])) {
             const periodId = p.get('period_id');
             const warehouseId = p.get('warehouse_id');
             const chemicalId = p.get('chemical_id');
-            if (!periodId || !warehouseId || !chemicalId) return;
+            if (!periodId && !warehouseId) return;
 
             const periodText = p.get('period_text') || '';
             const warehouseText = p.get('warehouse_text') || '';
@@ -528,31 +531,30 @@ if (!empty($user_employee['fullname'])) {
             const chemicalCode = p.get('chemical_code') || '';
 
             // Isi select2 secara visual (kosmetik) tanpa perlu fetch ulang ke server
-            if (periodText) {
+            if (periodId && periodText) {
                 const opt = new Option(periodText, periodId, true, true);
                 $('#card-filter-period').append(opt).trigger('change');
+                this.currentPeriodId = periodId;
+                this.currentPeriodRange = p.get('period_range') || null;
+                this.currentPeriodStatus = p.get('period_status') || null;
             }
-            if (warehouseText) {
+            if (warehouseId && warehouseText) {
                 const opt = new Option(warehouseText, warehouseId, true, true);
                 $('#card-filter-warehouse').append(opt).trigger('change');
+                this.currentWarehouseId = warehouseId;
+                this.currentWarehouseText = warehouseText || null;
             }
-            if (chemicalText) {
+            if (chemicalId && chemicalText) {
                 const opt = new Option(chemicalText, chemicalId, true, true);
                 $('#card-filter-chemical').append(opt).trigger('change');
+                this.currentChemicalId = chemicalId;
+                // chemical_text dari link Posisi Stok berformat "Nama (KODE)" — dipakai langsung utk tampilan.
+                // chemical_code dikirim terpisah supaya barcode di halaman cetak tidak perlu parsing string.
+                this.currentChemicalText = chemicalText || null;
+                this.currentChemicalCode = chemicalCode || null;
+                this._pendingSearchRegex = p.get('search_regex') || null;
+                this._pendingSearch = p.get('search') || null;
             }
-
-            this.currentPeriodId = periodId;
-            this.currentPeriodRange = p.get('period_range') || null;
-            this.currentPeriodStatus = p.get('period_status') || null;
-            this.currentWarehouseId = warehouseId;
-            this.currentWarehouseText = warehouseText || null;
-            this.currentChemicalId = chemicalId;
-            // chemical_text dari link Posisi Stok berformat "Nama (KODE)" — dipakai langsung utk tampilan.
-            // chemical_code dikirim terpisah supaya barcode di halaman cetak tidak perlu parsing string.
-            this.currentChemicalText = chemicalText || null;
-            this.currentChemicalCode = chemicalCode || null;
-            this._pendingSearchRegex = p.get('search_regex') || null;
-            this._pendingSearch = p.get('search') || null;
 
             if (this.currentPeriodRange) {
                 document.getElementById('card-period-status-hint').textContent =
@@ -560,7 +562,7 @@ if (!empty($user_employee['fullname'])) {
             }
 
             this.updateFilterUI();
-            this.reload();
+            this.reload(); // aman dipanggil meski chemical_id belum ada — reload() akan tampilkan empty state
         },
 
         async get(url) {
