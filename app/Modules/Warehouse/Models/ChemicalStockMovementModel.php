@@ -31,6 +31,8 @@ class ChemicalStockMovementModel extends Model
         'variant_id',
         'movement_type',
         'quantity_in',
+        'qty_unit',
+        'qty_berat',
         'quantity_out',
         'unit',
         'reference_type',
@@ -50,12 +52,15 @@ class ChemicalStockMovementModel extends Model
     // ============================================================
 
     /**
-     * Simpan bulk baris Penerimaan untuk 1 periode + 1 gudang + 1 tanggal.
-     * $rows: array of ['chemical_id' => int, 'quantity' => float, 'unit' => string, 'notes' => string]
+     * Simpan bulk baris Penerimaan untuk 1 periode + 1 gudang. Setiap baris membawa
+     * movement_date sendiri (diisi per item lewat modal "Tambah Item"), jadi satu batch
+     * simpan boleh berisi tanggal yang berbeda-beda, selama masih dalam rentang periode.
+     * $rows: array of ['chemical_id' => int, 'variant_id' => ?int, 'qty_unit' => ?float,
+     *                   'quantity' => float, 'unit' => string, 'movement_date' => 'Y-m-d', 'notes' => string]
      *
      * Return: ['status' => 'success'|'error', 'message' => string, 'saved' => int, 'skipped' => array]
      */
-    public function saveReceiptBulk(int $periodId, int $warehouseId, string $movementDate, array $rows, int $userId): array
+    public function saveReceiptBulk(int $periodId, int $warehouseId, array $rows, int $userId): array
     {
         $period = $this->db->table('periods')->where('id', $periodId)->where('deleted_at', null)->get()->getRowArray();
         if (!$period) {
@@ -63,12 +68,6 @@ class ChemicalStockMovementModel extends Model
         }
         if ($period['status'] === 'Closed') {
             return ['status' => 'error', 'message' => 'Periode sudah ditutup, transaksi tidak bisa dicatat'];
-        }
-        if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $movementDate)) {
-            return ['status' => 'error', 'message' => 'Format tanggal penerimaan tidak valid'];
-        }
-        if ($movementDate < $period['start_date'] || $movementDate > $period['end_date']) {
-            return ['status' => 'error', 'message' => 'Tanggal penerimaan harus berada dalam rentang periode (' . $period['start_date'] . ' s/d ' . $period['end_date'] . ')'];
         }
 
         $warehouse = $this->db->table('warehouses')->where('id', $warehouseId)->where('deleted_at', null)->get()->getRowArray();
@@ -82,6 +81,16 @@ class ChemicalStockMovementModel extends Model
         foreach ($rows as $row) {
             $chemicalId = (int) ($row['chemical_id'] ?? 0);
             if (!$chemicalId) continue;
+
+            $movementDate = trim((string) ($row['movement_date'] ?? ''));
+            if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $movementDate)) {
+                $skipped[] = "Chemical #{$chemicalId}: tanggal penerimaan tidak valid";
+                continue;
+            }
+            if ($movementDate < $period['start_date'] || $movementDate > $period['end_date']) {
+                $skipped[] = "Chemical #{$chemicalId}: tanggal {$movementDate} di luar rentang periode ({$period['start_date']} s/d {$period['end_date']})";
+                continue;
+            }
 
             $quantity = is_numeric($row['quantity'] ?? null) ? (float) $row['quantity'] : 0;
             if ($quantity <= 0) {
@@ -119,6 +128,14 @@ class ChemicalStockMovementModel extends Model
             $unit  = trim($row['unit'] ?? '') ?: 'kg';
             $notes = trim($row['notes'] ?? '') ?: null;
 
+            // Qty Unit (jumlah kemasan, mis. 5 drum) — opsional, hanya relevan kalau varian
+            // dipilih. Qty Berat (qty_berat) selalu diisi sama dengan quantity_in supaya kedua
+            // kolom konsisten: quantity_in tetap jadi acuan tunggal untuk saldo stok
+            // (Posisi Stok / Kartu Stok), sedangkan qty_unit & qty_berat menyimpan rincian
+            // varian secara terstruktur untuk kebutuhan laporan/cetak.
+            $qtyUnit = is_numeric($row['qty_unit'] ?? null) ? (float) $row['qty_unit'] : 0;
+            if ($qtyUnit < 0) $qtyUnit = 0;
+
             $this->insert([
                 'period_id'      => $periodId,
                 'warehouse_id'   => $warehouseId,
@@ -126,6 +143,8 @@ class ChemicalStockMovementModel extends Model
                 'variant_id'     => $variantId,
                 'movement_type'  => 'Receipt',
                 'quantity_in'    => $quantity,
+                'qty_unit'       => $qtyUnit,
+                'qty_berat'      => $quantity,
                 'quantity_out'   => 0,
                 'unit'           => $unit,
                 'reference_type' => 'manual',
@@ -169,6 +188,8 @@ class ChemicalStockMovementModel extends Model
                 'm.id',
                 'm.movement_date',
                 'm.quantity_in',
+                'm.qty_unit',
+                'm.qty_berat',
                 'm.quantity_out',
                 'm.unit',
                 'm.notes',
@@ -177,6 +198,7 @@ class ChemicalStockMovementModel extends Model
                 'c.chemical_name',
                 'v.variant_name',
                 'v.packaging',
+                'v.packaging_size',
                 'u.username',
                 'e.fullname as employee_fullname',
             ])

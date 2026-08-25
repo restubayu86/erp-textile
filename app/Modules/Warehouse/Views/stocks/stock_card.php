@@ -335,15 +335,6 @@
             </span>
         </div>
         <div class="d-flex gap-2 align-items-center">
-            <div class="d-flex align-items-center gap-1" title="Pengaturan orientasi kertas untuk Cetak Kartu Stok">
-                <label for="card-print-orientation" class="fs-10 text-muted mb-0 text-nowrap">
-                    <span class="fas fa-cog me-1"></span>Orientasi
-                </label>
-                <select class="form-select form-select-sm" id="card-print-orientation" style="width:auto">
-                    <option value="portrait" selected>Portrait</option>
-                    <option value="landscape">Landscape</option>
-                </select>
-            </div>
             <button class="btn btn-subtle-primary btn-sm" id="card-btn-print" type="button">
                 <span class="fas fa-print me-1"></span>Cetak Kartu Stok
             </button>
@@ -475,7 +466,6 @@ if (!empty($user_employee['fullname'])) {
     const StockCard = {
         BASE: '<?= base_url() ?>',
         printedBy: '<?= esc($printedByName) ?>',
-        printOrientation: 'portrait',
         currentPeriodId: null,
         currentPeriodRange: null,
         currentPeriodStatus: null,
@@ -523,7 +513,11 @@ if (!empty($user_employee['fullname'])) {
             const periodId = p.get('period_id');
             const warehouseId = p.get('warehouse_id');
             const chemicalId = p.get('chemical_id');
-            if (!periodId && !warehouseId) return;
+            if (!periodId && !warehouseId) {
+                // Tidak datang dari link halaman lain — default-select periode berjalan.
+                this.autoSelectCurrentPeriod();
+                return;
+            }
 
             const periodText = p.get('period_text') || '';
             const warehouseText = p.get('warehouse_text') || '';
@@ -563,6 +557,38 @@ if (!empty($user_employee['fullname'])) {
 
             this.updateFilterUI();
             this.reload(); // aman dipanggil meski chemical_id belum ada — reload() akan tampilkan empty state
+        },
+
+        /**
+         * Default-select periode yang ditandai "Periode Berjalan" (is_current) supaya user
+         * tidak perlu pilih manual tiap buka halaman ini. Hanya dipanggil kalau halaman TIDAK
+         * dibuka lewat link berisi query string (lihat initFromQueryParams).
+         */
+        async autoSelectCurrentPeriod() {
+            try {
+                const res = await this.get(this.BASE + 'warehouse/master/periods/select2');
+                const list = res.data ?? [];
+                const current = list.find(p => Number(p.is_current) === 1) ?? list.find(p => p.status === 'Open') ?? null;
+                if (!current) return;
+
+                const opt = new Option(`${current.name} (${current.code})`, current.id, true, true);
+                $(opt).data({
+                    status: current.status,
+                    start_date: current.start_date,
+                    end_date: current.end_date,
+                    name: current.name,
+                    code: current.code,
+                });
+                $('#card-filter-period').append(opt).trigger('change');
+                this.currentPeriodId = current.id;
+                this.currentPeriodRange = `${this.fmtDateOnly(current.start_date)} — ${this.fmtDateOnly(current.end_date)}`;
+                this.currentPeriodStatus = current.status;
+                document.getElementById('card-period-status-hint').textContent =
+                    `${current.name} (${current.code})${current.status === 'Closed' ? ' — Ditutup' : ''} · ${this.currentPeriodRange}`;
+                this.updateFilterUI();
+            } catch (e) {
+                // Kalau gagal, biarkan user pilih periode manual seperti biasa.
+            }
         },
 
         async get(url) {
@@ -672,9 +698,6 @@ if (!empty($user_employee['fullname'])) {
         initEvents() {
             document.getElementById('card-btn-refresh')?.addEventListener('click', () => this.reload());
             document.getElementById('card-btn-print')?.addEventListener('click', () => this.printStockCard());
-            document.getElementById('card-print-orientation')?.addEventListener('change', e => {
-                this.printOrientation = e.target.value === 'landscape' ? 'landscape' : 'portrait';
-            });
             document.getElementById('card-btn-apply-filter')?.addEventListener('click', () => this.applyFilter());
             document.getElementById('card-btn-reset-filter')?.addEventListener('click', () => this.resetFilter());
 
@@ -969,7 +992,6 @@ if (!empty($user_employee['fullname'])) {
             });
             const periodText = $('#card-filter-period').select2('data')[0]?.text ?? '';
             const searchTerm = $('#card-stock-table_filter input').val() || '';
-            const orientation = this.printOrientation === 'landscape' ? 'landscape' : 'portrait';
 
             // Kode kimia untuk barcode — utamakan state currentChemicalCode; fallback parsing dari
             // "Nama (KODE)" untuk kompatibilitas link lama yang belum membawa parameter chemical_code.
@@ -995,7 +1017,7 @@ if (!empty($user_employee['fullname'])) {
                     <title>Kartu Stok - ${this.e(this.currentChemicalText ?? '')}</title>
                     <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"><\/script>
                     <style>
-                        @page { size: A4 ${orientation}; margin: 3mm; }
+                        @page { margin: 3mm; }
                         * { box-sizing: border-box; }
                         body { font-family: Arial, Helvetica, sans-serif; font-size: 9pt; color: #111; margin: 0; padding: 4mm; }
                         .letterhead { display: flex; align-items: center; justify-content: space-between; gap: 12px; border-bottom: 2px solid #111; padding-bottom: 8px; margin-bottom: 10px; }

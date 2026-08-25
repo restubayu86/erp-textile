@@ -267,7 +267,7 @@ class PeriodController extends BaseController
     {
         $search  = trim($this->request->getGet('search') ?? '');
         $builder = $this->model->db->table('periods')
-            ->select('id, period_code AS code, period_name AS name, status, start_date, end_date')
+            ->select('id, period_code AS code, period_name AS name, status, start_date, end_date, is_current')
             ->where('deleted_at', null)->orderBy('start_date', 'DESC');
         if ($search !== '') $builder->groupStart()->like('period_name', $search)->orLike('period_code', $search)->groupEnd();
         return $this->response->setJSON(['status' => 'success', 'data' => $builder->limit(50)->get()->getResultArray()]);

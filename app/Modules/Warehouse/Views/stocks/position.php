@@ -357,15 +357,6 @@
             </span>
         </div>
         <div class="d-flex gap-2 align-items-center">
-            <div class="d-flex align-items-center gap-1" title="Pengaturan orientasi kertas untuk Cetak, PDF &amp; Excel">
-                <label for="pos-print-orientation" class="fs-10 text-muted mb-0 text-nowrap">
-                    <span class="fas fa-cog me-1"></span>Orientasi
-                </label>
-                <select class="form-select form-select-sm" id="pos-print-orientation" style="width:auto">
-                    <option value="portrait" selected>Portrait</option>
-                    <option value="landscape">Landscape</option>
-                </select>
-            </div>
             <button class="btn btn-subtle-success btn-sm" id="pos-btn-export-excel" type="button">
                 <span class="fas fa-file-excel me-1"></span>Export Excel
             </button>
@@ -587,7 +578,6 @@ if (!empty($user_employee['fullname'])) {
     const PositionStock = {
         BASE: '<?= base_url() ?>',
         printedBy: '<?= esc($printedByName) ?>',
-        printOrientation: 'portrait',
         currentPeriodId: null,
         currentPeriodRange: null,
         currentWarehouseId: null,
@@ -600,13 +590,32 @@ if (!empty($user_employee['fullname'])) {
             this.initSelect2();
             this.initEvents();
             this.initColumnFilters();
-            document.getElementById('pos-print-date').textContent = new Date().toLocaleDateString('id-ID', {
-                day: '2-digit',
-                month: 'long',
-                year: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit'
-            });
+            this.autoSelectCurrentPeriod();
+        },
+
+        /**
+         * Default-select periode yang ditandai "Periode Berjalan" (is_current) supaya user
+         * tidak perlu pilih manual tiap buka halaman ini. Gudang tetap harus dipilih sendiri.
+         */
+        async autoSelectCurrentPeriod() {
+            try {
+                const res = await this.get(this.BASE + 'warehouse/master/periods/select2');
+                const list = res.data ?? [];
+                const current = list.find(p => Number(p.is_current) === 1) ?? list.find(p => p.status === 'Open') ?? null;
+                if (!current) return;
+
+                const opt = new Option(`${current.name} (${current.code})`, current.id, true, true);
+                $(opt).data({
+                    status: current.status,
+                    start_date: current.start_date,
+                    end_date: current.end_date,
+                    name: current.name,
+                    code: current.code,
+                });
+                $('#pos-filter-period').append(opt).trigger('change');
+            } catch (e) {
+                // Kalau gagal, biarkan user pilih periode manual seperti biasa.
+            }
         },
 
         async get(url) {
@@ -692,9 +701,6 @@ if (!empty($user_employee['fullname'])) {
             document.getElementById('pos-btn-print')?.addEventListener('click', () => this.printPosition());
             document.getElementById('pos-btn-export-excel')?.addEventListener('click', () => this.exportExcel());
             document.getElementById('pos-btn-export-pdf')?.addEventListener('click', () => this.exportPdf());
-            document.getElementById('pos-print-orientation')?.addEventListener('change', e => {
-                this.printOrientation = e.target.value === 'landscape' ? 'landscape' : 'portrait';
-            });
             document.getElementById('pos-btn-apply-filter')?.addEventListener('click', () => this.applyFilter());
             document.getElementById('pos-btn-reset-filter')?.addEventListener('click', () => this.resetFilter());
 
@@ -1023,7 +1029,7 @@ if (!empty($user_employee['fullname'])) {
                         // bukan teks hasil strip HTML dari tampilan layar yang masih menyertakan kode.
                         orthogonal: 'export',
                     },
-                    customize: xlsx => self.customizeExcelOrientation(xlsx),
+                    customize: xlsx => self.customizeExcelOrientation(xlsx, false),
                 }, ],
                 language: {
                     search: '',
@@ -1211,7 +1217,7 @@ if (!empty($user_employee['fullname'])) {
                         // bukan teks hasil strip HTML dari tampilan layar yang masih menyertakan kode.
                         orthogonal: 'export',
                     },
-                    customize: xlsx => self.customizeExcelOrientation(xlsx),
+                    customize: xlsx => self.customizeExcelOrientation(xlsx, true),
                 }, ],
                 language: {
                     search: '',
@@ -1459,13 +1465,15 @@ if (!empty($user_employee['fullname'])) {
         // ============================================================
 
         /**
-         * Set orientasi halaman (page setup) worksheet Excel supaya sama
-         * dengan pilihan orientasi di "Cetak Laporan" / "Export PDF".
+         * Set orientasi halaman (page setup) worksheet Excel. Orientasi tidak lagi bisa
+         * dipilih user (sudah dihapus, ikut pengaturan printer/Print dialog bawaan browser
+         * untuk Cetak) — untuk file Excel/PDF yang digenerate manual, pakai default yang
+         * masuk akal: landscape untuk laporan Gabungan (kolomnya banyak), portrait untuk per-Gudang.
          */
-        customizeExcelOrientation(xlsx) {
+        customizeExcelOrientation(xlsx, isCombined = false) {
             try {
                 const sheet = xlsx.xl.worksheets['sheet1.xml'];
-                const orientation = this.printOrientation === 'landscape' ? 'landscape' : 'portrait';
+                const orientation = isCombined ? 'landscape' : 'portrait';
                 if ($('pageSetup', sheet).length) {
                     $('pageSetup', sheet).attr('orientation', orientation);
                 } else {
@@ -1727,7 +1735,9 @@ if (!empty($user_employee['fullname'])) {
                 margin: [0, 0, 0, 10],
             };
 
-            const orientation = this.printOrientation === 'landscape' ? 'landscape' : 'portrait';
+            // Orientasi tidak lagi dipilih user — pakai default landscape utk laporan
+            // Gabungan (kolom banyak), portrait utk per-Gudang.
+            const orientation = isCombined ? 'landscape' : 'portrait';
 
             const docDefinition = {
                 pageOrientation: orientation,
@@ -1872,7 +1882,6 @@ if (!empty($user_employee['fullname'])) {
                 minute: '2-digit'
             });
             const periodText = $('#pos-filter-period').select2('data')[0]?.text ?? '';
-            const orientation = this.printOrientation === 'landscape' ? 'landscape' : 'portrait';
 
             const withVariance = rows.filter(r => r.variance_on_hand !== null && Math.abs(Number(r.variance_on_hand)) > 0.001).length;
             const draftArchived = rows.filter(r => r.status !== 'Active').length;
@@ -1953,7 +1962,7 @@ if (!empty($user_employee['fullname'])) {
                     <meta charset="UTF-8">
                     <title>Posisi Stok Bahan Kimia</title>
                     <style>
-                        @page { size: A4 ${orientation}; margin: 3mm; }
+                        @page { margin: 3mm; }
                         * { box-sizing: border-box; }
                         body { font-family: Arial, Helvetica, sans-serif; font-size: 8pt; color: #111; margin: 0; padding: 4mm; }
                         .letterhead { display: flex; align-items: center; gap: 12px; border-bottom: 2px solid #111; padding-bottom: 8px; margin-bottom: 10px; }

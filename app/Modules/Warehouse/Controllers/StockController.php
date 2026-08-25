@@ -161,20 +161,21 @@ class StockController extends BaseController
     }
 
     /**
-     * Simpan bulk baris Penerimaan — POST period_id, warehouse_id, movement_date, rows[] (JSON string)
+     * Simpan bulk baris Penerimaan — POST period_id, warehouse_id, rows[] (JSON string).
+     * Setiap baris di rows[] membawa movement_date sendiri (diisi per item lewat modal),
+     * jadi satu kali "Simpan Penerimaan" boleh berisi tanggal yang berbeda-beda.
      */
     public function storeReceipt()
     {
         if (!$this->request->isAJAX()) return $this->jsonError('Method not allowed', 405);
         if (!canDo('warehouse.stocks.receive')) return $this->jsonError('Akses ditolak', 403);
 
-        $periodId     = (int) $this->request->getPost('period_id');
-        $warehouseId  = (int) $this->request->getPost('warehouse_id');
-        $movementDate = trim((string) $this->request->getPost('movement_date'));
-        $rowsRaw      = $this->request->getPost('rows');
+        $periodId    = (int) $this->request->getPost('period_id');
+        $warehouseId = (int) $this->request->getPost('warehouse_id');
+        $rowsRaw     = $this->request->getPost('rows');
 
-        if (!$periodId || !$warehouseId || !$movementDate) {
-            return $this->jsonError('Periode, gudang, dan tanggal penerimaan wajib diisi', 422);
+        if (!$periodId || !$warehouseId) {
+            return $this->jsonError('Periode dan gudang wajib dipilih', 422);
         }
 
         $rows = is_string($rowsRaw) ? json_decode($rowsRaw, true) : $rowsRaw;
@@ -182,7 +183,7 @@ class StockController extends BaseController
             return $this->jsonError('Belum ada item penerimaan yang ditambahkan', 422);
         }
 
-        $result = $this->movementModel->saveReceiptBulk($periodId, $warehouseId, $movementDate, $rows, (int) auth()->id());
+        $result = $this->movementModel->saveReceiptBulk($periodId, $warehouseId, $rows, (int) auth()->id());
         return $this->jsonResponse($result, $result['status'] === 'success' ? 200 : 422);
     }
 

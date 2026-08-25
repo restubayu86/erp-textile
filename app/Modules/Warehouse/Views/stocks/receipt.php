@@ -122,6 +122,27 @@ if (!empty($user_employee['fullname'])) {
         width: 100% !important;
     }
 
+    /* Margin/padding tabel Daftar Item Penerimaan supaya lebih lega, tidak mepet */
+    #rcp-pending-table th,
+    #rcp-pending-table td {
+        padding: .65rem .75rem;
+    }
+
+    #rcp-pending-table .btn-row-remove {
+        width: 28px;
+        height: 28px;
+        padding: 0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: .4rem;
+    }
+
+    /* Tombol modal (Batal / Tambahkan) proporsional & sama lebar minimum */
+    #rcp-add-modal .modal-footer .btn {
+        min-width: 130px;
+    }
+
     #rcp-history-mode-group label {
         font-size: .72rem;
     }
@@ -276,19 +297,17 @@ if (!empty($user_employee['fullname'])) {
     <div class="d-flex justify-content-between align-items-center mb-3 gap-2 flex-wrap">
         <div class="d-flex gap-2 align-items-center">
             <span class="badge badge-phoenix badge-phoenix-secondary fs-9 p-2 px-3" id="rcp-context-badge">
-                <span class="fas fa-info-circle me-1"></span>Pilih periode, gudang &amp; tanggal penerimaan
+                <span class="fas fa-info-circle me-1"></span>Pilih periode &amp; gudang
             </span>
         </div>
-        <div class="d-flex gap-2 align-items-center">
-            <div class="d-flex align-items-center gap-1" title="Pengaturan orientasi kertas untuk Cetak">
-                <label for="rcp-print-orientation" class="fs-10 text-muted mb-0 text-nowrap">
-                    <span class="fas fa-cog me-1"></span>Orientasi
-                </label>
-                <select class="form-select form-select-sm" id="rcp-print-orientation" style="width:auto">
-                    <option value="portrait" selected>Portrait</option>
-                    <option value="landscape">Landscape</option>
-                </select>
-            </div>
+        <div class="d-flex gap-2 align-items-center flex-wrap">
+            <a href="<?= site_url('warehouse/stocks/position') ?>" class="btn btn-outline-secondary btn-sm" title="Buka halaman Posisi Stok">
+                <span class="fas fa-layer-group me-1"></span>Posisi Stok
+            </a>
+            <a href="<?= site_url('warehouse/stocks/stock-card') ?>" class="btn btn-outline-secondary btn-sm" title="Buka halaman Kartu Stok">
+                <span class="fas fa-address-card me-1"></span>Kartu Stok
+            </a>
+            <div class="vr mx-1 d-none d-md-block"></div>
             <button class="btn btn-subtle-primary btn-sm" id="rcp-btn-print" type="button">
                 <span class="fas fa-print me-1"></span>Cetak
             </button>
@@ -302,7 +321,7 @@ if (!empty($user_employee['fullname'])) {
     <div class="mx-n4 px-4 mx-lg-n6 px-lg-6 bg-body-emphasis py-5 border-y" id="rcp-empty-wrapper">
         <div class="text-center py-5 text-body-tertiary">
             <span class="fas fa-truck-loading fa-2x mb-2 d-block opacity-50"></span>
-            Pilih periode, gudang, dan tanggal penerimaan terlebih dahulu.
+            Pilih periode dan gudang terlebih dahulu.
         </div>
     </div>
 
@@ -322,23 +341,24 @@ if (!empty($user_employee['fullname'])) {
                     </button>
                 </div>
             </div>
-            <div class="card-body p-0">
+            <div class="card-body p-3">
                 <div class="table-responsive">
                     <table class="table table-hover fs-9 align-middle mb-0" id="rcp-pending-table">
                         <thead class="bg-body-secondary">
                             <tr>
                                 <th style="width:30px">No</th>
+                                <th style="width:100px">Tanggal</th>
                                 <th>Bahan Kimia</th>
                                 <th>Varian / Kemasan</th>
                                 <th class="text-end" style="width:110px">Qty Berat</th>
                                 <th style="width:70px">Satuan</th>
                                 <th>Catatan</th>
-                                <th style="width:40px"></th>
+                                <th style="width:50px" class="text-center">Aksi</th>
                             </tr>
                         </thead>
                         <tbody id="rcp-pending-tbody">
                             <tr id="rcp-pending-empty-row">
-                                <td colspan="7" class="text-center text-muted py-4">Belum ada item ditambahkan. Klik "Tambah Item" untuk mulai.</td>
+                                <td colspan="8" class="text-center text-muted py-4">Belum ada item ditambahkan. Klik "Tambah Item" untuk mulai.</td>
                             </tr>
                         </tbody>
                     </table>
@@ -390,6 +410,7 @@ if (!empty($user_employee['fullname'])) {
                         <tr>
                             <th>Tanggal</th>
                             <th>Bahan Kimia</th>
+                            <th>Varian / Kemasan</th>
                             <th class="text-end">Qty Masuk</th>
                             <th>Catatan</th>
                             <th>Dicatat Oleh</th>
@@ -436,12 +457,6 @@ if (!empty($user_employee['fullname'])) {
                     <option value=""></option>
                 </select>
             </div>
-            <div class="mb-4">
-                <label class="form-label fw-semibold fs-9 text-uppercase text-muted" for="rcp-filter-date">
-                    Tanggal Penerimaan <span class="text-danger">*</span>
-                </label>
-                <input type="date" class="form-control form-control-sm" id="rcp-filter-date">
-            </div>
         </div>
         <div class="d-grid gap-2">
             <button class="btn btn-primary btn-sm" id="rcp-btn-apply-filter">
@@ -463,11 +478,18 @@ if (!empty($user_employee['fullname'])) {
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <div class="mb-3">
-                    <label class="form-label fw-semibold fs-9 text-uppercase text-muted">Bahan Kimia</label>
-                    <select class="form-select form-select-sm" id="rcp-modal-chemical" style="width:100%">
-                        <option value=""></option>
-                    </select>
+                <div class="row g-2 mb-3">
+                    <div class="col-md-7">
+                        <label class="form-label fw-semibold fs-9 text-uppercase text-muted">Bahan Kimia</label>
+                        <select class="form-select form-select-sm" id="rcp-modal-chemical" style="width:100%">
+                            <option value=""></option>
+                        </select>
+                    </div>
+                    <div class="col-md-5">
+                        <label class="form-label fw-semibold fs-9 text-uppercase text-muted">Tanggal Penerimaan</label>
+                        <input type="date" class="form-control form-control-sm" id="rcp-modal-date">
+                        <div class="form-text fs-10" id="rcp-modal-date-hint"></div>
+                    </div>
                 </div>
                 <div class="mb-3">
                     <label class="form-label fw-semibold fs-9 text-uppercase text-muted">Varian / Kemasan (template)</label>
@@ -495,7 +517,9 @@ if (!empty($user_employee['fullname'])) {
                 </div>
             </div>
             <div class="modal-footer">
-                <button class="btn btn-subtle-secondary btn-sm" data-bs-dismiss="modal" type="button">Batal</button>
+                <button class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal" type="button">
+                    <span class="fas fa-times me-1"></span>Batal
+                </button>
                 <button class="btn btn-primary btn-sm" id="rcp-modal-btn-submit" type="button">
                     <span class="fas fa-plus me-1"></span>Tambahkan ke Daftar
                 </button>
@@ -512,7 +536,6 @@ if (!empty($user_employee['fullname'])) {
     const StockReceipt = {
         BASE: '<?= base_url() ?>',
         printedBy: '<?= esc($printedByName) ?>',
-        printOrientation: 'portrait',
         currentPeriodId: null,
         currentPeriodRange: null,
         currentPeriodStart: null,
@@ -522,7 +545,7 @@ if (!empty($user_employee['fullname'])) {
         currentWarehouseId: null,
         currentWarehouseText: null,
         currentDate: null,
-        pendingItems: [], // { chemical_id, chemical_name, chemical_code, variant_id, variant_label, quantity, unit, notes }
+        pendingItems: [], // { chemical_id, chemical_name, chemical_code, variant_id, variant_label, qty_unit, quantity, unit, movement_date, notes }
         dtHistory: null,
         _modalSelectedVariant: null,
         _modalQtyBeratManual: false,
@@ -530,8 +553,35 @@ if (!empty($user_employee['fullname'])) {
         init() {
             this.initSelect2();
             this.initEvents();
-            const today = new Date().toISOString().slice(0, 10);
-            document.getElementById('rcp-filter-date').value = today;
+            this.autoSelectCurrentPeriod();
+        },
+
+        /**
+         * Default-select periode yang ditandai "Periode Berjalan" (is_current) supaya user
+         * tidak perlu pilih manual tiap buka halaman ini. Gudang tetap harus dipilih sendiri.
+         */
+        async autoSelectCurrentPeriod() {
+            try {
+                const res = await this.get(this.BASE + 'warehouse/master/periods/select2');
+                const list = res.data ?? [];
+                const current = list.find(p => Number(p.is_current) === 1) ?? list.find(p => p.status === 'Open') ?? null;
+                if (!current) return;
+
+                const opt = new Option(`${current.name} (${current.code})`, current.id, true, true);
+                $(opt).data({
+                    status: current.status,
+                    start_date: current.start_date,
+                    end_date: current.end_date,
+                    name: current.name,
+                    code: current.code,
+                });
+                $('#rcp-filter-period').append(opt).trigger('change');
+
+                document.getElementById('rcp-period-status-hint').textContent =
+                    `${current.name} (${current.code})${current.status === 'Closed' ? ' — Ditutup' : ''} · ${this.fmtDateOnly(current.start_date)} — ${this.fmtDateOnly(current.end_date)}`;
+            } catch (e) {
+                // Kalau gagal, biarkan user pilih periode manual seperti biasa.
+            }
         },
 
         initSelect2() {
@@ -557,6 +607,7 @@ if (!empty($user_employee['fullname'])) {
                             end_date: p.end_date,
                             name: p.name,
                             code: p.code,
+                            is_current: p.is_current,
                         })),
                     }),
                 },
@@ -640,9 +691,6 @@ if (!empty($user_employee['fullname'])) {
             document.getElementById('rcp-btn-reset-filter')?.addEventListener('click', () => this.resetFilter());
             document.getElementById('rcp-btn-save')?.addEventListener('click', () => this.save());
             document.getElementById('rcp-btn-print')?.addEventListener('click', () => this.printReceiptHistory());
-            document.getElementById('rcp-print-orientation')?.addEventListener('change', e => {
-                this.printOrientation = e.target.value === 'landscape' ? 'landscape' : 'portrait';
-            });
 
             // Modal tambah item
             document.getElementById('rcp-btn-open-add-modal')?.addEventListener('click', () => this.openAddModal());
@@ -662,14 +710,9 @@ if (!empty($user_employee['fullname'])) {
         applyFilter() {
             const periodData = $('#rcp-filter-period').select2('data')[0];
             const warehouseData = $('#rcp-filter-warehouse').select2('data')[0];
-            const date = document.getElementById('rcp-filter-date').value;
 
-            if (!periodData?.id || !warehouseData?.id || !date) {
-                this.toast('error', 'Periode, gudang, dan tanggal penerimaan wajib dipilih');
-                return;
-            }
-            if (date < periodData.start_date || date > periodData.end_date) {
-                this.toast('error', 'Tanggal penerimaan harus berada dalam rentang periode');
+            if (!periodData?.id || !warehouseData?.id) {
+                this.toast('error', 'Periode dan gudang wajib dipilih');
                 return;
             }
 
@@ -681,13 +724,18 @@ if (!empty($user_employee['fullname'])) {
             this.currentPeriodText = `${periodData.name} (${periodData.code})`;
             this.currentWarehouseId = warehouseData.id;
             this.currentWarehouseText = warehouseData.text;
-            this.currentDate = date;
+
+            // Tanggal transaksi kini diisi per item lewat modal "Tambah Item" — di sini cukup
+            // siapkan tanggal default (hari ini, dijepit ke rentang periode) untuk modal & filter riwayat.
+            const today = new Date().toISOString().slice(0, 10);
+            this.currentDate = today < periodData.start_date ? periodData.start_date :
+                (today > periodData.end_date ? periodData.end_date : today);
 
             document.getElementById('rcp-period-status-hint').textContent =
                 `${this.currentPeriodText}${periodData.status === 'Closed' ? ' — Ditutup' : ''} · ${this.currentPeriodRange}`;
 
-            // Default input filter riwayat mengikuti tanggal & rentang periode terpilih
-            document.getElementById('rcp-history-single-date').value = date;
+            // Default input filter riwayat mengikuti rentang periode terpilih
+            document.getElementById('rcp-history-single-date').value = this.currentDate;
             document.getElementById('rcp-history-from').value = periodData.start_date;
             document.getElementById('rcp-history-to').value = periodData.end_date;
             document.getElementById('rcp-mode-period').checked = true;
@@ -701,7 +749,6 @@ if (!empty($user_employee['fullname'])) {
         resetFilter() {
             $('#rcp-filter-period').val(null).trigger('change');
             $('#rcp-filter-warehouse').val(null).trigger('change');
-            document.getElementById('rcp-filter-date').value = new Date().toISOString().slice(0, 10);
             document.getElementById('rcp-period-status-hint').textContent = '';
             this.currentPeriodId = null;
             this.currentPeriodStart = null;
@@ -722,7 +769,6 @@ if (!empty($user_employee['fullname'])) {
             const labels = [];
             if (this.currentPeriodId) labels.push(`Periode: ${this.currentPeriodText}`);
             if (this.currentWarehouseText) labels.push(`Gudang: ${this.currentWarehouseText}`);
-            if (this.currentDate) labels.push(`Tanggal: ${this.fmtDateOnly(this.currentDate)}`);
 
             const badge = document.getElementById('rcp-context-badge');
             const toggle = document.getElementById('rcp-filter-toggle');
@@ -730,7 +776,7 @@ if (!empty($user_employee['fullname'])) {
                 badge.innerHTML = `<span class="fas fa-check-circle me-1"></span>${labels.join(' · ')}`;
                 toggle.classList.add('has-filter');
             } else {
-                badge.innerHTML = `<span class="fas fa-info-circle me-1"></span>Pilih periode, gudang &amp; tanggal penerimaan`;
+                badge.innerHTML = `<span class="fas fa-info-circle me-1"></span>Pilih periode &amp; gudang`;
                 toggle.classList.remove('has-filter');
             }
 
@@ -758,7 +804,7 @@ if (!empty($user_employee['fullname'])) {
         },
 
         async reload() {
-            if (!this.currentPeriodId || !this.currentWarehouseId || !this.currentDate) {
+            if (!this.currentPeriodId || !this.currentWarehouseId) {
                 this.renderEmpty();
                 return;
             }
@@ -788,8 +834,8 @@ if (!empty($user_employee['fullname'])) {
                 this.toast('error', 'Periode sudah ditutup, tidak bisa menambah item');
                 return;
             }
-            if (!this.currentPeriodId || !this.currentWarehouseId || !this.currentDate) {
-                this.toast('error', 'Pilih periode, gudang, dan tanggal terlebih dahulu');
+            if (!this.currentPeriodId || !this.currentWarehouseId) {
+                this.toast('error', 'Pilih periode dan gudang terlebih dahulu');
                 return;
             }
 
@@ -802,6 +848,17 @@ if (!empty($user_employee['fullname'])) {
             document.getElementById('rcp-modal-qty-berat').value = '';
             document.getElementById('rcp-modal-unit-suffix').textContent = 'kg';
             document.getElementById('rcp-modal-notes').value = '';
+
+            // Tanggal penerimaan default: tanggal terakhir dipakai (atau hari ini), dijepit
+            // ke rentang periode yang aktif.
+            const dateInput = document.getElementById('rcp-modal-date');
+            dateInput.min = this.currentPeriodStart ?? '';
+            dateInput.max = this.currentPeriodEnd ?? '';
+            dateInput.value = this.currentDate ?? this.currentPeriodStart ?? '';
+            document.getElementById('rcp-modal-date-hint').textContent =
+                this.currentPeriodStart && this.currentPeriodEnd ?
+                `Rentang periode: ${this.fmtDateOnly(this.currentPeriodStart)} — ${this.fmtDateOnly(this.currentPeriodEnd)}` : '';
+
             this._modalSelectedVariant = null;
             this._modalQtyBeratManual = false;
 
@@ -902,17 +959,27 @@ if (!empty($user_employee['fullname'])) {
             const notes = document.getElementById('rcp-modal-notes').value.trim();
             const variant = this._modalSelectedVariant;
             const unit = variant?.unit || document.getElementById('rcp-modal-unit-suffix').textContent || 'kg';
+            const movementDate = document.getElementById('rcp-modal-date').value;
 
             if (!chemicalData?.id) {
                 this.toast('error', 'Pilih bahan kimia terlebih dahulu');
+                return;
+            }
+            if (!movementDate) {
+                this.toast('error', 'Tanggal penerimaan wajib diisi');
+                return;
+            }
+            if (this.currentPeriodStart && this.currentPeriodEnd &&
+                (movementDate < this.currentPeriodStart || movementDate > this.currentPeriodEnd)) {
+                this.toast('error', 'Tanggal penerimaan harus berada dalam rentang periode');
                 return;
             }
             if (!qtyBerat || qtyBerat <= 0) {
                 this.toast('error', 'Qty Berat harus lebih dari 0');
                 return;
             }
-            if (this.pendingItems.some(it => String(it.chemical_id) === String(chemicalData.id))) {
-                this.toast('error', 'Bahan kimia ini sudah ada di daftar — hapus dulu kalau mau ubah');
+            if (this.pendingItems.some(it => String(it.chemical_id) === String(chemicalData.id) && it.movement_date === movementDate)) {
+                this.toast('error', 'Bahan kimia ini dengan tanggal yang sama sudah ada di daftar — hapus dulu kalau mau ubah');
                 return;
             }
 
@@ -935,10 +1002,15 @@ if (!empty($user_employee['fullname'])) {
                 chemical_code: chemicalData.code ?? '',
                 variant_id: variant?.id ?? null,
                 variant_label: variant ? `${qtyUnit ? this.fmtNumber(qtyUnit) + ' x ' : ''}${variant.name}` : null,
+                qty_unit: variant ? qtyUnit : null,
                 quantity: qtyBerat,
                 unit,
+                movement_date: movementDate,
                 notes,
             });
+
+            // Ingat tanggal terakhir dipakai supaya modal berikutnya prefill dengan tanggal ini.
+            this.currentDate = movementDate;
 
             bootstrap.Modal.getInstance(document.getElementById('rcp-add-modal'))?.hide();
             this.renderPending();
@@ -955,13 +1027,14 @@ if (!empty($user_employee['fullname'])) {
             document.getElementById('rcp-btn-save').disabled = this.pendingItems.length === 0 || this.currentPeriodStatus === 'Closed';
 
             if (!this.pendingItems.length) {
-                tbody.innerHTML = `<tr id="rcp-pending-empty-row"><td colspan="7" class="text-center text-muted py-4">Belum ada item ditambahkan. Klik "Tambah Item" untuk mulai.</td></tr>`;
+                tbody.innerHTML = `<tr id="rcp-pending-empty-row"><td colspan="8" class="text-center text-muted py-4">Belum ada item ditambahkan. Klik "Tambah Item" untuk mulai.</td></tr>`;
                 return;
             }
 
             tbody.innerHTML = this.pendingItems.map((it, idx) => `
                 <tr>
                     <td>${idx + 1}</td>
+                    <td>${this.fmtDateOnly(it.movement_date)}</td>
                     <td>
                         <span class="fw-semibold">${this.e(it.chemical_name)}</span>
                         <div class="text-muted small font-monospace">${this.e(it.chemical_code)}</div>
@@ -970,8 +1043,8 @@ if (!empty($user_employee['fullname'])) {
                     <td class="text-end fw-semibold">${this.fmtNumber(it.quantity)}</td>
                     <td>${this.e(it.unit)}</td>
                     <td class="text-muted">${it.notes ? this.e(it.notes) : '<span class="fst-italic">—</span>'}</td>
-                    <td class="text-end">
-                        <button class="btn btn-subtle-danger btn-sm py-0 px-2" onclick="StockReceipt.removeItem(${idx})" type="button">
+                    <td class="text-center">
+                        <button class="btn btn-subtle-danger btn-row-remove" onclick="StockReceipt.removeItem(${idx})" type="button" title="Hapus item">
                             <span class="fas fa-times"></span>
                         </button>
                     </td>
@@ -997,16 +1070,16 @@ if (!empty($user_employee['fullname'])) {
                 const fd = new FormData();
                 fd.set('period_id', this.currentPeriodId);
                 fd.set('warehouse_id', this.currentWarehouseId);
-                fd.set('movement_date', this.currentDate);
-                // Info varian (mis. "5 x Drum 200L") digabung ke catatan supaya tercatat di ledger,
-                // karena tabel movements tidak punya kolom jumlah-kemasan terpisah.
+                // variant_id, qty_unit & movement_date dikirim per baris (tiap item punya
+                // tanggalnya sendiri, diisi lewat modal) — catatan tetap murni isian user.
                 fd.set('rows', JSON.stringify(this.pendingItems.map(it => ({
                     chemical_id: it.chemical_id,
                     variant_id: it.variant_id,
+                    qty_unit: it.qty_unit,
                     quantity: it.quantity,
                     unit: it.unit,
-                    notes: it.variant_label ?
-                        (it.notes ? `${it.variant_label} — ${it.notes}` : it.variant_label) : it.notes,
+                    movement_date: it.movement_date,
+                    notes: it.notes,
                 }))));
 
                 const res = await this.post(this.BASE + 'warehouse/stocks/receipt/store', fd);
@@ -1060,7 +1133,7 @@ if (!empty($user_employee['fullname'])) {
                 const rows = res.status === 'success' ? (res.data ?? []) : [];
                 this.buildHistoryTable(rows);
 
-                const todayStr = this.currentDate;
+                const todayStr = new Date().toISOString().slice(0, 10);
                 const todayCount = rows.filter(r => (r.movement_date ?? '').slice(0, 10) === todayStr).length;
                 document.getElementById('rcp-stat-today').textContent = todayCount;
             } catch (e) {
@@ -1113,6 +1186,15 @@ if (!empty($user_employee['fullname'])) {
                         },
                     },
                     {
+                        data: null,
+                        render: (d, t, row) => {
+                            if (!row.variant_name) return '<span class="text-muted fst-italic">—</span>';
+                            const qtyUnitText = row.qty_unit && Number(row.qty_unit) > 0 ? `${self.fmtNumber(row.qty_unit)} x ` : '';
+                            return `${qtyUnitText}${self.e(row.variant_name)}` +
+                                (row.packaging ? `<div class="text-muted small">${self.e(row.packaging)}</div>` : '');
+                        },
+                    },
+                    {
                         data: 'quantity_in',
                         className: 'text-end fw-semibold text-success',
                         render: d => '+' + self.fmtNumber(d),
@@ -1129,7 +1211,7 @@ if (!empty($user_employee['fullname'])) {
                         data: 'id',
                         className: 'text-end',
                         orderable: false,
-                        render: id => self.currentPeriodStatus === 'Closed' ? '' : `<button class="btn btn-subtle-danger btn-sm py-0 px-2" onclick="StockReceipt.deleteHistory(${id})" type="button">
+                        render: id => self.currentPeriodStatus === 'Closed' ? '' : `<button class="btn btn-subtle-danger btn-sm" onclick="StockReceipt.deleteHistory(${id})" type="button">
                                 <span class="fas fa-trash-alt"></span>
                              </button>`,
                     },
@@ -1192,7 +1274,6 @@ if (!empty($user_employee['fullname'])) {
                 hour: '2-digit',
                 minute: '2-digit'
             });
-            const orientation = this.printOrientation === 'landscape' ? 'landscape' : 'portrait';
 
             const mode = document.querySelector('input[name="rcp-history-mode"]:checked')?.value ?? 'period';
             let filterText = this.currentPeriodRange ?? '-';
@@ -1207,17 +1288,22 @@ if (!empty($user_employee['fullname'])) {
 
             const totalQty = rows.reduce((sum, r) => sum + (Number(r.quantity_in) || 0), 0);
 
-            const rowsHtml = rows.map((r, i) => `
+            const rowsHtml = rows.map((r, i) => {
+                const qtyUnitText = r.qty_unit && Number(r.qty_unit) > 0 ? `${this.fmtNumber(r.qty_unit)} x ` : '';
+                const variantText = r.variant_name ? `${qtyUnitText}${this.e(r.variant_name)}` : '-';
+                return `
                 <tr>
                     <td>${i + 1}</td>
                     <td>${this.fmtDateOnly(r.movement_date)}</td>
                     <td>${this.e(r.chemical_name)}<div class="mono">${this.e(r.chemical_code)}</div></td>
+                    <td>${variantText}</td>
                     <td class="num in bold">+${this.fmtNumber(r.quantity_in)}</td>
                     <td>${this.e(r.unit ?? '-')}</td>
                     <td>${r.notes ? this.e(r.notes) : '-'}</td>
                     <td>${this.e(r.employee_fullname || r.username || '-')}</td>
                 </tr>
-            `).join('');
+            `;
+            }).join('');
 
             const printWindow = window.open('', '_blank', 'width=1300,height=900');
             printWindow.document.write(`
@@ -1227,7 +1313,7 @@ if (!empty($user_employee['fullname'])) {
                     <meta charset="UTF-8">
                     <title>Bukti Penerimaan Stok Bahan Kimia</title>
                     <style>
-                        @page { size: A4 ${orientation}; margin: 3mm; }
+                        @page { margin: 3mm; }
                         * { box-sizing: border-box; }
                         body { font-family: Arial, Helvetica, sans-serif; font-size: 8pt; color: #111; margin: 0; padding: 4mm; }
                         .letterhead { display: flex; align-items: center; gap: 12px; border-bottom: 2px solid #111; padding-bottom: 8px; margin-bottom: 10px; }
@@ -1268,7 +1354,7 @@ if (!empty($user_employee['fullname'])) {
                     </div>
                     <table>
                         <thead>
-                            <tr><th>#</th><th>Tanggal</th><th>Bahan Kimia</th><th class="num">Qty Masuk</th><th>Satuan</th><th>Catatan</th><th>Dicatat Oleh</th></tr>
+                            <tr><th>#</th><th>Tanggal</th><th>Bahan Kimia</th><th>Varian / Kemasan</th><th class="num">Qty Masuk</th><th>Satuan</th><th>Catatan</th><th>Dicatat Oleh</th></tr>
                         </thead>
                         <tbody>${rowsHtml}</tbody>
                     </table>

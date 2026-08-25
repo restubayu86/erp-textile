@@ -1,3 +1,12 @@
+<?php
+// Nama yang tampil di "Dicetak Oleh" — prioritas: nama lengkap employee, fallback username/email.
+$printedByName = '-';
+if (!empty($user_employee['fullname'])) {
+    $printedByName = ucwords(strtolower($user_employee['fullname']));
+} elseif (auth()->user()) {
+    $printedByName = auth()->user()->username ?? auth()->user()->email ?? '-';
+}
+?>
 <?= $this->extend('templates/layout') ?>
 
 <?= $this->section('styles') ?>
@@ -320,7 +329,13 @@
                 <span class="fas fa-info-circle me-1"></span>Pilih periode &amp; gudang
             </span>
         </div>
-        <div class="d-flex gap-2">
+        <div class="d-flex gap-2 flex-wrap">
+            <button class="btn btn-subtle-success btn-sm" id="so-btn-export-excel" type="button">
+                <span class="fas fa-file-excel me-1"></span>Export Excel
+            </button>
+            <button class="btn btn-subtle-primary btn-sm" id="so-btn-print" type="button">
+                <span class="fas fa-print me-1"></span>Cetak
+            </button>
             <button class="btn btn-subtle-secondary btn-sm" id="so-btn-refresh" type="button">
                 <span class="fas fa-sync-alt me-1"></span>Refresh
             </button>
@@ -335,15 +350,6 @@
                 <span id="so-save-text">Simpan Stok Awal</span>
             </button>
         </div>
-    </div>
-
-    <!-- Print header -->
-    <div class="print-header mb-3">
-        <h5 class="fw-bold mb-1">Stok Awal Bahan Kimia</h5>
-        <div class="text-muted small" id="so-print-context"></div>
-        <div class="text-muted small" id="so-print-period-range"></div>
-        <div class="text-muted small">Dicetak: <span id="so-print-date"></span></div>
-        <hr class="my-2">
     </div>
 
     <!-- Empty state -->
@@ -465,6 +471,7 @@
 
     const StockOpening = {
         BASE: '<?= base_url() ?>',
+        printedBy: '<?= esc($printedByName) ?>',
         currentPeriodId: null,
         currentPeriodRange: null,
         currentWarehouseId: null,
@@ -477,13 +484,32 @@
         init() {
             this.initSelect2();
             this.initEvents();
-            document.getElementById('so-print-date').textContent = new Date().toLocaleDateString('id-ID', {
-                day: '2-digit',
-                month: 'long',
-                year: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit'
-            });
+            this.autoSelectCurrentPeriod();
+        },
+
+        /**
+         * Default-select periode yang ditandai "Periode Berjalan" (is_current) supaya user
+         * tidak perlu pilih manual tiap buka halaman ini. Gudang tetap harus dipilih sendiri.
+         */
+        async autoSelectCurrentPeriod() {
+            try {
+                const res = await this.get(this.BASE + 'warehouse/master/periods/select2');
+                const list = res.data ?? [];
+                const current = list.find(p => Number(p.is_current) === 1) ?? list.find(p => p.status === 'Open') ?? null;
+                if (!current) return;
+
+                const opt = new Option(`${current.name} (${current.code})`, current.id, true, true);
+                $(opt).data({
+                    status: current.status,
+                    start_date: current.start_date,
+                    end_date: current.end_date,
+                    name: current.name,
+                    code: current.code,
+                });
+                $('#so-filter-period').append(opt).trigger('change');
+            } catch (e) {
+                // Kalau gagal, biarkan user pilih periode manual seperti biasa.
+            }
         },
 
         csrfName: () => document.querySelector('meta[name="csrf-name"]')?.content ?? '',
@@ -590,11 +616,153 @@
 
         initEvents() {
             document.getElementById('so-btn-refresh')?.addEventListener('click', () => this.reload());
+            document.getElementById('so-btn-export-excel')?.addEventListener('click', () => this.exportExcel());
+            document.getElementById('so-btn-print')?.addEventListener('click', () => this.printStockAwal());
             document.getElementById('so-btn-apply-filter')?.addEventListener('click', () => this.applyFilter());
             document.getElementById('so-btn-reset-filter')?.addEventListener('click', () => this.resetFilter());
             document.getElementById('so-btn-save-grid')?.addEventListener('click', () => this.save());
             document.getElementById('so-btn-reset-grid')?.addEventListener('click', () => this.reload());
             document.getElementById('so-btn-pull-previous')?.addEventListener('click', () => this.pullPrevious());
+        },
+
+        // ============================================================
+        // EXPORT EXCEL — trigger tombol excelHtml5 yang sudah terpasang di tabel aktif
+        // ============================================================
+        excelLetterhead(isCombined) {
+            const periodText = $('#so-filter-period').select2('data')[0]?.text ?? '-';
+            const now = new Date().toLocaleDateString('id-ID', {
+                day: '2-digit',
+                month: 'long',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+            return `PT. SINAR CONTINENTAL - DIVISI 3A | Gudang: ${isCombined ? 'Gabungan (Semua Gudang)' : (this.currentWarehouseText ?? '-')} | Periode: ${periodText}${this.currentPeriodStatus === 'Closed' ? ' (Close)' : ' (Open)'} | Dicetak: ${now} oleh ${this.printedBy}`;
+        },
+
+        exportExcel() {
+            if (!this.currentPeriodId || !this.currentWarehouseId) {
+                this.toast('error', 'Pilih periode dan gudang terlebih dahulu');
+                return;
+            }
+            const isCombined = this.currentWarehouseId === '__combined__';
+            const dt = isCombined ? this.dtCombined : this.dtEditable;
+            if (!dt) {
+                this.toast('error', 'Belum ada data untuk diexport');
+                return;
+            }
+            dt.button(0).trigger();
+        },
+
+        // ============================================================
+        // CETAK — popup letterhead, konsisten dengan halaman Penerimaan/Posisi Stok
+        // ============================================================
+        printStockAwal() {
+            if (!this.currentPeriodId || !this.currentWarehouseId) {
+                this.toast('error', 'Pilih periode dan gudang terlebih dahulu');
+                return;
+            }
+            const isCombined = this.currentWarehouseId === '__combined__';
+            const dt = isCombined ? this.dtCombined : this.dtEditable;
+            if (!dt) {
+                this.toast('error', 'Belum ada data untuk dicetak');
+                return;
+            }
+            const rows = dt.rows({
+                search: 'applied'
+            }).data().toArray();
+            const periodText = $('#so-filter-period').select2('data')[0]?.text ?? '-';
+            const now = new Date().toLocaleDateString('id-ID', {
+                day: '2-digit',
+                month: 'long',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+            const logoPath = this.BASE + 'assets/img/app/logo-regency-footer.png';
+            const filled = rows.filter(r => Number(r.quantity) > 0).length;
+
+            const rowsHtml = isCombined ? rows.map((r, i) => `
+                <tr>
+                    <td>${i + 1}</td>
+                    <td>${this.e(r.chemical_name)}<div class="mono">${this.e(r.chemical_code)}</div></td>
+                    <td>${this.e(r.category_name ?? '-')}</td>
+                    <td class="num bold">${this.fmtNumber(r.quantity)}</td>
+                    <td>${r.warehouse_count} gudang</td>
+                </tr>
+            `).join('') : rows.map((r, i) => `
+                <tr>
+                    <td>${i + 1}</td>
+                    <td>${this.e(r.chemical_name)}<div class="mono">${this.e(r.chemical_code)}</div></td>
+                    <td>${this.e(r.category_name ?? '-')}</td>
+                    <td class="num bold">${this.fmtNumber(r.quantity)}</td>
+                    <td>${r.notes ? this.e(r.notes) : '-'}</td>
+                </tr>
+            `).join('');
+
+            const theadHtml = isCombined ?
+                `<tr><th>#</th><th>Bahan Kimia</th><th>Kategori</th><th class="num">Total Stok Awal</th><th>Tersebar</th></tr>` :
+                `<tr><th>#</th><th>Bahan Kimia</th><th>Kategori</th><th class="num">Stok Awal (kg)</th><th>Catatan</th></tr>`;
+
+            const printWindow = window.open('', '_blank', 'width=1200,height=900');
+            printWindow.document.write(`
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <meta charset="UTF-8">
+                    <title>Stok Awal Bahan Kimia</title>
+                    <style>
+                        @page { margin: 3mm; }
+                        * { box-sizing: border-box; }
+                        body { font-family: Arial, Helvetica, sans-serif; font-size: 8pt; color: #111; margin: 0; padding: 4mm; }
+                        .letterhead { display: flex; align-items: center; gap: 12px; border-bottom: 2px solid #111; padding-bottom: 8px; margin-bottom: 10px; }
+                        .letterhead img { height: 48px; }
+                        .letterhead .company { font-size: 15pt; font-weight: bold; letter-spacing: .3px; }
+                        .letterhead .division { font-size: 10pt; color: #444; }
+                        .doc-title { text-align: center; font-size: 11pt; font-weight: bold; margin: 6px 0 10px; text-transform: uppercase; }
+                        .info-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px 16px; font-size: 8pt; margin-bottom: 10px; border: 1px solid #ccc; padding: 8px 10px; background: #f8f8f8; }
+                        .info-grid div span.label { color: #666; display: block; font-size: 7pt; text-transform: uppercase; letter-spacing: .3px; }
+                        .info-grid div span.value { font-weight: 600; }
+                        table { width: 100%; border-collapse: collapse; font-size: 7pt; }
+                        th, td { border: 1px solid #999; padding: 2px 4px; text-align: left; }
+                        th { background: #eee; font-weight: 700; text-align: center; }
+                        td.num, th.num { text-align: right; }
+                        td.bold { font-weight: 700; }
+                        .mono { font-family: 'Courier New', monospace; font-size: 6.5pt; color: #555; }
+                        .footer-note { margin-top: 14px; font-size: 7pt; color: #777; display: flex; justify-content: space-between; border-top: 1px solid #ccc; padding-top: 6px; }
+                    </style>
+                </head>
+                <body>
+                    <div class="letterhead">
+                        <img src="${logoPath}" alt="Logo" onerror="this.style.display='none'">
+                        <div>
+                            <div class="company">PT. SINAR CONTINENTAL</div>
+                            <div class="division">DIVISI 3A</div>
+                        </div>
+                    </div>
+                    <div class="doc-title">Stok Awal Bahan Kimia${isCombined ? ' (Gabungan Semua Gudang)' : ''}</div>
+                    <div class="info-grid">
+                        <div><span class="label">Gudang</span><span class="value">${isCombined ? 'Gabungan (Semua Gudang)' : this.e(this.currentWarehouseText ?? '-')}</span></div>
+                        <div><span class="label">Periode</span><span class="value">${this.e(periodText)}${this.currentPeriodStatus === 'Closed' ? ' (Close)' : ' (Open)'}</span></div>
+                        <div><span class="label">Rentang Periode</span><span class="value">${this.e(this.currentPeriodRange ?? '-')}</span></div>
+                        <div><span class="label">Tanggal Cetak</span><span class="value">${now}</span></div>
+                        <div><span class="label">Total Item</span><span class="value">${rows.length} bahan kimia</span></div>
+                        <div><span class="label">Sudah Diinput</span><span class="value">${filled} item</span></div>
+                        <div><span class="label">Dicetak Oleh</span><span class="value">${this.e(this.printedBy)}</span></div>
+                    </div>
+                    <table>
+                        <thead>${theadHtml}</thead>
+                        <tbody>${rowsHtml}</tbody>
+                    </table>
+                    <div class="footer-note">
+                        <span>Dokumen ini dihasilkan otomatis dari sistem ERP — PT. Sinar Continental</span>
+                        <span>Dicetak: ${now}</span>
+                    </div>
+                    <script>window.onload = () => window.print();<\/script>
+                </body>
+                </html>
+            `);
+            printWindow.document.close();
         },
 
         async pullPrevious() {
@@ -709,8 +877,6 @@
             } else {
                 badge.innerHTML = `<span class="fas fa-info-circle me-1"></span>Pilih periode &amp; gudang`;
             }
-            document.getElementById('so-print-context').textContent = labels.join(' · ');
-            document.getElementById('so-print-period-range').textContent = this.currentPeriodRange ? `Rentang: ${this.currentPeriodRange}` : '';
             document.getElementById('so-stat-period-range').textContent = this.currentPeriodRange ?? '';
         },
 
@@ -929,17 +1095,19 @@
                 order: [
                     [1, 'asc']
                 ],
-                dom: '<"top"Bf>rt<"bottom"lpi>',
+                dom: '<"top"f>rt<"bottom"lpi>', // 'B' sengaja dihilangkan — tombol export dipicu dari toolbar halaman (lihat so-btn-export-excel)
                 buttons: [{
                     extend: 'excelHtml5',
-                    text: '<span class="fas fa-file-excel me-1"></span>Export Excel',
-                    className: 'btn btn-subtle-success btn-sm',
                     title: 'Stok Awal Bahan Kimia',
+                    messageTop: () => this.excelLetterhead(false),
                     exportOptions: {
-                        columns: [0, 1, 2, 3],
-                        format: {
-                            body: (data) => data.replace(/<[^>]*>/g, '').trim()
-                        }
+                        // Export SEMUA kolom termasuk yang visible:false (Kode Kimia) —
+                        // FIX bug lama: pola lama pakai format.body yang manggil .replace()
+                        // langsung di atas number (No urut / Qty), jadi export selalu gagal
+                        // waktu mode per-Gudang dipakai. Sekarang pakai orthogonal:'export'
+                        // supaya tiap kolom kirim teks polos sendiri, tanpa perlu strip HTML manual.
+                        columns: (idx, data, node) => true,
+                        orthogonal: 'export',
                     },
                 }, ],
                 language: {
@@ -964,10 +1132,15 @@
                     },
                     {
                         targets: 2,
-                        width: '150px'
+                        visible: false,
+                        searchable: false,
                     },
                     {
                         targets: 3,
+                        width: '150px'
+                    },
+                    {
+                        targets: 4,
                         width: '150px'
                     },
                 ],
@@ -980,16 +1153,21 @@
                     {
                         data: 'chemical_name',
                         render: (data, type, row) => {
+                            // Excel/sort/filter pakai nama polos saja — kode kimia jadi kolom tersendiri.
                             if (type !== 'display') return data;
                             return `<span class="fw-semibold">${self.e(data)}</span>
                                     <div class="text-muted small font-monospace">${self.e(row.chemical_code)}</div>`;
                         },
                     },
                     {
+                        // Kolom khusus export Excel: kode kimia terpisah dari nama (disembunyikan di layar).
+                        data: 'chemical_code',
+                        title: 'Kode Kimia',
+                    },
+                    {
                         data: 'category_name',
                         render: d => d ?
-                            d.split(', ').map(c => `<span class="badge badge-phoenix badge-phoenix-secondary p-2 fs-10 me-1 mb-1">${self.e(c)}</span>`).join('') :
-                            '<span class="text-muted fst-italic">—</span>',
+                            d.split(', ').map(c => `<span class="badge badge-phoenix badge-phoenix-secondary p-2 fs-10 me-1 mb-1">${self.e(c)}</span>`).join('') : '<span class="text-muted fst-italic">—</span>',
                     },
                     {
                         data: 'quantity',
@@ -1055,14 +1233,14 @@
                 order: [
                     [1, 'asc']
                 ],
-                dom: '<"top"Bf>rt<"bottom"lpi>',
+                dom: '<"top"f>rt<"bottom"lpi>', // 'B' sengaja dihilangkan — tombol export dipicu dari toolbar halaman
                 buttons: [{
                     extend: 'excelHtml5',
-                    text: '<span class="fas fa-file-excel me-1"></span>Export Excel',
-                    className: 'btn btn-subtle-success btn-sm',
                     title: 'Stok Awal Bahan Kimia (Gabungan)',
+                    messageTop: () => this.excelLetterhead(true),
                     exportOptions: {
-                        columns: [0, 1, 2, 3, 4]
+                        columns: (idx, data, node) => true,
+                        orthogonal: 'export',
                     },
                 }, ],
                 language: {
@@ -1087,18 +1265,23 @@
                     },
                     {
                         targets: 2,
-                        width: '150px'
+                        visible: false,
+                        searchable: false,
                     },
                     {
                         targets: 3,
-                        width: '160px'
+                        width: '150px'
                     },
                     {
                         targets: 4,
-                        width: '110px'
+                        width: '160px'
                     },
                     {
                         targets: 5,
+                        width: '110px'
+                    },
+                    {
+                        targets: 6,
                         width: '30px'
                     },
                 ],
@@ -1117,10 +1300,14 @@
                         },
                     },
                     {
+                        // Kolom khusus export Excel: kode kimia terpisah dari nama (disembunyikan di layar).
+                        data: 'chemical_code',
+                        title: 'Kode Kimia',
+                    },
+                    {
                         data: 'category_name',
                         render: d => d ?
-                            d.split(', ').map(c => `<span class="badge badge-phoenix badge-phoenix-secondary p-2 fs-10 me-1 mb-1">${self.e(c)}</span>`).join('') :
-                            '<span class="text-muted fst-italic">—</span>',
+                            d.split(', ').map(c => `<span class="badge badge-phoenix badge-phoenix-secondary p-2 fs-10 me-1 mb-1">${self.e(c)}</span>`).join('') : '<span class="text-muted fst-italic">—</span>',
                     },
                     {
                         data: 'quantity',
