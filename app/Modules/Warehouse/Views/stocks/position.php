@@ -277,11 +277,6 @@
             <h1 class="h3 mb-1 fw-bold"><?= esc((string)$page_title) ?></h1>
             <p class="text-body-tertiary mb-0"><?= esc((string)$page_description) ?></p>
         </div>
-        <div class="no-print">
-            <a href="<?= site_url('warehouse/stocks/stock-card') ?>" class="btn btn-subtle-primary btn-sm">
-                <span class="fas fa-book me-1"></span>Kartu Stok
-            </a>
-        </div>
     </div>
 
     <!-- Stat Cards -->
@@ -356,7 +351,11 @@
                 <span class="fas fa-info-circle me-1"></span>Pilih periode &amp; gudang
             </span>
         </div>
-        <div class="d-flex gap-2 align-items-center">
+        <div class="d-flex gap-2 align-items-center flex-wrap">
+            <a href="<?= site_url('warehouse/stocks/stock-card') ?>" class="btn btn-outline-secondary btn-sm" title="Buka halaman Kartu Stok">
+                <span class="fas fa-address-card me-1"></span>Kartu Stok
+            </a>
+            <div class="vr mx-1 d-none d-md-block"></div>
             <button class="btn btn-subtle-success btn-sm" id="pos-btn-export-excel" type="button">
                 <span class="fas fa-file-excel me-1"></span>Export Excel
             </button>

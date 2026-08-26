@@ -335,6 +335,10 @@
             </span>
         </div>
         <div class="d-flex gap-2 align-items-center">
+            <a href="<?= site_url('warehouse/stocks/position') ?>" class="btn btn-outline-secondary btn-sm" title="Buka halaman Posisi Stok">
+                <span class="fas fa-layer-group me-1"></span>Posisi Stok
+            </a>
+            <div class="vr mx-1 d-none d-md-block"></div>
             <button class="btn btn-subtle-primary btn-sm" id="card-btn-print" type="button">
                 <span class="fas fa-print me-1"></span>Cetak Kartu Stok
             </button>

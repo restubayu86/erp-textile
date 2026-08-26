@@ -727,7 +727,7 @@ if (!empty($user_employee['fullname'])) {
 
             // Tanggal transaksi kini diisi per item lewat modal "Tambah Item" — di sini cukup
             // siapkan tanggal default (hari ini, dijepit ke rentang periode) untuk modal & filter riwayat.
-            const today = new Date().toISOString().slice(0, 10);
+            const today = this.todayLocal();
             this.currentDate = today < periodData.start_date ? periodData.start_date :
                 (today > periodData.end_date ? periodData.end_date : today);
 
@@ -1133,7 +1133,7 @@ if (!empty($user_employee['fullname'])) {
                 const rows = res.status === 'success' ? (res.data ?? []) : [];
                 this.buildHistoryTable(rows);
 
-                const todayStr = new Date().toISOString().slice(0, 10);
+                const todayStr = this.todayLocal();
                 const todayCount = rows.filter(r => (r.movement_date ?? '').slice(0, 10) === todayStr).length;
                 document.getElementById('rcp-stat-today').textContent = todayCount;
             } catch (e) {
@@ -1403,6 +1403,17 @@ if (!empty($user_employee['fullname'])) {
                 }
             });
             return r.json();
+        },
+
+        /**
+         * Tanggal HARI INI menurut waktu lokal browser (bukan UTC!). `toISOString()` selalu
+         * memakai UTC — di WIB (UTC+7), antara jam 00:00–07:00 itu akan salah menunjuk ke
+         * tanggal KEMARIN. Helper ini menggeser dulu sebelum konversi supaya tetap akurat.
+         */
+        todayLocal() {
+            const d = new Date();
+            const offsetMs = d.getTimezoneOffset() * 60000;
+            return new Date(d.getTime() - offsetMs).toISOString().slice(0, 10);
         },
 
         fmtDateOnly(d) {

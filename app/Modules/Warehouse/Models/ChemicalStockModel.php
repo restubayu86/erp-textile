@@ -192,9 +192,9 @@ class ChemicalStockModel extends Model
             ->where('period_id', $periodId)->whereIn('movement_type', ['Receipt', 'TransferIn'])->groupBy('chemical_id');
         $stockInMap = array_column($this->whWhere($q, $warehouseId)->get()->getResultArray(), 'qty', 'chemical_id');
 
-        // --- 4a. Stok Keluar - transfer kimia murni ---
+        // --- 4a. Stok Keluar - Issue (pemakaian langsung ke produksi) + Transfer kimia murni ---
         $q = $this->db->table('chemical_stock_movements')->select('chemical_id, SUM(quantity_out) as qty')
-            ->where('period_id', $periodId)->where('movement_type', 'TransferOut')->groupBy('chemical_id');
+            ->where('period_id', $periodId)->whereIn('movement_type', ['Issue', 'TransferOut'])->groupBy('chemical_id');
         $outChemMap = array_column($this->whWhere($q, $warehouseId)->get()->getResultArray(), 'qty', 'chemical_id');
 
         // --- 4b. Stok Keluar - aplikasi produksi + transfer formulasi (diurai) ---
