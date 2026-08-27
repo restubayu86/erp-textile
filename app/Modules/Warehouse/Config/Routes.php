@@ -20,6 +20,9 @@ $routes->group('warehouse', [
     $routes->post('stocks/receipt/delete',   'StockController::receiptDelete');
     $routes->get('stocks/issue',             'StockController::issue');
     $routes->post('stocks/issue/store',      'StockController::storeIssue');
+    $routes->get('stocks/issue/recent',      'StockController::issueRecent');
+    $routes->get('stocks/issue/available-balance', 'StockController::issueAvailableBalance');
+    $routes->post('stocks/issue/delete',     'StockController::issueDelete');
     $routes->get('stocks/adjustment',        'StockController::adjustment');
     $routes->post('stocks/adjustment/store', 'StockController::storeAdjustment');
 

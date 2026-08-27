@@ -343,8 +343,8 @@ function navActive(string $seg1, string $seg2 = '', string $seg3 = ''): string
                                         <?php endif; ?>
 
                                         <!-- Transaksi -->
-                                        <!-- CATATAN: Penerimaan sudah dibangun (StockController::receipt).
-                                             Pemakaian & Penyesuaian (adjustment) masih "Segera" — menyusul. -->
+                                        <!-- CATATAN: Penerimaan & Pemakaian sudah dibangun (StockController::receipt/issue).
+                                             Transfer Stok & Penyesuaian (adjustment) masih "Segera" — menyusul. -->
                                         <li class="nav-item">
                                             <a class="nav-link dropdown-indicator"
                                                 href="#nv-wh-stock-transaksi"
@@ -361,7 +361,7 @@ function navActive(string $seg1, string $seg2 = '', string $seg3 = ''): string
                                                 <ul class="nav collapse parent" id="nv-wh-stock-transaksi">
                                                     <?php if (canDo('warehouse.stocks.receive')): ?>
                                                         <li class="nav-item">
-                                                            <a class="nav-link" href="<?= site_url('warehouse/stocks/receipt') ?>">
+                                                            <a class="nav-link<?= navActive('warehouse', 'stocks', 'receipt') ?>" href="<?= site_url('warehouse/stocks/receipt') ?>">
                                                                 <div class="d-flex align-items-center">
                                                                     <span class="nav-link-text">Penerimaan</span>
                                                                 </div>
@@ -370,10 +370,9 @@ function navActive(string $seg1, string $seg2 = '', string $seg3 = ''): string
                                                     <?php endif; ?>
                                                     <?php if (canDo('warehouse.stocks.issue')): ?>
                                                         <li class="nav-item">
-                                                            <a class="nav-link disabled" href="#" aria-disabled="true" tabindex="-1">
+                                                            <a class="nav-link<?= navActive('warehouse', 'stocks', 'issue') ?>" href="<?= site_url('warehouse/stocks/issue') ?>">
                                                                 <div class="d-flex align-items-center">
                                                                     <span class="nav-link-text">Pemakaian</span>
-                                                                    <span class="badge ms-2 badge-phoenix badge-phoenix-warning nav-link-badge">Segera</span>
                                                                 </div>
                                                             </a>
                                                         </li>

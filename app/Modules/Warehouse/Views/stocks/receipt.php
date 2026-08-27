@@ -301,6 +301,9 @@ if (!empty($user_employee['fullname'])) {
             </span>
         </div>
         <div class="d-flex gap-2 align-items-center flex-wrap">
+            <a href="<?= site_url('warehouse/stocks/issue') ?>" class="btn btn-outline-secondary btn-sm" title="Buka halaman Pemakaian Langsung">
+                <span class="fas fa-dolly me-1"></span>Pemakaian
+            </a>
             <a href="<?= site_url('warehouse/stocks/position') ?>" class="btn btn-outline-secondary btn-sm" title="Buka halaman Posisi Stok">
                 <span class="fas fa-layer-group me-1"></span>Posisi Stok
             </a>

@@ -282,6 +282,20 @@ class ChemicalStockModel extends Model
         return $this->computePositionData($periodId, $warehouseId);
     }
 
+    /**
+     * Saldo "Available" (siap dipakai) 1 bahan kimia di periode+gudang tertentu —
+     * dipakai untuk validasi Pemakaian Langsung (Issue) supaya tidak minus.
+     * Bukan endpoint ringan (tetap hitung posisi semua kimia), tapi memastikan
+     * angkanya SELALU konsisten dengan yang ditampilkan di Posisi Stok.
+     */
+    public function getAvailableBalance(int $periodId, int $warehouseId, int $chemicalId): ?float
+    {
+        foreach ($this->computePositionData($periodId, $warehouseId) as $row) {
+            if ((int) $row['chemical_id'] === $chemicalId) return (float) $row['available'];
+        }
+        return null; // chemical tidak aktif / tidak ditemukan
+    }
+
     // ============================================================
     // POSISI STOK — gabungan semua gudang
     // ============================================================
