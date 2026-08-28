@@ -596,14 +596,18 @@ if (!empty($user_employee['fullname'])) {
                 const current = list.find(p => Number(p.is_current) === 1) ?? list.find(p => p.status === 'Open') ?? null;
                 if (!current) return;
 
-                const opt = new Option(`${current.name} (${current.code})`, current.id, true, true);
-                $(opt).data({
+                const periodOptionData = {
+                    id: current.id,
+                    text: `${current.name} (${current.code})`,
                     status: current.status,
                     start_date: current.start_date,
                     end_date: current.end_date,
                     name: current.name,
                     code: current.code,
-                });
+                    is_current: current.is_current,
+                };
+                const opt = new Option(periodOptionData.text, periodOptionData.id, true, true);
+                $(opt).data('data', periodOptionData);
                 $('#iss-filter-period').append(opt).trigger('change');
 
                 document.getElementById('iss-period-status-hint').textContent =
@@ -1546,4 +1550,4 @@ if (!empty($user_employee['fullname'])) {
 
     $(document).ready(() => StockIssue.init());
 </script>
-<?= $this->endSection() ?>```
+<?= $this->endSection() ?>
