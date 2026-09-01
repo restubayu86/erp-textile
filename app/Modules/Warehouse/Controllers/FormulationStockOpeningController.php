@@ -41,6 +41,9 @@ class FormulationStockOpeningController extends BaseController
         if (!$periodId || !$warehouseId) {
             return $this->jsonError('Periode dan gudang wajib dipilih', 422);
         }
+        if (!warehouseAccessAllowed($this->getWarehouseScope(), $warehouseId)) {
+            return $this->jsonError('Anda tidak memiliki akses ke gudang ini', 403);
+        }
 
         $period = \Config\Database::connect()->table('periods')->where('id', $periodId)->where('deleted_at', null)->get()->getRowArray();
         if (!$period) return $this->jsonError('Periode tidak ditemukan', 404);
@@ -64,6 +67,10 @@ class FormulationStockOpeningController extends BaseController
         $periodId = (int) $this->request->getGet('period_id');
         if (!$periodId) return $this->jsonError('Periode wajib dipilih', 422);
 
+        if ($this->getWarehouseScope() !== null) {
+            return $this->jsonError('Mode "Gabungan Semua Gudang" tidak tersedia untuk akun Anda', 403);
+        }
+
         return $this->response->setJSON([
             'status' => 'success',
             'data'   => $this->model->getCombinedGrid($periodId),
@@ -81,6 +88,10 @@ class FormulationStockOpeningController extends BaseController
         $periodId      = (int) $this->request->getGet('period_id');
         $formulationId = (int) $this->request->getGet('formulation_id');
         if (!$periodId || !$formulationId) return $this->jsonError('Parameter tidak lengkap', 422);
+
+        if ($this->getWarehouseScope() !== null) {
+            return $this->jsonError('Anda tidak memiliki akses ke rincian gabungan seluruh gudang', 403);
+        }
 
         return $this->response->setJSON([
             'status' => 'success',
@@ -102,6 +113,9 @@ class FormulationStockOpeningController extends BaseController
 
         if (!$periodId || !$warehouseId) {
             return $this->jsonError('Periode dan gudang wajib dipilih', 422);
+        }
+        if (!warehouseAccessAllowed($this->getWarehouseScope(), $warehouseId)) {
+            return $this->jsonError('Anda tidak memiliki akses ke gudang ini', 403);
         }
 
         $rows = is_string($rowsRaw) ? json_decode($rowsRaw, true) : $rowsRaw;
@@ -129,6 +143,9 @@ class FormulationStockOpeningController extends BaseController
         if (!$periodId || !$warehouseId) {
             return $this->jsonError('Periode dan gudang wajib dipilih', 422);
         }
+        if (!warehouseAccessAllowed($this->getWarehouseScope(), $warehouseId)) {
+            return $this->jsonError('Anda tidak memiliki akses ke gudang ini', 403);
+        }
 
         $data = ['is_initialized' => $this->model->isInitialized($periodId, $warehouseId)];
 
@@ -151,6 +168,9 @@ class FormulationStockOpeningController extends BaseController
         $periodId    = (int) $this->request->getGet('period_id');
         $warehouseId = (int) $this->request->getGet('warehouse_id');
         if (!$periodId || !$warehouseId) return $this->jsonError('Periode dan gudang wajib dipilih', 422);
+        if (!warehouseAccessAllowed($this->getWarehouseScope(), $warehouseId)) {
+            return $this->jsonError('Anda tidak memiliki akses ke gudang ini', 403);
+        }
 
         $result = $this->model->pullFromPreviousPeriod($periodId, $warehouseId);
         return $this->jsonResponse($result, $result['status'] === 'success' ? 200 : 422);

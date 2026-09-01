@@ -52,6 +52,9 @@ class StockController extends BaseController
         $periodId    = (int) $this->request->getGet('period_id');
         $warehouseId = (int) $this->request->getGet('warehouse_id');
         if (!$periodId || !$warehouseId) return $this->jsonError('Periode dan gudang wajib dipilih', 422);
+        if (!warehouseAccessAllowed($this->getWarehouseScope(), $warehouseId)) {
+            return $this->jsonError('Anda tidak memiliki akses ke gudang ini', 403);
+        }
 
         return $this->response->setJSON([
             'status' => 'success',
@@ -70,6 +73,13 @@ class StockController extends BaseController
         $periodId = (int) $this->request->getGet('period_id');
         if (!$periodId) return $this->jsonError('Periode wajib dipilih', 422);
 
+        // "Gabungan (Semua Gudang)" belum di-scope per departemen di model —
+        // Warehouse Operator tidak boleh pakai mode ini (frontend juga sudah
+        // menyembunyikan opsinya, ini lapis pertahanan kedua di backend).
+        if ($this->getWarehouseScope() !== null) {
+            return $this->jsonError('Mode "Gabungan Semua Gudang" tidak tersedia untuk akun Anda', 403);
+        }
+
         return $this->response->setJSON([
             'status' => 'success',
             'data'   => $this->model->getPositionCombinedGrid($periodId),
@@ -87,6 +97,13 @@ class StockController extends BaseController
         $periodId   = (int) $this->request->getGet('period_id');
         $chemicalId = (int) $this->request->getGet('chemical_id');
         if (!$periodId || !$chemicalId) return $this->jsonError('Parameter tidak lengkap', 422);
+
+        // Cuma dipakai dari mode "Gabungan Semua Gudang" (sudah diblok untuk Warehouse
+        // Operator di positionCombinedGrid()) — guard yang sama di sini juga, jaga-jaga
+        // kalau endpoint ini dipanggil langsung tanpa lewat mode Gabungan.
+        if ($this->getWarehouseScope() !== null) {
+            return $this->jsonError('Anda tidak memiliki akses ke rincian gabungan seluruh gudang', 403);
+        }
 
         return $this->response->setJSON([
             'status' => 'success',
@@ -126,6 +143,9 @@ class StockController extends BaseController
 
         if (!$periodId || !$warehouseId || !$chemicalId) {
             return $this->jsonError('Periode, gudang, dan bahan kimia wajib dipilih', 422);
+        }
+        if (!warehouseAccessAllowed($this->getWarehouseScope(), $warehouseId)) {
+            return $this->jsonError('Anda tidak memiliki akses ke gudang ini', 403);
         }
 
         if ($fromDate && !preg_match('/^\d{4}-\d{2}-\d{2}$/', $fromDate)) {
@@ -178,6 +198,13 @@ class StockController extends BaseController
             return $this->jsonError('Periode dan gudang wajib dipilih', 422);
         }
 
+        // Warehouse Operator hanya boleh input di gudang departemennya sendiri.
+        // WAJIB dicek di backend juga — dropdown yang di-disable di frontend
+        // bisa saja dilewati lewat request manual (mis. lewat devtools/Postman).
+        if (!warehouseAccessAllowed($this->getWarehouseScope(), $warehouseId)) {
+            return $this->jsonError('Anda tidak memiliki akses ke gudang ini', 403);
+        }
+
         $rows = is_string($rowsRaw) ? json_decode($rowsRaw, true) : $rowsRaw;
         if (!is_array($rows) || empty($rows)) {
             return $this->jsonError('Belum ada item penerimaan yang ditambahkan', 422);
@@ -202,6 +229,9 @@ class StockController extends BaseController
         if (!$periodId || !$warehouseId) {
             return $this->jsonError('Periode dan gudang wajib dipilih', 422);
         }
+        if (!warehouseAccessAllowed($this->getWarehouseScope(), $warehouseId)) {
+            return $this->jsonError('Anda tidak memiliki akses ke gudang ini', 403);
+        }
 
         $fromDate = trim((string) $this->request->getGet('from_date')) ?: null;
         $toDate   = trim((string) $this->request->getGet('to_date')) ?: null;
@@ -222,6 +252,14 @@ class StockController extends BaseController
 
         $id = (int) $this->request->getPost('id');
         if (!$id) return $this->jsonError('ID transaksi tidak valid', 422);
+
+        // Cek scope SEBELUM hapus — operator tidak boleh hapus transaksi gudang
+        // lain sekalipun tahu/nebak id-nya (dropdown yang di-disable bukan proteksi asli).
+        $row = $this->movementModel->find($id);
+        if (!$row) return $this->jsonError('Data tidak ditemukan', 404);
+        if (!warehouseAccessAllowed($this->getWarehouseScope(), (int) $row['warehouse_id'])) {
+            return $this->jsonError('Anda tidak memiliki akses ke gudang transaksi ini', 403);
+        }
 
         $result = $this->movementModel->deleteOne($id);
         return $this->jsonResponse($result, $result['status'] === 'success' ? 200 : 422);
@@ -260,6 +298,10 @@ class StockController extends BaseController
             return $this->jsonError('Periode dan gudang wajib dipilih', 422);
         }
 
+        if (!warehouseAccessAllowed($this->getWarehouseScope(), $warehouseId)) {
+            return $this->jsonError('Anda tidak memiliki akses ke gudang ini', 403);
+        }
+
         $rows = is_string($rowsRaw) ? json_decode($rowsRaw, true) : $rowsRaw;
         if (!is_array($rows) || empty($rows)) {
             return $this->jsonError('Belum ada item pemakaian yang ditambahkan', 422);
@@ -281,6 +323,9 @@ class StockController extends BaseController
         $warehouseId = (int) $this->request->getGet('warehouse_id');
         if (!$periodId || !$warehouseId) {
             return $this->jsonError('Periode dan gudang wajib dipilih', 422);
+        }
+        if (!warehouseAccessAllowed($this->getWarehouseScope(), $warehouseId)) {
+            return $this->jsonError('Anda tidak memiliki akses ke gudang ini', 403);
         }
 
         $fromDate = trim((string) $this->request->getGet('from_date')) ?: null;
@@ -307,6 +352,9 @@ class StockController extends BaseController
         if (!$periodId || !$warehouseId || !$chemicalId) {
             return $this->jsonError('Periode, gudang, dan bahan kimia wajib dipilih', 422);
         }
+        if (!warehouseAccessAllowed($this->getWarehouseScope(), $warehouseId)) {
+            return $this->jsonError('Anda tidak memiliki akses ke gudang ini', 403);
+        }
 
         $available = $this->model->getAvailableBalance($periodId, $warehouseId, $chemicalId);
         return $this->response->setJSON([
@@ -325,6 +373,12 @@ class StockController extends BaseController
 
         $id = (int) $this->request->getPost('id');
         if (!$id) return $this->jsonError('ID transaksi tidak valid', 422);
+
+        $row = $this->movementModel->find($id);
+        if (!$row) return $this->jsonError('Data tidak ditemukan', 404);
+        if (!warehouseAccessAllowed($this->getWarehouseScope(), (int) $row['warehouse_id'])) {
+            return $this->jsonError('Anda tidak memiliki akses ke gudang transaksi ini', 403);
+        }
 
         $result = $this->movementModel->deleteOne($id);
         return $this->jsonResponse($result, $result['status'] === 'success' ? 200 : 422);

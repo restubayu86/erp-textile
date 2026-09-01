@@ -61,6 +61,7 @@
   <link href="<?= base_url('vendors/simplebar/simplebar.min.css') ?>" rel="stylesheet">
   <link href="<?= base_url('assets/css/theme-rtl.min.css') ?>" type="text/css" rel="stylesheet" id="style-rtl">
   <link href="<?= base_url('assets/css/theme.min.css') ?>" type="text/css" rel="stylesheet" id="style-default">
+  <link href="<?= base_url('assets/css/plugins/stat-card.css') ?>" rel="stylesheet" />
   <link href="<?= base_url('assets/css/user-rtl.min.css') ?>" type="text/css" rel="stylesheet" id="user-style-rtl">
   <link href="<?= base_url('assets/css/user.min.css') ?>" type="text/css" rel="stylesheet" id="user-style-default">
   <?= $this->renderSection('styles') ?>
@@ -276,6 +277,21 @@
   <!-- ===============================================-->
   <!--    JavaScripts-->
   <!-- ===============================================-->
+  <script>
+    /**
+     * Scope gudang user login — dipakai halaman Warehouse untuk auto-select
+     * & (kalau perlu) mengunci dropdown Gudang untuk role Warehouse Operator.
+     * Dihitung sekali di BaseController::initController() (helper warehouse_helper.php).
+     *   restricted   : true = user dibatasi hanya ke gudang tertentu (Warehouse Operator)
+     *   warehouseIds : daftar id gudang yang boleh diakses (kosong = belum ada gudang utk departemennya)
+     *   departmentName: nama departemen user, buat pesan di UI
+     */
+    window.APP_WAREHOUSE_SCOPE = {
+      restricted: <?= json_encode(isset($warehouse_scope) && $warehouse_scope !== null) ?>,
+      warehouseIds: <?= json_encode(isset($warehouse_scope) && $warehouse_scope !== null ? $warehouse_scope : []) ?>,
+      departmentName: <?= json_encode($user_employee['department_name'] ?? null) ?>,
+    };
+  </script>
   <script src="<?= base_url('assets/js/jquery.min.js') ?>"></script>
   <script>
     if (!jQuery.fn.andSelf) {

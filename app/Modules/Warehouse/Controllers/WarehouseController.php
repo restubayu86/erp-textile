@@ -230,12 +230,20 @@ class WarehouseController extends BaseController
     {
         $search  = trim($this->request->getGet('search') ?? '');
         $builder = $this->model->db->table('warehouses')
-            ->select('id, warehouse_code AS code, warehouse_name AS name')
+            ->select('id, warehouse_code AS code, warehouse_name AS name, department_id')
             ->where('status', 'Active')->where('deleted_at', null)->orderBy('warehouse_name', 'ASC');
 
-        if ($department = $this->request->getGet('department_id')) {
+        // Warehouse Operator: paksa hanya gudang di departemennya sendiri, ABAIKAN
+        // department_id yang dikirim dari client (client-supplied value tidak dipercaya
+        // untuk role yang dibatasi — cegah operator "iseng" akses gudang departemen lain
+        // lewat request manual). Role lain tetap bisa filter bebas seperti biasa.
+        $scope = $this->getWarehouseScope();
+        if ($scope !== null) {
+            $builder->whereIn('id', $scope ?: [0]); // array kosong -> where id IN (0) = tidak ada hasil
+        } elseif ($department = $this->request->getGet('department_id')) {
             $builder->where('department_id', $department);
         }
+
         if ($search !== '') $builder->groupStart()->like('warehouse_name', $search)->orLike('warehouse_code', $search)->groupEnd();
 
         return $this->response->setJSON(['status' => 'success', 'data' => $builder->limit(50)->get()->getResultArray()]);

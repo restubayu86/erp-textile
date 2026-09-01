@@ -296,11 +296,11 @@
                         className: 'text-end',
                         render: (d, t, r) => `
                             <div class="btn-group btn-group-sm">
-                                <button class="btn btn-subtle-success btn-restore" data-id="${r.id}" data-name="${self.e(r.warehouse_name)}" title="Pulihkan">
+                                <button class="btn btn-subtle-success btn-sm btn-restore" data-id="${r.id}" data-name="${self.e(r.warehouse_name)}" title="Pulihkan">
                                     <span class="fas fa-rotate-left"></span>
                                 </button>
-                                <button class="btn btn-subtle-danger btn-force-delete" data-id="${r.id}" data-name="${self.e(r.warehouse_name)}" title="Hapus Permanen">
-                                    <span class="fas fa-trash-alt"></span>
+                                <button class="btn btn-subtle-danger btn-sm btn-force-delete" data-id="${r.id}" data-name="${self.e(r.warehouse_name)}" title="Hapus Permanen">
+                                    <span class="fas fa-trash"></span>
                                 </button>
                             </div>`
                     },
@@ -393,7 +393,7 @@
                 reverseButtons: true,
                 confirmButtonColor: '#e63757',
                 cancelButtonColor: '#748194',
-                confirmButtonText: '<span class="fas fa-trash-alt me-1"></span>Hapus Permanen',
+                confirmButtonText: '<span class="fas fa-fire me-1"></span>Hapus Permanen',
                 cancelButtonText: 'Batal',
                 input: 'checkbox',
                 inputValue: 0,

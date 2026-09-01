@@ -536,7 +536,7 @@
                                     <input type="text" class="form-control code-input" id="f-code"
                                         value="<?= esc((string)($formulation['formulation_code'] ?? $suggested_code ?? '')) ?>"
                                         readonly placeholder="Otomatis" maxlength="50">
-                                    <button class="btn btn-outline-primary" type="button" id="btn-generate-code" title="Generate ulang kode">
+                                    <button class="btn btn-outline-primary btn-sm" type="button" id="btn-generate-code" title="Generate ulang kode">
                                         <span class="fas fa-sync-alt"></span>
                                     </button>
                                 </div>
@@ -799,11 +799,11 @@
                         <?php endif; ?>
                         <!-- Actions -->
                         <div class="d-grid gap-2">
-                            <button type="submit" id="btn-submit-formulation" class="btn btn-primary">
+                            <button type="submit" id="btn-submit-formulation" class="btn btn-primary btn-sm">
                                 <span class="fas fa-save me-1"></span>
                                 <span id="btn-submit-text"><?= !empty($formulation['id']) ? 'Simpan Perubahan' : 'Simpan Formulasi' ?></span>
                             </button>
-                            <a href="<?= site_url('warehouse/formulations') ?>" class="btn btn-subtle-secondary">
+                            <a href="<?= site_url('warehouse/formulations') ?>" class="btn btn-subtle-secondary btn-sm">
                                 <span class="fas fa-times me-1"></span>Batal
                             </a>
                         </div>

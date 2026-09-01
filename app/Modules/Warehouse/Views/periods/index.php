@@ -8,40 +8,47 @@
         overflow-x: hidden;
     }
 
-    .stat-card {
-        border: none;
-        border-radius: 1rem;
-        transition: all .2s;
+    .filter-toggle {
+        position: fixed;
+        right: 0;
+        top: 50%;
+        transform: translateY(-50%);
+        z-index: 1040;
+        border-radius: .75rem 0 0 .75rem !important;
+        box-shadow: -2px 0 12px rgba(0, 0, 0, .12);
+        text-decoration: none;
+        border: 1px solid var(--phoenix-border-color) !important;
+        border-right: none !important;
     }
 
-    .stat-card:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 24px rgba(0, 0, 0, .1);
-    }
-
-    .stat-icon {
-        width: 48px;
-        height: 48px;
-        border-radius: 12px;
+    .filter-toggle .card-body {
+        padding: .9rem .5rem;
         display: flex;
+        flex-direction: column;
         align-items: center;
-        justify-content: center;
-        font-size: 1.35rem;
-        flex-shrink: 0;
+        gap: .45rem;
     }
 
-    .info-label {
-        font-size: .65rem;
+    .filter-toggle .filter-label {
+        writing-mode: vertical-rl;
+        font-size: .6rem;
+        font-weight: 700;
         text-transform: uppercase;
         letter-spacing: .06em;
-        color: var(--phoenix-secondary-color);
-        margin-bottom: .2rem;
+        color: var(--phoenix-body-color);
+        opacity: .5;
     }
 
-    .info-value {
-        font-weight: 700;
-        font-size: 1.5rem;
-        line-height: 1;
+    .filter-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: var(--phoenix-danger);
+        display: none;
+    }
+
+    .filter-toggle.has-filter .filter-dot {
+        display: block;
     }
 
     .badge-current {
@@ -203,7 +210,54 @@
         <?php endforeach; ?>
     </div>
 
+    <!-- Filter toggle mengambang -->
+    <a class="card filter-toggle no-print" href="#filter-offcanvas" data-bs-toggle="offcanvas" id="filter-toggle">
+        <div class="card-body">
+            <span class="fas fa-filter text-primary"></span>
+            <span class="filter-label">Filter</span>
+            <span class="filter-dot"></span>
+        </div>
+    </a>
+
+    <!-- Offcanvas Filter -->
+    <div class="offcanvas offcanvas-end" tabindex="-1" id="filter-offcanvas" style="width:320px">
+        <div class="offcanvas-header border-bottom">
+            <h5 class="offcanvas-title"><span class="fas fa-filter me-2 text-primary"></span>Filter</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
+        </div>
+        <div class="offcanvas-body d-flex flex-column">
+            <div class="flex-grow-1">
+                <div class="mb-3">
+                    <label class="form-label fw-semibold fs-9 text-uppercase text-muted" for="filter-name">Nama Periode</label>
+                    <input type="text" class="form-control form-control-sm" id="filter-name" placeholder="Cari nama periode...">
+                </div>
+                <div class="mb-4">
+                    <label class="form-label fw-semibold fs-9 text-uppercase text-muted" for="filter-status">Status</label>
+                    <select class="form-select form-select-sm" id="filter-status">
+                        <option value="">— Semua —</option>
+                        <option value="Open">Open</option>
+                        <option value="Closed">Closed</option>
+                    </select>
+                </div>
+            </div>
+            <div class="d-grid gap-2">
+                <button class="btn btn-primary btn-sm" id="btn-apply-filter" type="button">
+                    <span class="fas fa-search me-1"></span>Terapkan
+                </button>
+                <button class="btn btn-subtle-secondary btn-sm" id="btn-reset-filter" type="button">
+                    <span class="fas fa-times me-1"></span>Reset
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- Toolbar -->
+    <div id="filter-summary" class="mb-3 d-none">
+        <span class="badge badge-phoenix badge-phoenix-secondary fs-9 p-2 px-3">
+            <span class="fas fa-filter me-1"></span>
+            <span id="filter-summary-text"></span>
+        </span>
+    </div>
     <div class="d-flex justify-content-between align-items-center mb-3 gap-2 flex-wrap no-print">
         <div class="d-flex gap-2">
             <?php if (canDo('warehouse.periods.delete')): ?>
@@ -863,6 +917,29 @@
             this.filters.name = document.getElementById('filter-name')?.value.trim() ?? '';
             this.filters.status = document.getElementById('filter-status')?.value ?? '';
             this.dt.ajax.reload();
+            this.updateFilterUI();
+            bootstrap.Offcanvas.getInstance(document.getElementById('filter-offcanvas'))?.hide();
+        },
+
+        resetFilter() {
+            this.filters = {
+                name: '',
+                status: ''
+            };
+            document.getElementById('filter-name').value = '';
+            document.getElementById('filter-status').value = '';
+            this.dt.ajax.reload();
+            this.updateFilterUI();
+        },
+
+        updateFilterUI() {
+            const labels = [];
+            if (this.filters.name) labels.push(`Nama: "${this.filters.name}"`);
+            if (this.filters.status) labels.push(`Status: ${this.filters.status}`);
+
+            document.getElementById('filter-toggle').classList.toggle('has-filter', labels.length > 0);
+            document.getElementById('filter-summary-text').textContent = labels.join(' · ');
+            document.getElementById('filter-summary').classList.toggle('d-none', labels.length === 0);
         },
 
         initEvents() {
@@ -871,6 +948,9 @@
             });
             document.getElementById('btn-create')?.addEventListener('click', () => this.openCreate());
             document.getElementById('btn-save')?.addEventListener('click', () => this.save());
+
+            document.getElementById('btn-apply-filter')?.addEventListener('click', () => this.applyFilter());
+            document.getElementById('btn-reset-filter')?.addEventListener('click', () => this.resetFilter());
 
             document.getElementById('f-code')?.addEventListener('input', e => {
                 e.target.value = e.target.value.toUpperCase().replace(/[^A-Z0-9_\-]/g, '');

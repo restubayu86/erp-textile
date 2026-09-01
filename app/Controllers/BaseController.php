@@ -33,6 +33,14 @@ abstract class BaseController extends Controller
     protected $userIdentities;
 
     /**
+     * Scope gudang untuk user yang sedang login.
+     * null  = tidak dibatasi (lihat semua gudang) — superadmin/admin/warehouse_manager
+     * array = HANYA boleh akses gudang dengan id di dalam array ini (bisa kosong)
+     * @var array<int>|null
+     */
+    protected ?array $warehouseScope = null;
+
+    /**
      * @return void
      */
     public function initController(RequestInterface $request, ResponseInterface $response, LoggerInterface $logger)
@@ -51,7 +59,7 @@ abstract class BaseController extends Controller
 
             // Query dengan column yang benar
             $query = $db->table('employees')
-                ->select('employees.*, departments.department as department_name, positions.position_name')
+                ->select('employees.*, departments.id as department_id, departments.department as department_name, positions.position_name')
                 ->join('positions', 'positions.id = employees.position_id', 'left')
                 ->join('departments', 'departments.id = positions.department_id', 'left')
                 ->where('employees.id', $this->currentUser->employee_id)
@@ -60,11 +68,16 @@ abstract class BaseController extends Controller
             $this->userEmployee = $query->getRowArray();
         }
 
+        // Hitung scope gudang (dipakai untuk auto-filter di controller Warehouse & di frontend)
+        helper('warehouse');
+        $this->warehouseScope = userWarehouseScope($this->currentUser, $this->userEmployee);
+
         // Share to all views
         $viewData = [
             'user' => $this->currentUser,
             'user_identities' => $this->userIdentities,
             'user_employee' => $this->userEmployee,
+            'warehouse_scope' => $this->warehouseScope,
         ];
 
         \Config\Services::renderer()->setData($viewData);
@@ -100,5 +113,14 @@ abstract class BaseController extends Controller
     protected function hasEmployeeRelation(): bool
     {
         return !empty($this->userEmployee);
+    }
+
+    /**
+     * Scope gudang user login. null = tak dibatasi, array = daftar id gudang yang boleh diakses.
+     * @return array<int>|null
+     */
+    protected function getWarehouseScope(): ?array
+    {
+        return $this->warehouseScope;
     }
 }

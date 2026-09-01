@@ -425,6 +425,7 @@ if (!empty($user_employee['fullname'])) {
                 <select class="form-select form-select-sm" id="so-filter-warehouse" style="width:100%">
                     <option value="__combined__">— Gabungan (Semua Gudang) —</option>
                 </select>
+                <div class="form-text fs-10" id="so-warehouse-scope-hint"></div>
             </div>
         </div>
         <div id="so-filter-summary" class="mb-3 d-none">
@@ -485,6 +486,52 @@ if (!empty($user_employee['fullname'])) {
             this.initSelect2();
             this.initEvents();
             this.autoSelectCurrentPeriod();
+            this.autoSelectUserWarehouse();
+        },
+
+        /**
+         * Warehouse Operator dibatasi hanya ke gudang departemennya sendiri.
+         * Penjelasan lengkap pola ini ada di stocks/receipt.php.
+         */
+        async autoSelectUserWarehouse() {
+            const scope = window.APP_WAREHOUSE_SCOPE;
+            const hint = document.getElementById('so-warehouse-scope-hint');
+            if (!scope || !scope.restricted) return;
+
+            if (!scope.warehouseIds.length) {
+                if (hint) {
+                    hint.innerHTML = `<span class="text-danger"><span class="fas fa-triangle-exclamation me-1"></span>` +
+                        `Akun Anda (departemen: ${scope.departmentName ?? '—'}) belum terhubung ke gudang manapun. Hubungi admin.</span>`;
+                }
+                $('#so-filter-warehouse').prop('disabled', true);
+                return;
+            }
+
+            try {
+                const res = await this.get(this.BASE + 'warehouse/master/warehouses/select2');
+                const list = res.data ?? [];
+                if (!list.length) return;
+
+                const w = list[0];
+                const warehouseOptionData = {
+                    id: w.id,
+                    text: `${w.name} (${w.code})`,
+                    name: w.name,
+                    code: w.code
+                };
+                const opt = new Option(warehouseOptionData.text, warehouseOptionData.id, true, true);
+                $(opt).data('data', warehouseOptionData);
+                $('#so-filter-warehouse').append(opt).trigger('change');
+
+                if (list.length === 1) {
+                    $('#so-filter-warehouse').prop('disabled', true);
+                    if (hint) hint.textContent = `Gudang departemen Anda (${scope.departmentName ?? '—'})`;
+                } else if (hint) {
+                    hint.textContent = `${list.length} gudang tersedia untuk departemen Anda (${scope.departmentName ?? '—'})`;
+                }
+            } catch (e) {
+                // Kalau gagal, biarkan user pilih manual dari opsi yang sudah ter-scope backend.
+            }
         },
 
         /**
@@ -604,10 +651,13 @@ if (!empty($user_employee['fullname'])) {
                         search: params.term
                     }),
                     processResults: data => ({
-                        results: [{
+                        results: [
+                            // "Gabungan (Semua Gudang)" cuma masuk akal kalau user tidak dibatasi
+                            // ke gudang tertentu (lihat combinedGrid() di controller — diblok utk operator).
+                            ...(window.APP_WAREHOUSE_SCOPE?.restricted ? [] : [{
                                 id: '__combined__',
                                 text: '— Gabungan (Semua Gudang) —'
-                            },
+                            }]),
                             ...(data.data ?? []).map(w => ({
                                 id: w.id,
                                 text: `${w.name} (${w.code})`
@@ -856,7 +906,14 @@ if (!empty($user_employee['fullname'])) {
 
         resetFilter() {
             $('#so-filter-period').val(null).trigger('change');
-            $('#so-filter-warehouse').val('__combined__').trigger('change');
+            // Operator tidak boleh direset ke "Gabungan" (opsi itu memang tidak
+            // ditawarkan untuknya) — arahkan ulang ke gudang departemennya sendiri.
+            if (window.APP_WAREHOUSE_SCOPE?.restricted) {
+                $('#so-filter-warehouse').val(null).trigger('change');
+                this.autoSelectUserWarehouse();
+            } else {
+                $('#so-filter-warehouse').val('__combined__').trigger('change');
+            }
             document.getElementById('so-period-status-hint').textContent = '';
             this.currentPeriodId = null;
             this.currentPeriodRange = null;

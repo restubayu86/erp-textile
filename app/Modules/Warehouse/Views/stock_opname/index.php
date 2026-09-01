@@ -8,42 +8,6 @@
         overflow-x: hidden;
     }
 
-    .stat-card {
-        border: none;
-        border-radius: 1rem;
-        transition: all .2s;
-    }
-
-    .stat-card:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 24px rgba(0, 0, 0, .1);
-    }
-
-    .stat-icon {
-        width: 48px;
-        height: 48px;
-        border-radius: 12px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 1.35rem;
-        flex-shrink: 0;
-    }
-
-    .info-label {
-        font-size: .65rem;
-        text-transform: uppercase;
-        letter-spacing: .06em;
-        color: var(--phoenix-secondary-color);
-        margin-bottom: .2rem;
-    }
-
-    .info-value {
-        font-weight: 700;
-        font-size: 1.5rem;
-        line-height: 1;
-    }
-
     .filter-toggle {
         position: fixed;
         right: 0;
@@ -416,6 +380,7 @@
                 <select class="form-select form-select-sm" id="sop-filter-warehouse" style="width:100%">
                     <option value="__combined__">— Gabungan (Semua Gudang) —</option>
                 </select>
+                <div class="form-text fs-10" id="sop-warehouse-scope-hint"></div>
             </div>
             <div class="mb-4">
                 <label class="form-label fw-semibold fs-9 text-uppercase text-muted" for="sop-opname-date">
@@ -488,6 +453,52 @@
                 hour: '2-digit',
                 minute: '2-digit'
             });
+            this.autoSelectUserWarehouse();
+        },
+
+        /**
+         * Warehouse Operator dibatasi hanya ke gudang departemennya sendiri.
+         * Penjelasan lengkap pola ini ada di stocks/receipt.php.
+         */
+        async autoSelectUserWarehouse() {
+            const scope = window.APP_WAREHOUSE_SCOPE;
+            const hint = document.getElementById('sop-warehouse-scope-hint');
+            if (!scope || !scope.restricted) return;
+
+            if (!scope.warehouseIds.length) {
+                if (hint) {
+                    hint.innerHTML = `<span class="text-danger"><span class="fas fa-triangle-exclamation me-1"></span>` +
+                        `Akun Anda (departemen: ${scope.departmentName ?? '—'}) belum terhubung ke gudang manapun. Hubungi admin.</span>`;
+                }
+                $('#sop-filter-warehouse').prop('disabled', true);
+                return;
+            }
+
+            try {
+                const res = await this.get(this.BASE + 'warehouse/master/warehouses/select2');
+                const list = res.data ?? [];
+                if (!list.length) return;
+
+                const w = list[0];
+                const warehouseOptionData = {
+                    id: w.id,
+                    text: `${w.name} (${w.code})`,
+                    name: w.name,
+                    code: w.code
+                };
+                const opt = new Option(warehouseOptionData.text, warehouseOptionData.id, true, true);
+                $(opt).data('data', warehouseOptionData);
+                $('#sop-filter-warehouse').append(opt).trigger('change');
+
+                if (list.length === 1) {
+                    $('#sop-filter-warehouse').prop('disabled', true);
+                    if (hint) hint.textContent = `Gudang departemen Anda (${scope.departmentName ?? '—'})`;
+                } else if (hint) {
+                    hint.textContent = `${list.length} gudang tersedia untuk departemen Anda (${scope.departmentName ?? '—'})`;
+                }
+            } catch (e) {
+                // Kalau gagal, biarkan user pilih manual dari opsi yang sudah ter-scope backend.
+            }
         },
 
         csrfName: () => document.querySelector('meta[name="csrf-name"]')?.content ?? '',
@@ -578,10 +589,11 @@
                         search: params.term
                     }),
                     processResults: data => ({
-                        results: [{
+                        results: [
+                            ...(window.APP_WAREHOUSE_SCOPE?.restricted ? [] : [{
                                 id: '__combined__',
                                 text: '— Gabungan (Semua Gudang) —'
-                            },
+                            }]),
                             ...(data.data ?? []).map(w => ({
                                 id: w.id,
                                 text: `${w.name} (${w.code})`
@@ -646,7 +658,12 @@
 
         resetFilter() {
             $('#sop-filter-period').val(null).trigger('change');
-            $('#sop-filter-warehouse').val('__combined__').trigger('change');
+            if (window.APP_WAREHOUSE_SCOPE?.restricted) {
+                $('#sop-filter-warehouse').val(null).trigger('change');
+                this.autoSelectUserWarehouse();
+            } else {
+                $('#sop-filter-warehouse').val('__combined__').trigger('change');
+            }
             document.getElementById('sop-period-status-hint').textContent = '';
             this.currentPeriodId = null;
             this.currentPeriodRange = null;
@@ -946,8 +963,7 @@
                     {
                         data: 'category_name',
                         render: d => d ?
-                            d.split(', ').map(c => `<span class="badge badge-phoenix badge-phoenix-secondary p-2 fs-10 me-1 mb-1">${self.e(c)}</span>`).join('') :
-                            '<span class="text-muted fst-italic">—</span>',
+                            d.split(', ').map(c => `<span class="badge badge-phoenix badge-phoenix-secondary p-2 fs-10 me-1 mb-1">${self.e(c)}</span>`).join('') : '<span class="text-muted fst-italic">—</span>',
                     },
                     {
                         data: 'opname_qty',
@@ -1077,8 +1093,7 @@
                     {
                         data: 'category_name',
                         render: d => d ?
-                            d.split(', ').map(c => `<span class="badge badge-phoenix badge-phoenix-secondary p-2 fs-10 me-1 mb-1">${self.e(c)}</span>`).join('') :
-                            '<span class="text-muted fst-italic">—</span>',
+                            d.split(', ').map(c => `<span class="badge badge-phoenix badge-phoenix-secondary p-2 fs-10 me-1 mb-1">${self.e(c)}</span>`).join('') : '<span class="text-muted fst-italic">—</span>',
                     },
                     {
                         data: 'opname_qty',
